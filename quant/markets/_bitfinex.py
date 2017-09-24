@@ -1,49 +1,40 @@
-# Copyright (C) 2017, Philsong <songbohr@gmail.com>
-
-import logging
-import requests
 from .market import Market
+from quant.api.bitfinex import PublicClient as Client
+import market_util
 
-
-# https://api.bitfinex.com/v1/symbols_details
-#   {
-#     "pair": "bchbtc",
-#     "price_precision": 5,
-#     "initial_margin": "30.0",
-#     "minimum_margin": "15.0",
-#     "maximum_order_size": "2000.0",
-#     "minimum_order_size": "0.001",
-#     "expiration": "NA"
-#   },
 
 class Bitfinex(Market):
     def __init__(self, pair_code):
-        base_currency, market_currency = self.convert_pairs(pair_code)
+        base_currency, market_currency = self.get_available_pairs(pair_code)
         super(Bitfinex, self).__init__(base_currency, market_currency, pair_code, 0.002)
+        self.client = Client()
+
+    def symbol(self):
+        return "%s%s" % (self.market_currency.lower(), self.base_currency.lower())
 
     def update_depth(self):
-        url = 'https://api.bitfinex.com/v1/book/%s' % self.pair_code
-        response = requests.request("GET", url, timeout=self.request_timeout)
-        raw_depth = response.json()
+        depth_raw = self.client.depth(self.symbol())
 
-        self.depth = self.format_depth(raw_depth)
-
-    # override method
-    def sort_and_format(self, l, reverse=False):
-        l.sort(key=lambda x: float(x['price']), reverse=reverse)
-        r = []
-        for i in l:
-            r.append({'price': float(i['price']), 'amount': float(i['amount'])})
-        return r
+        if depth_raw:
+            self.depth = self.format_depth(depth_raw)
 
     @classmethod
-    def convert_pairs(cls, pair_code):
+    def format_depth(cls, depth):
+        bids = market_util.sort_and_format_dict(depth['bids'], True)
+        asks = market_util.sort_and_format_dict(depth['asks'], False)
+        return {'asks': asks, 'bids': bids}
+
+    @classmethod
+    def get_available_pairs(cls, pair_code):
         if pair_code == 'bchbtc':
             base_currency = 'BTC'
             market_currency = 'BCH'
         elif pair_code == 'btcusd':
             base_currency = 'USD'
             market_currency = 'BTC'
+        elif pair_code == 'bchusd':
+            base_currency = 'USD'
+            market_currency = 'BCH'
         else:
             assert False
         return base_currency, market_currency

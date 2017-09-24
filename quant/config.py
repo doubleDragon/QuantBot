@@ -8,7 +8,9 @@ markets = [
 # "KrakenUSD",
 # "OKCoinCNY",
 # "HuobiCNY",
+"Bitfinex_BCH_USD",
 "Bitfinex_BCH_BTC",
+"Bitfinex_BTC_USD",
 # "Bittrex_BCH_BTC",
 ]
 

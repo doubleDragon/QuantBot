@@ -3,16 +3,13 @@
 
 import logging
 import time
+
+import requests
+
 from quant import config
 
 
 class Market(object):
-    """
-    eth_btc
-        base_currency :btc
-        quote_currency:eth
-    """
-
     def __init__(self, base_currency, market_currency, pair_code, fee_rate):
         self._name = None
         self.base_currency = base_currency
@@ -25,7 +22,17 @@ class Market(object):
 
         self.is_terminated = False
         self.request_timeout = 5  # 5s
-        self.depth = {'asks': [{'price': 0, 'amount': 0}], 'bids': [{'price': 0, 'amount': 0}]}
+        self.depth = {'asks': [{'price': 0, 'amount': 0}], 'bids': [
+            {'price': 0, 'amount': 0}]}
+
+    def request_get(self, url):
+        try:
+            resp = requests.get(url, timeout=self.request_timeout)
+        except requests.exceptions.RequestException as e:
+            logging.debug("get %s failed: " % url + str(e))
+        else:
+            if resp.status_code == requests.codes.ok:
+                return resp.json()
 
     @property
     def name(self):
@@ -50,8 +57,8 @@ class Market(object):
         # logging.warn('Market: %s order book2:(%s>%s)', self.name, time_diff, self.depth_updated)
 
         if time_diff > config.market_expiration_time:
-            # logging.warn('Market: %s order book is expired(%s>%s)', self.name, time_diff,
-            #              config.market_expiration_time)
+            # logging.warn('Market: %s order book is expired(%s>%s)', self.name, timediff,
+            # config.market_expiration_time)
             return None
         return self.depth
 
@@ -76,7 +83,7 @@ class Market(object):
 
         if len(depth['asks']) > 0:
             res['ask'] = depth['asks'][0]
-        if len(depth['bids']) > 0:
+        if len(depth["bids"]) > 0:
             res['bid'] = depth['bids'][0]
         return res
 

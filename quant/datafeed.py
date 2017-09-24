@@ -9,6 +9,7 @@ import traceback
 
 import sys
 import signal
+
 from markets.market_factory import create_markets
 
 is_sigint_up = False
@@ -50,7 +51,6 @@ class DataFeed(object):
                 exec ('import observers.' + observer_name.lower())
                 observer = eval('observers.' + observer_name.lower() + '.' +
                                 observer_name + '()')
-                print("%s 的type是%s" % (observer_name, str(type(observer))))
                 self.observers.append(observer)
             except (ImportError, AttributeError) as e:
                 print("%s observer name is invalid: Ignored (you should check your config file)" % observer_name)
@@ -83,6 +83,7 @@ class DataFeed(object):
             depths[market.name] = depth
 
     def update_depths(self):
+        # depths = {}
         depths = {}
         futures = []
 
@@ -138,6 +139,7 @@ class DataFeed(object):
             self.depths = self.update_depths()
 
             try:
+
                 self.tick()
             except Exception as ex:
                 logging.warn("exception depths:%s" % ex)

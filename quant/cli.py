@@ -5,6 +5,7 @@ import logging
 from logging.handlers import RotatingFileHandler
 
 from quant.datafeed import DataFeed
+from quant.observers.t_bitfinex import TrigangularArbitrer_Bitfinex
 
 
 class CLI(object):
@@ -80,8 +81,17 @@ class CLI(object):
             pass
         else:
             self.create_data_feed(args)
+            if "t-watch-bitfinex-bch" in args.command:
+                self.register_t_bitfinex_bcc()
 
         self.data_feed.run_loop()
+
+    def register_t_bitfinex_bcc(self):
+        _observer = TrigangularArbitrer_Bitfinex(base_pair='Bitfinex_BCH_USD',
+                                                 pair1='Bitfinex_BCH_BTC',
+                                                 pair2='Bitfinex_BTC_USD',
+                                                 monitor_only=True)
+        self.data_feed.register_observer(_observer)
 
     def create_data_feed(self, args):
         self.data_feed = DataFeed()
