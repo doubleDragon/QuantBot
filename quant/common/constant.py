@@ -20,11 +20,13 @@ ORDER_STATE_CANCELED = 4
 
 EX_OKEX = 'okex'
 EX_BFX = 'Bitfinex'
-EX_LQ = 'liqui'
+EX_LQ = 'Liqui'
 EX_GDAX = 'gdax'
 EX_BINANCE = 'binance'
-EX_CEX = 'cex'
+EX_CEX = 'Cex'
 EX_EXMO = 'exmo'
+EX_KKEX = 'Kkex'
+EX_HITBITC = 'Hitbtc'
 
 EX_SET = (
     EX_OKEX,

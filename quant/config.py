@@ -8,10 +8,14 @@ markets = [
 # "KrakenUSD",
 # "OKCoinCNY",
 # "HuobiCNY",
-"Bitfinex_BCH_USD",
-"Bitfinex_BCH_BTC",
-"Bitfinex_BTC_USD",
 # "Bittrex_BCH_BTC",
+# "Bitfinex_BCH_USD",
+# "Bitfinex_BCH_BTC",
+# "Bitfinex_BTC_USD",
+# "Kkex_BCC_BTC",
+# "Liqui_BCC_BTC",
+# "Hitbtc_BCC_BTC",
+# "Cex_BCC_BTC",
 ]
 
 # observers if any

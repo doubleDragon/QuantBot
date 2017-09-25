@@ -1,37 +1,39 @@
-from __future__ import division
-
-# python3 xrypto/cli.py -m Viabtc_BCH_CNY,Viabtc_BCH_BTC,Viabtc_BTC_CNY t-watch -v
-# python -m quant.cli t-watch-bitfinex-bch -v
-
+#!/usr/bin/env python
+# -*- coding: UTF-8 -*-
 import logging
+
 import time
 
 from quant import config
-from quant.brokers import broker_factory
 from .basicbot import BasicBot
 
 
-class TrigangularArbitrer_Bitfinex(BasicBot):
+class TriangleArbitrage(BasicBot):
     """
-    base_pair='Bitfinex_BCH_USD',
-    pair1='Bitfinex_BCH_BTC',
-    pair2='Bitfinex_BTC_USD'
+    python -m quant.cli t-watch-triangle-arbitrage -d
+    每个交易所的min_price和min_stocks不一致，限定条件需要查询文档
+    限制条件:
+        1, 交易所的min_price和min_stocks限制, 每个交易所可能不一样，需要动态的改
+        2, 余额限制，即当前能买卖的币数量合理
     """
 
-    def __init__(self, base_pair, pair1, pair2, monitor_only=False):
-        super(TrigangularArbitrer_Bitfinex, self).__init__()
-        self.base_pair = base_pair or 'Bitfinex_BCH_USD'
-        self.pair_1 = pair1 or 'Bitfinex_BCH_BTC'
-        self.pair_2 = pair2 or 'Bitfinex_BTC_USD'
+    def __init__(self, monitor_only=False):
+        super(TriangleArbitrage, self).__init__()
 
+        self.base_pair = 'Bitfinex_BCH_USD'
+        # self.pair_1 = 'Kkex_BCC_BTC'
+        self.pair_1 = 'Liqui_BCC_BTC'
+        # self.pair_1 = 'Hitbtc_BCC_BTC'
+        # self.pair_1 = 'Cex_BCC_BTC'
+        self.pair_2 = 'Bitfinex_BTC_USD'
         self.monitor_only = monitor_only
 
-        self.brokers = broker_factory.create_brokers([self.base_pair, self.pair_1, self.pair_2])
-
+        # self.brokers = broker_factory.create_brokers([self.base_pair, self.pair_1, self.pair_2])
+        self.brokers = {}
         self.last_trade = 0
 
-    def update_balance(self):
-        self.brokers[self.base_pair].get_balances()
+    def is_depths_available(self, depths):
+        return self.base_pair in depths and self.pair_1 in depths and self.pair_2 in depths
 
     def tick(self, depths):
         if not self.is_depths_available(depths):
@@ -40,10 +42,8 @@ class TrigangularArbitrer_Bitfinex(BasicBot):
         self.forward(depths)
         self.reverse(depths)
 
-    def is_depths_available(self, depths):
-        return self.base_pair in depths and self.pair_1 in depths and self.pair_2 in depths
-
     def forward(self, depths):
+        logging.info("==============正循环==============")
         base_pair_ask_amount = depths[self.base_pair]['asks'][0]['amount']
         base_pair_ask_price = depths[self.base_pair]['asks'][0]['price']
 
@@ -54,6 +54,8 @@ class TrigangularArbitrer_Bitfinex(BasicBot):
 
         pair2_bid_amount = depths[self.pair_2]['bids'][0]['amount']
         pair2_bid_price = depths[self.pair_2]['bids'][0]['price']
+
+        logging.info("%s bid_price: %s,  %s bid_price: %s" % (self.pair_1, pair1_bid_price, self.pair_2, pair2_bid_price))
 
         if pair1_bid_price == 0:
             return
@@ -71,7 +73,8 @@ class TrigangularArbitrer_Bitfinex(BasicBot):
             return
 
         hedge_btc_amount = hedge_bch_amount * pair1_bid_price
-        if hedge_btc_amount < 0.01:
+        # if hedge_btc_amount < 0.01:
+        if hedge_btc_amount < 0.001:
             logging.info('hedge_btc_amount is too small! %s' % hedge_btc_amount)
             return
 
@@ -111,6 +114,7 @@ class TrigangularArbitrer_Bitfinex(BasicBot):
             self.last_trade = time.time()
 
     def reverse(self, depths):
+        logging.info("==============逆循环==============")
         base_pair_bid_amount = depths[self.base_pair]['bids'][0]['amount']
         base_pair_bid_price = depths[self.base_pair]['bids'][0]['price']
 
@@ -122,6 +126,7 @@ class TrigangularArbitrer_Bitfinex(BasicBot):
         pair2_ask_amount = depths[self.pair_2]['asks'][0]['amount']
         pair2_ask_price = depths[self.pair_2]['asks'][0]['price']
 
+        logging.info("%s ask_price: %s,  %s ask_price: %s" % (self.pair_1, pair1_ask_price, self.pair_2, pair2_ask_price))
         if pair1_ask_price == 0 or pair2_ask_price == 0:
             return
 
@@ -147,7 +152,8 @@ class TrigangularArbitrer_Bitfinex(BasicBot):
         t_price = round(base_pair_bid_price * config.TFEE * config.Diff, 2)
         logging.info("synthetic_ask_price: %s t_price:%s" % (synthetic_ask_price, t_price))
 
-        p_diff = synthetic_ask_price - t_price
+        # p_diff = synthetic_ask_price - t_price
+        p_diff = t_price - synthetic_ask_price
 
         profit = round(p_diff * hedge_bch_amount, 2)
         logging.info('profit=%s' % profit)

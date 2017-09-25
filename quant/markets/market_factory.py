@@ -2,6 +2,10 @@ import logging
 
 from quant.common import constant
 from ._bitfinex import Bitfinex
+from ._kkex import Kkex
+from ._liqui import Liqui
+from ._hitbtc import Hitbtc
+from ._cex import Cex
 
 
 def create_markets(exchange_names):
@@ -19,6 +23,14 @@ def create_markets(exchange_names):
             ex = Bitfinex('bchbtc')
         elif name == "%s_BTC_USD" % constant.EX_BFX:
             ex = Bitfinex('btcusd')
+        elif name == "%s_BCC_BTC" % constant.EX_KKEX:
+            ex = Kkex('bccbtc')
+        elif name == "%s_BCC_BTC" % constant.EX_LQ:
+            ex = Liqui('bccbtc')
+        elif name == "%s_BCC_BTC" % constant.EX_HITBITC:
+            ex = Hitbtc('bccbtc')
+        elif name == "%s_BCC_BTC" % constant.EX_CEX:
+            ex = Cex('bccbtc')
         else:
             logging.warn('Exchange ' + name + ' not supported!')
             assert False
