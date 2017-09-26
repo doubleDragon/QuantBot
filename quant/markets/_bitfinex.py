@@ -35,6 +35,9 @@ class Bitfinex(Market):
         elif pair_code == 'bchusd':
             base_currency = 'USD'
             market_currency = 'BCH'
+        elif pair_code == 'eosusd':
+            base_currency = 'USD'
+            market_currency = 'EOS'
         else:
             assert False
         return base_currency, market_currency
