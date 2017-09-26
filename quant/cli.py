@@ -4,10 +4,17 @@ import argparse
 import logging
 from logging.handlers import RotatingFileHandler
 
+import sys
+
+import time
+
 from quant.datafeed import DataFeed
 from quant.observers.t_bitfinex import TrigangularArbitrer_Bitfinex
 from quant.observers.triangle_arbitrage_bch import TriangleArbitrage as TriangleArbitrageBch
 from quant.observers.triangle_arbitrage_eos import TriangleArbitrage as TriangleArbitrageEos
+
+from quant.brokers import broker_factory
+from quant.snapshot import Snapshot
 
 
 class CLI(object):
@@ -79,6 +86,10 @@ class CLI(object):
         #     if "t-watch-binance-qtum" in args.command:
         #         self.register_t_binance_qtum(args)
 
+        if "get-balance" in args.command:
+            self.get_balance(args)
+            return
+
         if "b-watch" in args.command:
             pass
         else:
@@ -91,6 +102,30 @@ class CLI(object):
                 self.register_t_triangle_arbitrage_eos()
 
         self.data_feed.run_loop()
+
+    @classmethod
+    def get_balance(cls, args):
+        if not args.markets:
+            logging.error("You must use --markets argument to specify markets")
+            sys.exit(2)
+        p_markets = args.markets.split(",")
+        brokers = broker_factory.create_brokers(p_markets)
+
+        snapshot = Snapshot()
+
+        while True:
+            total_btc = 0.
+            total_bch = 0.
+            for market in brokers.values():
+                market.get_balances()
+                print(market)
+                total_btc += market.btc_balance
+                total_bch += market.bch_balance
+                snapshot.snapshot_balance(market.name[7:], market.btc_balance, market.bch_balance)
+
+            snapshot.snapshot_balance('ALL', total_btc, total_bch)
+
+            time.sleep(60 * 10)
 
     def register_t_triangle_arbitrage_bch(self):
         _observer = TriangleArbitrageBch(monitor_only=True)

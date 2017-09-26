@@ -2,6 +2,9 @@
 # -*- coding: UTF-8 -*-
 
 from __future__ import absolute_import
+
+import logging
+
 import requests
 import json
 import base64
@@ -72,8 +75,9 @@ class PublicClient(object):
             'mid': u'562.62495'}
         """
         resp = self._get(self.url_for('ticker/%s', symbol.lower()))
-        if resp is not None:
-            return dict_to_ticker(resp)
+        return resp
+        # if resp is not None:
+        #     return dict_to_ticker(resp)
 
     def depth(self, symbol, parameters=None):
         """
@@ -171,11 +175,14 @@ class PrivateClient(PublicClient):
             "X-BFX-PAYLOAD": data
         }
 
-    def _post(self, url, headers):
+    @classmethod
+    def _post(cls, url, headers):
         try:
             resp = requests.post(url, headers=headers, verify=True)
+            print("Bitfinex _post: " + str(resp))
         except requests.exceptions.RequestException as e:
-            print('Bitfinex post' + url + ' failed: ' + str(e))
+            logging.debug('Bitfinex post' + url + ' failed: ' + str(e))
+            raise e
         else:
             if resp.status_code == requests.codes.ok:
                 return resp.json()
@@ -208,7 +215,8 @@ class PrivateClient(PublicClient):
         signed_payload = self._sign_payload(payload)
         url = BASE_URL + "/order/new"
         resp = self._post(url=url, headers=signed_payload)
-        return dict_to_order(resp)
+        return resp
+        # return dict_to_order(resp)
 
     def buy(self, symbol, amount, price):
         side = 'buy'
@@ -245,7 +253,8 @@ class PrivateClient(PublicClient):
         bal_type: exchange or trading or deposit
         :return: btc and usd
         """
-        return self._balances_inner()
+        resp = self._balances_inner()
+        return resp
         # if resp is not None:
             # filter wrong type information
             # def is_right_symbol(pp):
@@ -271,7 +280,8 @@ class PrivateClient(PublicClient):
         signed_payload = self._sign_payload(payload)
         url = BASE_URL + "/order/status"
         resp = self._post(url=url, headers=signed_payload)
-        return dict_to_order(resp)
+        return resp
+        # return dict_to_order(resp)
 
     def cancel_order(self, order_id):
         payload = {
@@ -305,57 +315,57 @@ class PrivateClient(PublicClient):
             return True
 
 
-def dict_to_account(data):
-    ac = account.Account()
-    for item in data:
-        balance = Decimal(item[u'amount'])
-        available_balance = Decimal(item[u'available'])
-        frozen_balance = balance - available_balance
-        currency = item[u'currency']
-
-        bean = account.Item(currency=currency, balance=balance, available_balance=available_balance,
-                            frozen_balance=frozen_balance)
-        ac.append(bean)
-    return ac
-
-
-def dict_to_order(resp):
-    if resp is not None:
-        origin_amount = Decimal(str(resp[u'original_amount']))
-        executed_amount = Decimal(str(resp[u'executed_amount']))
-
-        is_cancelled = resp[u'is_cancelled']
-        is_completed = (executed_amount == origin_amount)
-        if is_completed:
-            order_status = constant.ORDER_STATE_CLOSED
-        else:
-            if is_cancelled:
-                order_status = constant.ORDER_STATE_CANCELED
-            else:
-                order_status = constant.ORDER_STATE_PENDING
-        order_id = resp[u'id']
-        price = resp[u'price']
-        order_type = resp[u'type']
-        return order.Order(order_id=order_id, price=price, status=order_status, order_type=order_type,
-                           amount=origin_amount, deal_amount=executed_amount), None
-    else:
-        return None, error.HttpError()
-
-
-def dict_to_order_result(resp):
-    if resp is not None:
-        order_id = resp['order_id']
-        if order_id is not None and order_id > 0:
-            return order.OrderResult(order_id=order_id)
-        else:
-            return order.OrderResult(error='order id not exists')
-    else:
-        return order.OrderResult(error='unknown error, may be balance not enough')
-
-
-def dict_to_ticker(resp):
-    sell = Decimal(resp[u'ask'])
-    buy = Decimal(resp[u'bid'])
-    last = Decimal(resp[u'last_price'])
-    data = ticker.Ticker(buy=buy, sell=sell, last=last)
-    return data
+# def dict_to_account(data):
+#     ac = account.Account()
+#     for item in data:
+#         balance = Decimal(item[u'amount'])
+#         available_balance = Decimal(item[u'available'])
+#         frozen_balance = balance - available_balance
+#         currency = item[u'currency']
+#
+#         bean = account.Item(currency=currency, balance=balance, available_balance=available_balance,
+#                             frozen_balance=frozen_balance)
+#         ac.append(bean)
+#     return ac
+#
+#
+# def dict_to_order(resp):
+#     if resp is not None:
+#         origin_amount = Decimal(str(resp[u'original_amount']))
+#         executed_amount = Decimal(str(resp[u'executed_amount']))
+#
+#         is_cancelled = resp[u'is_cancelled']
+#         is_completed = (executed_amount == origin_amount)
+#         if is_completed:
+#             order_status = constant.ORDER_STATE_CLOSED
+#         else:
+#             if is_cancelled:
+#                 order_status = constant.ORDER_STATE_CANCELED
+#             else:
+#                 order_status = constant.ORDER_STATE_PENDING
+#         order_id = resp[u'id']
+#         price = resp[u'price']
+#         order_type = resp[u'type']
+#         return order.Order(order_id=order_id, price=price, status=order_status, order_type=order_type,
+#                            amount=origin_amount, deal_amount=executed_amount), None
+#     else:
+#         return None, error.HttpError()
+#
+#
+# def dict_to_order_result(resp):
+#     if resp is not None:
+#         order_id = resp['order_id']
+#         if order_id is not None and order_id > 0:
+#             return order.OrderResult(order_id=order_id)
+#         else:
+#             return order.OrderResult(error='order id not exists')
+#     else:
+#         return order.OrderResult(error='unknown error, may be balance not enough')
+#
+#
+# def dict_to_ticker(resp):
+#     sell = Decimal(resp[u'ask'])
+#     buy = Decimal(resp[u'bid'])
+#     last = Decimal(resp[u'last_price'])
+#     data = ticker.Ticker(buy=buy, sell=sell, last=last)
+#     return data

@@ -6,7 +6,7 @@ from quant.api.bitfinex import PrivateClient as BfxClient
 import logging
 
 
-# python3 xrypto/cli.py -m Bitfinex_BCH_BTC get-balance
+# python -m quant.cli -m Bitfinex_BCH_BTC get-balance
 
 class Bitfinex(Broker):
     def __init__(self, pair_code, api_key=None, api_secret=None):
@@ -90,7 +90,7 @@ class Bitfinex(Broker):
         else:
             return False
 
-    def _get_balances(self):
+    def get_balances(self):
         """Get balance"""
         res = self.client.balance()
 

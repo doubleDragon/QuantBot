@@ -60,4 +60,5 @@ tools/*.png
 .idea/
 src/
 quant/local_config.py
+quant/settings.ini
 

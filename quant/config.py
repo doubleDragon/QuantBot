@@ -1,3 +1,5 @@
+from decouple import config
+
 markets = [
 # "BitstampUSD",
 # "BTCCCNY",
@@ -117,6 +119,9 @@ BROKER_PORT = 18030
 bitstamp_username = "FIXME"
 bitstamp_password = "FIXME"
 
+# CEX_API_KEY = config('CEX_API_KEY')
+# CEX_API_SECRET = config('CEX_API_SECRET')
+# CEX_USER_ID = "up109027181"
 
 HUOBI_API_KEY = ''
 HUOBI_SECRET_TOKEN = ''
@@ -133,14 +138,17 @@ KKEX_SECRET_TOKEN = ''
 BITSTAR_API_KEY = ''
 BITSTAR_SECRET_TOKEN = ''
 
-Bitfinex_API_KEY = ''
-Bitfinex_SECRET_TOKEN = ''
+Bitfinex_API_KEY = config('BFX_API_KEY')
+Bitfinex_SECRET_TOKEN = config('BFX_API_SECRET')
 
 Bittrex_API_KEY = ''
 Bittrex_SECRET_TOKEN = ''
 
 Viabtc_API_KEY = ''
 Viabtc_SECRET_TOKEN = ''
+
+Liqui_API_KEY = config('LIQUI_API_KEY')
+Liqui_SECRET_TOKEN = config('LIQUI_API_KEY')
 
 
 SUPPORT_ZMQ = False

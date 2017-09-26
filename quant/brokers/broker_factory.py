@@ -1,5 +1,6 @@
 from quant import config
 from ._bitfinex import Bitfinex
+from ._liqui import Liqui
 import logging
 
 
@@ -29,6 +30,8 @@ def create_brokers(exchange_names):
             chg = Bitfinex('bchbtc', config.Bitfinex_API_KEY, config.Bitfinex_SECRET_TOKEN)
         elif name == 'Bitfinex_BTC_USD':
             chg = Bitfinex('btcusd', config.Bitfinex_API_KEY, config.Bitfinex_SECRET_TOKEN)
+        elif name == 'Liqui_BCC_BTC':
+            chg = Liqui('bccbtc', config.Liqui_API_KEY, config.Liqui_SECRET_TOKEN)
         else:
             logging.warn('Exchange ' + name + ' not supported!')
             assert False
