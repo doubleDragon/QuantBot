@@ -1,10 +1,5 @@
-#!/usr/bin/python
-# -*- coding: UTF-8 -*-
-
+# coding=utf-8
 from __future__ import absolute_import
-
-import logging
-
 import requests
 import json
 import base64
@@ -12,15 +7,16 @@ import hmac
 import hashlib
 import time
 
-from decimal import Decimal
-
-from quant.common import constant
-
 PROTOCOL = "https"
 HOST = "api.bitfinex.com"
 VERSION = "v1"
 
-BASE_URL = u"{0:s}://{1:s}/{2:s}".format(PROTOCOL, HOST, VERSION)
+PATH_SYMBOLS = "symbols"
+PATH_TICKER = "ticker/%s"
+PATH_TODAY = "today/%s"
+PATH_STATS = "stats/%s"
+PATH_LENDBOOK = "lendbook/%s"
+PATH_ORDERBOOK = "book/%s"
 
 # HTTP request timeout in seconds
 TIMEOUT = 5.0
@@ -29,17 +25,17 @@ TIMEOUT = 5.0
 class PublicClient(object):
     """
     Client for the bitfinex.com API.
-
     See https://www.bitfinex.com/pages/api for API documentation.
     """
 
-    def __init__(self):
-        pass
+    @classmethod
+    def server(cls):
+        return u"{0:s}://{1:s}/{2:s}".format(PROTOCOL, HOST, VERSION)
 
     def url_for(self, path, path_arg=None, parameters=None):
 
         # build the basic url
-        url = "%s/%s" % (BASE_URL, path)
+        url = "%s/%s" % (self.server(), path)
 
         # If there is a path_arh, interpolate it into the URL.
         # In this case the path that was provided will need to have string
@@ -56,16 +52,14 @@ class PublicClient(object):
     def symbols(self):
         """
         GET /symbols
-
         curl https://api.bitfinex.com/v1/symbols
         ['btcusd','ltcusd','ltcbtc']
         """
-        return self._get(self.url_for('symbols'))
+        return self._get(self.url_for(PATH_SYMBOLS))
 
     def ticker(self, symbol):
         """
         GET /ticker/:symbol
-
         curl https://api.bitfinex.com/v1/ticker/btcusd
         {
             'ask': '562.9999',
@@ -74,66 +68,80 @@ class PublicClient(object):
             'last_price': u'562.25',
             'mid': u'562.62495'}
         """
-        resp = self._get(self.url_for('ticker/%s', symbol.lower()))
-        return resp
-        # if resp is not None:
-        #     return dict_to_ticker(resp)
+        data = self._get(self.url_for(PATH_TICKER, symbol))
+
+        # convert all values to floats
+        return self._convert_to_floats(data)
+
+    def today(self, symbol):
+        """
+        GET /today/:symbol
+        curl "https://api.bitfinex.com/v1/today/btcusd"
+        {"low":"550.09","high":"572.2398","volume":"7305.33119836"}
+        """
+
+        data = self._get(self.url_for(PATH_TODAY, (symbol)))
+
+        # convert all values to floats
+        return self._convert_to_floats(data)
+
+    def lendbook(self, currency, parameters=None):
+        """
+        curl "https://api.bitfinex.com/v1/lendbook/btc"
+        {"bids":[{"rate":"5.475","amount":"15.03894663","period":30,"timestamp":"1395112149.0","frr":"No"},{"rate":"2.409","amount":"14.5121868","period":7,"timestamp":"1395497599.0","frr":"No"}],"asks":[{"rate":"6.351","amount":"15.5180735","period":5,"timestamp":"1395549996.0","frr":"No"},{"rate":"6.3588","amount":"626.94808249","period":30,"timestamp":"1395400654.0","frr":"Yes"}]}
+        Optional parameters
+        limit_bids (int): Optional. Limit the number of bids (loan demands) returned.
+        May be 0 in which case the array of bids is empty. Default is 50.
+        limit_asks (int): Optional. Limit the number of asks (loan offers) returned.
+        May be 0 in which case the array of asks is empty. Default is 50.
+        """
+        return self._get(self.url_for(PATH_LENDBOOK, path_arg=currency, parameters=parameters))
 
     def depth(self, symbol, parameters=None):
         """
         curl "https://api.bitfinex.com/v1/book/btcusd"
-
         {"bids":[{"price":"561.1101","amount":"0.985","timestamp":"1395557729.0"}],"asks":[{"price":"562.9999","amount":"0.985","timestamp":"1395557711.0"}]}
-
         The 'bids' and 'asks' arrays will have multiple bid and ask dicts.
-
         Optional parameters
-
-        limit_bids (int): Optional. Limit the number of bids returned. May be 0 in which case the array of bids is empty. Default is 50.
-        limit_asks (int): Optional. Limit the number of asks returned. May be 0 in which case the array of asks is empty. Default is 50.
-
+        limit_bids (int): Optional. Limit the number of bids returned.
+        May be 0 in which case the array of bids is empty. Default is 50.
+        limit_asks (int): Optional. Limit the number of asks returned.
+        May be 0 in which case the array of asks is empty. Default is 50.
         eg.
         curl "https://api.bitfinex.com/v1/book/btcusd?limit_bids=1&limit_asks=0"
         {"bids":[{"price":"561.1101","amount":"0.985","timestamp":"1395557729.0"}],"asks":[]}
-
         """
-        if parameters is None:
-            parameters = {}
-        parameters.update({
-            'limit_bids': 5,
-            'limit_asks': 5
-        })
-        return self._get(self.url_for('book/%s', path_arg=symbol.lower(), parameters=parameters))
-        # resp = self._get(self.url_for('book/%s', path_arg=symbol.lower(), parameters=parameters))
-        # if resp is not None:
-        #     data = {
-        #         u'bids': [],
-        #         u'asks': []
-        #     }
+        if not parameters:
+            parameters = {
+                'limit_bids': 5,
+                'limit_asks': 5
+            }
+        return self._get(self.url_for(PATH_ORDERBOOK, path_arg=symbol, parameters=parameters))
+        # data = self._get(self.url_for(PATH_ORDERBOOK, path_arg=symbol, parameters=parameters))
         #
-        #     def fn(x):
-        #         return Decimal(x)
+        # for type_ in data.keys():
+        #     for list_ in data[type_]:
+        #         for key, value in list_.items():
+        #             list_[key] = float(value)
         #
-        #     for i in range(5):
-        #         del resp[u'bids'][i][u'timestamp']
-        #         del resp[u'asks'][i][u'timestamp']
-        #
-        #         bid_dict = resp[u'bids'][i]
-        #         bid_dict = dict(zip(bid_dict.keys(), map(fn, bid_dict.values())))
-        #
-        #         ask_dict = resp[u'asks'][i]
-        #         ask_dict = dict(zip(ask_dict.keys(), map(fn, ask_dict.values())))
-        #
-        #         data[u'bids'].append(bid_dict)
-        #         data[u'asks'].append(ask_dict)
-        #     return depth.dict_to_depth(data)
+        # return data
+
+    @classmethod
+    def _convert_to_floats(cls, data):
+        """
+        Convert all values in a dict to floats
+        """
+        for key, value in data.items():
+            data[key] = float(value)
+
+        return data
 
     @classmethod
     def _get(cls, url):
         try:
             resp = requests.get(url, timeout=TIMEOUT)
         except requests.exceptions.RequestException as e:
-            raise e
+            print("bitfinex get %s failed: " % url + str(e))
         else:
             if resp.status_code == requests.codes.ok:
                 return resp.json()
@@ -149,10 +157,14 @@ class PublicClient(object):
 
 
 class PrivateClient(PublicClient):
-    def __init__(self, api_key, api_secret):
-        PublicClient.__init__(self)
-        self.api_key = api_key
-        self.api_secret = api_secret
+    """
+    Authenticated client for trading through Bitfinex API
+    """
+
+    def __init__(self, key, secret):
+        self.URL = "{0:s}://{1:s}/{2:s}".format(PROTOCOL, HOST, VERSION)
+        self.KEY = key
+        self.SECRET = secret
 
     @property
     def _nonce(self):
@@ -160,17 +172,17 @@ class PrivateClient(PublicClient):
         Returns a nonce
         Used in authentication
         """
-
-        return str(int(round(time.time() * 10000)))
+        # return str(time.time() * 1000000)
+        return str(int(round(time.time() * 1000000)))
 
     def _sign_payload(self, payload):
         j = json.dumps(payload)
-        data = base64.standard_b64encode(j.encode('utf-8'))
+        data = base64.standard_b64encode(j.encode('utf8'))
 
-        h = hmac.new(self.api_secret.encode('utf-8'), data, hashlib.sha384)
+        h = hmac.new(self.SECRET.encode('utf8'), data, hashlib.sha384)
         signature = h.hexdigest()
         return {
-            "X-BFX-APIKEY": self.api_key,
+            "X-BFX-APIKEY": self.KEY,
             "X-BFX-SIGNATURE": signature,
             "X-BFX-PAYLOAD": data
         }
@@ -179,17 +191,14 @@ class PrivateClient(PublicClient):
     def _post(cls, url, headers):
         try:
             resp = requests.post(url, headers=headers, verify=True)
-            print("Bitfinex _post: " + str(resp))
         except requests.exceptions.RequestException as e:
-            logging.debug('Bitfinex post' + url + ' failed: ' + str(e))
-            raise e
+            print('Bitfinex post' + url + ' failed: ' + str(e))
         else:
             if resp.status_code == requests.codes.ok:
                 return resp.json()
 
-    def place_order(self, amount, price, side, ord_type, symbol, exchange='bitfinex'):
+    def place_order(self, amount, price, side, ord_type, symbol='btcusd', exchange='bitfinex'):
         """
-        委单，包括exchange和margin
         Submit a new order.
         :param amount:
         :param price:
@@ -197,15 +206,15 @@ class PrivateClient(PublicClient):
         :param ord_type:
         :param symbol:
         :param exchange:
-        :return: order id
+        :return:
         """
         payload = {
 
             "request": "/v1/order/new",
             "nonce": self._nonce,
             "symbol": symbol,
-            "amount": str(amount),
-            "price": str(price),
+            "amount": amount,
+            "price": price,
             "exchange": exchange,
             "side": side,
             "type": ord_type
@@ -213,10 +222,7 @@ class PrivateClient(PublicClient):
         }
 
         signed_payload = self._sign_payload(payload)
-        url = BASE_URL + "/order/new"
-        resp = self._post(url=url, headers=signed_payload)
-        return resp
-        # return dict_to_order(resp)
+        return self._post(url=self.URL + "/order/new", headers=signed_payload)
 
     def buy(self, symbol, amount, price):
         side = 'buy'
@@ -233,42 +239,43 @@ class PrivateClient(PublicClient):
         order_type = 'limit'
         return self.place_order(symbol=symbol, amount=amount, price=price, side=side, ord_type=order_type)
 
-    def _balances_inner(self):
-        """
-        Fetch balances
+    def margin_buy(self, symbol, amount, price):
+        side = 'buy'
+        order_type = 'limit'
+        return self.place_order(symbol=symbol, amount=amount, price=price, side=side, ord_type=order_type)
 
+    def cancel_order(self, order_id):
+        """
+        Cancel an order.
+        :param order_id:
         :return:
         """
         payload = {
-            "request": "/v1/balances",
-            "nonce": self._nonce
+            "request": "/v1/order/cancel",
+            "nonce": self._nonce,
+            "order_id": order_id
         }
 
         signed_payload = self._sign_payload(payload)
-        url = BASE_URL + "/balances"
-        return self._post(url=url, headers=signed_payload)
+        return self._post(url=self.URL + "/order/cancel", headers=signed_payload)
 
-    def balance(self):
+    def cancel_all_orders(self):
         """
-        bal_type: exchange or trading or deposit
-        :return: btc and usd
+        Cancel all orders.
+        :return:
         """
-        resp = self._balances_inner()
-        return resp
-        # if resp is not None:
-            # filter wrong type information
-            # def is_right_symbol(pp):
-            #     return (pp[u'currency'] == u'btc' or pp[u'currency'] == u'usd') and pp[u'type'] == bal_type
-            #
-            # data = filter(is_right_symbol, resp)
-            #
-            # if data is not None:
-            #     return dict_to_account(data)
+        payload = {
+            "request": "/v1/order/cancel/all",
+            "nonce": self._nonce,
+        }
+
+        signed_payload = self._sign_payload(payload)
+        return self._post(url=self.URL + "/order/cancel/all", headers=signed_payload)
 
     def get_order(self, order_id):
         """
         Get the status of an order. Is it active? Was it cancelled? To what extent has it been executed? etc.
-        :param order_id: must
+        :param order_id:
         :return:
         """
         payload = {
@@ -278,94 +285,160 @@ class PrivateClient(PublicClient):
         }
 
         signed_payload = self._sign_payload(payload)
-        url = BASE_URL + "/order/status"
-        resp = self._post(url=url, headers=signed_payload)
-        return resp
-        # return dict_to_order(resp)
+        return self._post(url=self.URL + "/order/status", headers=signed_payload)
 
-    def cancel_order(self, order_id):
+    def active_orders(self):
+        """
+        Fetch active orders
+        """
+
         payload = {
-            "request": "/v1/order/cancel",
-            "nonce": self._nonce,
-            "order_id": order_id
+            "request": "/v1/orders",
+            "nonce": self._nonce
         }
 
         signed_payload = self._sign_payload(payload)
+        return self._post(url=self.URL + "/orders", headers=signed_payload)
 
-        url = BASE_URL + "/order/cancel"
-        resp = self._post(url=url, headers=signed_payload)
-        if resp is not None:
-            return resp[u'id'] is not None
-
-    def cancel_all_orders(self):
+    def active_positions(self):
         """
-        Cancel all orders.
+        Fetch active Positions
+        """
 
+        payload = {
+            "request": "/v1/positions",
+            "nonce": self._nonce
+        }
+
+        signed_payload = self._sign_payload(payload)
+        return self._post(url=self.URL + "/positions", headers=signed_payload)
+
+    def claim_position(self, position_id):
+        """
+        Claim a position.
+        :param position_id:
         :return:
         """
         payload = {
-            "request": "/v1/order/cancel/all",
+            "request": "/v1/position/claim",
             "nonce": self._nonce,
+            "position_id": position_id
         }
 
         signed_payload = self._sign_payload(payload)
-        url = BASE_URL + "/order/cancel/all"
-        resp = self._post(url=url, headers=signed_payload)
-        if resp is not None:
-            return True
+        return self._post(url=self.URL + "/position/claim", headers=signed_payload)
 
+    def past_trades(self, timestamp=0, symbol='btcusd'):
+        """
+        Fetch past trades
+        :param timestamp:
+        :param symbol:
+        :return:
+        """
+        payload = {
+            "request": "/v1/mytrades",
+            "nonce": self._nonce,
+            "symbol": symbol,
+            "timestamp": timestamp
+        }
 
-# def dict_to_account(data):
-#     ac = account.Account()
-#     for item in data:
-#         balance = Decimal(item[u'amount'])
-#         available_balance = Decimal(item[u'available'])
-#         frozen_balance = balance - available_balance
-#         currency = item[u'currency']
-#
-#         bean = account.Item(currency=currency, balance=balance, available_balance=available_balance,
-#                             frozen_balance=frozen_balance)
-#         ac.append(bean)
-#     return ac
-#
-#
-# def dict_to_order(resp):
-#     if resp is not None:
-#         origin_amount = Decimal(str(resp[u'original_amount']))
-#         executed_amount = Decimal(str(resp[u'executed_amount']))
-#
-#         is_cancelled = resp[u'is_cancelled']
-#         is_completed = (executed_amount == origin_amount)
-#         if is_completed:
-#             order_status = constant.ORDER_STATE_CLOSED
-#         else:
-#             if is_cancelled:
-#                 order_status = constant.ORDER_STATE_CANCELED
-#             else:
-#                 order_status = constant.ORDER_STATE_PENDING
-#         order_id = resp[u'id']
-#         price = resp[u'price']
-#         order_type = resp[u'type']
-#         return order.Order(order_id=order_id, price=price, status=order_status, order_type=order_type,
-#                            amount=origin_amount, deal_amount=executed_amount), None
-#     else:
-#         return None, error.HttpError()
-#
-#
-# def dict_to_order_result(resp):
-#     if resp is not None:
-#         order_id = resp['order_id']
-#         if order_id is not None and order_id > 0:
-#             return order.OrderResult(order_id=order_id)
-#         else:
-#             return order.OrderResult(error='order id not exists')
-#     else:
-#         return order.OrderResult(error='unknown error, may be balance not enough')
-#
-#
-# def dict_to_ticker(resp):
-#     sell = Decimal(resp[u'ask'])
-#     buy = Decimal(resp[u'bid'])
-#     last = Decimal(resp[u'last_price'])
-#     data = ticker.Ticker(buy=buy, sell=sell, last=last)
-#     return data
+        signed_payload = self._sign_payload(payload)
+        return self._post(url=self.URL + "/mytrades", headers=signed_payload)
+
+    def place_offer(self, currency, amount, rate, period, direction):
+        """
+        :param currency:
+        :param amount:
+        :param rate:
+        :param period:
+        :param direction:
+        :return:
+        """
+        payload = {
+            "request": "/v1/offer/new",
+            "nonce": self._nonce,
+            "currency": currency,
+            "amount": amount,
+            "rate": rate,
+            "period": period,
+            "direction": direction
+        }
+
+        signed_payload = self._sign_payload(payload)
+        return self._post(url=self.URL + "/offer/new", headers=signed_payload)
+
+    def cancel_offer(self, offer_id):
+        """
+        :param offer_id:
+        :return:
+        """
+        payload = {
+            "request": "/v1/offer/cancel",
+            "nonce": self._nonce,
+            "offer_id": offer_id
+        }
+
+        signed_payload = self._sign_payload(payload)
+        return self._post(url=self.URL + "/offer/cancel", headers=signed_payload)
+
+    def status_offer(self, offer_id):
+        """
+        :param offer_id:
+        :return:
+        """
+        payload = {
+            "request": "/v1/offer/status",
+            "nonce": self._nonce,
+            "offer_id": offer_id
+        }
+
+        signed_payload = self._sign_payload(payload)
+        return self._post(url=self.URL + "/offer/status", headers=signed_payload)
+
+    def active_offers(self):
+        """
+        Fetch active_offers
+        :return:
+        """
+        payload = {
+            "request": "/v1/offers",
+            "nonce": self._nonce
+        }
+
+        signed_payload = self._sign_payload(payload)
+        return self._post(url=self.URL + "/offers", headers=signed_payload)
+
+    def balances(self):
+        """
+        Fetch balances
+        :return:
+        """
+        payload = {
+            "request": "/v1/balances",
+            "nonce": self._nonce
+        }
+
+        signed_payload = self._sign_payload(payload)
+        return self._post(self.URL + "/balances", headers=signed_payload)
+
+    def history(self, currency, since=0, until=9999999999, limit=500, wallet='exchange'):
+        """
+        View you balance ledger entries
+        :param currency: currency to look for
+        :param since: Optional. Return only the history after this timestamp.
+        :param until: Optional. Return only the history before this timestamp.
+        :param limit: Optional. Limit the number of entries to return. Default is 500.
+        :param wallet: Optional. Return only entries that took place in this wallet. Accepted inputs are: “trading”,
+        “exchange”, “deposit”.
+        """
+        payload = {
+            "request": "/v1/history",
+            "nonce": self._nonce,
+            "currency": currency,
+            "since": since,
+            "until": until,
+            "limit": limit,
+            "wallet": wallet
+        }
+        signed_payload = self._sign_payload(payload)
+        return self._post(self.URL + "/history", headers=signed_payload)

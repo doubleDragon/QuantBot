@@ -59,12 +59,13 @@ class Bitfinex(Broker):
     def _order_status(self, res):
         # print(res)
 
-        resp = {}
-        resp['order_id'] = res['id']
-        resp['amount'] = float(res['original_amount'])
-        resp['price'] = float(res['price'])
-        resp['deal_amount'] = float(res['executed_amount'])
-        resp['avg_price'] = float(res['avg_execution_price'])
+        resp = {
+            'order_id': res['id'],
+            'amount': float(res['original_amount']),
+            'price': float(res['price']),
+            'deal_amount': float(res['executed_amount']),
+            'avg_price': float(res['avg_execution_price'])
+        }
 
         if res['is_live']:
             resp['status'] = 'OPEN'
@@ -92,7 +93,7 @@ class Bitfinex(Broker):
 
     def get_balances(self):
         """Get balance"""
-        res = self.client.balance()
+        res = self.client.balances()
 
         logging.debug("bitfinex get_balances response: %s" % res)
 
