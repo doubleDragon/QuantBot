@@ -5,6 +5,7 @@ import logging
 import time
 
 from quant import config
+from quant.brokers import broker_factory
 from .basicbot import BasicBot
 
 
@@ -31,13 +32,15 @@ class TriangleArbitrage(BasicBot):
         self.pair_2 = 'Bitfinex_BTC_USD'
         self.monitor_only = monitor_only
 
-        # self.brokers = broker_factory.create_brokers([self.base_pair, self.pair_1, self.pair_2])
-        self.brokers = {}
+        self.brokers = broker_factory.create_brokers([self.base_pair, self.pair_1, self.pair_2])
+
         self.last_trade = 0
         self.min_amount_bch = 0.001
         self.min_amount_btc = 0.005
         # 保留的小树位精度
         self.precision = 2
+
+        self.update_balance()
 
     def is_depths_available(self, depths):
         return self.base_pair in depths and self.pair_1 in depths and self.pair_2 in depths
@@ -197,3 +200,10 @@ class TriangleArbitrage(BasicBot):
                 self.brokers[self.pair_1].buy_limit(hedge_bch_amount, pair1_ask_price)
 
             self.last_trade = time.time()
+
+    def update_balance(self):
+        super(TriangleArbitrage, self).update_balance()
+        for name in self.brokers:
+            broker = self.brokers[name]
+            logging.info("%s btc balance: %s" % (broker.name, broker.btc_available))
+            logging.info("%s bch balance: %s" % (broker.name, broker.bch_available))

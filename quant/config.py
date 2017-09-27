@@ -148,7 +148,7 @@ Viabtc_API_KEY = ''
 Viabtc_SECRET_TOKEN = ''
 
 Liqui_API_KEY = config('LIQUI_API_KEY')
-Liqui_SECRET_TOKEN = config('LIQUI_API_KEY')
+Liqui_SECRET_TOKEN = config('LIQUI_API_SECRET')
 
 
 SUPPORT_ZMQ = False

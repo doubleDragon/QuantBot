@@ -56,9 +56,8 @@ class Bitfinex(Broker):
             symbol=self.pair_code)
         return res['order_id']
 
-    def _order_status(self, res):
-        # print(res)
-
+    @classmethod
+    def _order_status(cls, res):
         resp = {
             'order_id': res['id'],
             'amount': float(res['original_amount']),
@@ -95,7 +94,7 @@ class Bitfinex(Broker):
         """Get balance"""
         res = self.client.balances()
 
-        logging.debug("bitfinex get_balances response: %s" % res)
+        # logging.debug("bitfinex get_balances response: %s" % res)
 
         for entry in res:
             if entry['type'] != 'exchange':

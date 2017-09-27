@@ -115,5 +115,5 @@ class BasicBot(Observer):
                     break
 
     def update_balance(self):
-        for kclient in self.brokers:
-            self.brokers[kclient].get_balances()
+        for broker in self.brokers:
+            self.brokers[broker].get_balances()

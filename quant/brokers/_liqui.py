@@ -95,7 +95,7 @@ class Liqui(Broker):
         res = self.client.balance()
         res = res['return']['funds']
 
-        logging.debug("bitfinex get_balances response: %s" % res)
+        # logging.debug("liqui get_balances response: %s" % res)
 
         for key, value in res.items():
             currency = key
