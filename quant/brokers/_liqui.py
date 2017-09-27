@@ -6,7 +6,7 @@ from quant.api.liqui import PrivateClient as LqClient
 import logging
 
 
-# python3 xrypto/cli.py -m Bitfinex_BCH_BTC get-balance
+# python -m quant.cli -m Bitfinex_BCH_BTC get-balance
 
 class Liqui(Broker):
     def __init__(self, pair_code, api_key=None, api_secret=None):
@@ -20,13 +20,10 @@ class Liqui(Broker):
 
         # self.get_balances()
 
-    def symbol(self):
-        return "%s%s" % (self.market_currency, self.base_currency)
-
     @classmethod
     def get_available_pairs(cls, pair_code):
         """可交易的pair"""
-        if pair_code == 'bccbtc':
+        if pair_code == 'bcc_btc':
             base_currency = 'btc'
             market_currency = 'bcc'
         else:
@@ -38,13 +35,13 @@ class Liqui(Broker):
         Create a buy limit order,
         order_id == 0表示已全部成交
         """
-        resp = self.client.buy(symbol=self.symbol(), price=str(price), amount=str(amount))
+        resp = self.client.buy(symbol=self.pair_code, price=str(price), amount=str(amount))
         if resp and 'return' in resp and 'order_id' in resp['return']:
             return resp['return']['order_id']
 
     def _sell_limit(self, amount, price):
         """Create a sell limit order"""
-        resp = self.client.sell(symbol=self.symbol(), price=str(price), amount=str(amount))
+        resp = self.client.sell(symbol=self.pair_code, price=str(price), amount=str(amount))
         if resp and 'return' in resp and 'order_id' in resp['return']:
             return resp['return']['order_id']
 

@@ -9,11 +9,8 @@ class Bitfinex(Market):
         super(Bitfinex, self).__init__(base_currency, market_currency, pair_code, 0.002)
         self.client = Client()
 
-    def symbol(self):
-        return "%s%s" % (self.market_currency.lower(), self.base_currency.lower())
-
     def update_depth(self):
-        depth_raw = self.client.depth(self.symbol())
+        depth_raw = self.client.depth(self.pair_code)
 
         if depth_raw:
             self.depth = self.format_depth(depth_raw)

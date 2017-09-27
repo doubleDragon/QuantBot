@@ -205,7 +205,5 @@ class TriangleArbitrage(BasicBot):
         super(TriangleArbitrage, self).update_balance()
         for name in self.brokers:
             broker = self.brokers[name]
-            if hasattr(broker, 'btc_available'):
-                logging.info("%s btc balance: %s" % (broker.name, broker.btc_available))
-            if hasattr(broker, 'zec_available'):
-                logging.info("%s zec balance: %s" % (broker.name, broker.zec_available))
+            logging.info("%s btc balance: %s" % (broker.name, broker.btc_available))
+            logging.info("%s zec balance: %s" % (broker.name, broker.zec_available))

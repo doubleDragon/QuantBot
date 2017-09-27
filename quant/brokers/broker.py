@@ -32,13 +32,24 @@ class Broker(object):
         self.bch_balance = 0.
         self.bch_available = 0.
 
+        self.zec_balance = 0.
+        self.zec_available = 0.
+
+        self.usd_balance = 0.
+        self.usd_available = 0.
+
     def __str__(self):
         return "%s: %s" % (self.brief_name, str({"cny_balance": self.cny_balance,
                                                  "cny_available": self.cny_available,
                                                  "btc_balance": self.btc_balance,
                                                  "btc_available": self.btc_available,
                                                  "bch_balance": self.bch_balance,
-                                                 "bch_available": self.bch_available}))
+                                                 "bch_available": self.bch_available,
+                                                 "zec_balance": self.zec_balance,
+                                                 "zec_available": self.zec_available,
+                                                 "usd_balance": self.usd_balance,
+                                                 "usd_available": self.usd_available
+                                                 }))
 
     def buy_limit(self, amount, price, client_id=None):
         if amount > config.RISK_PROTECT_MAX_VOLUMN:

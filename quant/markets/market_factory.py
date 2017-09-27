@@ -33,9 +33,9 @@ def create_markets(exchange_names):
         elif name == "%s_BCC_BTC" % constant.EX_KKEX:
             ex = Kkex('bccbtc')
         elif name == "%s_BCC_BTC" % constant.EX_LQ:
-            ex = Liqui('bccbtc')
+            ex = Liqui('bcc_btc')
         elif name == "%s_EOS_BTC" % constant.EX_LQ:
-            ex = Liqui('eosbtc')
+            ex = Liqui('eos_btc')
         elif name == "%s_BCC_BTC" % constant.EX_HITBITC:
             ex = Hitbtc('bccbtc')
         elif name == "%s_BCC_BTC" % constant.EX_CEX:

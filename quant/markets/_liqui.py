@@ -15,23 +15,20 @@ class Liqui(Market):
 
     @classmethod
     def get_available_pairs(cls, pair_code):
-        if pair_code == 'bccbtc':
+        if pair_code == 'bcc_btc':
             base_currency = 'BTC'
             market_currency = 'BCC'
-        elif pair_code == 'eosbtc':
+        elif pair_code == 'eos_btc':
             base_currency = 'BTC'
             market_currency = 'EOS'
         else:
             assert False
         return base_currency, market_currency
 
-    def symbol(self):
-        return "%s_%s" % (self.market_currency.lower(), self.base_currency.lower())
-
     def update_depth(self):
-        depth_raw = self.client.depth(self.symbol())
-        if depth_raw and self.symbol() in depth_raw:
-            self.depth = self.format_depth(depth_raw[self.symbol()])
+        depth_raw = self.client.depth(self.pair_code)
+        if depth_raw and self.pair_code in depth_raw:
+            self.depth = self.format_depth(depth_raw[self.pair_code])
 
     @classmethod
     def format_depth(cls, depth):
