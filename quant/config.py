@@ -49,6 +49,8 @@ bch_max_tx_volume = 5  # in BCH
 bch_min_tx_volume = 0.5  # in BCH
 bch_frozen_volume = 10
 
+zec_max_tx_volume = 5
+
 price_departure_perc = 0.002 #in BTC 1%
 
 
@@ -141,8 +143,8 @@ BITSTAR_SECRET_TOKEN = ''
 Bitfinex_API_KEY = config('BFX_API_KEY')
 Bitfinex_SECRET_TOKEN = config('BFX_API_SECRET')
 
-Bittrex_API_KEY = ''
-Bittrex_SECRET_TOKEN = ''
+Bittrex_API_KEY = config('BITTREX_API_KEY')
+Bittrex_SECRET_TOKEN = config('BITTREX_API_SECRET')
 
 Viabtc_API_KEY = ''
 Viabtc_SECRET_TOKEN = ''

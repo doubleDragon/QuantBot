@@ -31,7 +31,10 @@ class Bitfinex(Broker):
             market_currency = 'BCH'
         elif pair_code == 'btcusd':
             base_currency = 'USD'
-            market_currency = 'USD'
+            market_currency = 'BTC'
+        elif pair_code == 'zecusd':
+            base_currency = 'USD'
+            market_currency = 'ZEC'
         else:
             assert False
         return base_currency, market_currency
@@ -94,7 +97,9 @@ class Bitfinex(Broker):
         """Get balance"""
         res = self.client.balances()
 
-        # logging.debug("bitfinex get_balances response: %s" % res)
+        logging.debug("bitfinex get_balances response: %s" % res)
+        if not res:
+            return
 
         for entry in res:
             if entry['type'] != 'exchange':
@@ -110,6 +115,10 @@ class Bitfinex(Broker):
                 self.bch_balance = float(entry['amount'])
 
             elif currency == 'BTC':
+                self.btc_available = float(entry['available'])
+                self.btc_balance = float(entry['amount'])
+
+            elif currency == 'ZEC':
                 self.btc_available = float(entry['available'])
                 self.btc_balance = float(entry['amount'])
         return res

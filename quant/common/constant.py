@@ -27,6 +27,7 @@ EX_CEX = 'Cex'
 EX_EXMO = 'exmo'
 EX_KKEX = 'Kkex'
 EX_HITBITC = 'Hitbtc'
+EX_BITTREX = 'Bittrex'
 
 EX_SET = (
     EX_OKEX,
@@ -35,7 +36,8 @@ EX_SET = (
     EX_GDAX,
     EX_BINANCE,
     EX_CEX,
-    EX_EXMO
+    EX_EXMO,
+    EX_BITTREX
 )
 
 """

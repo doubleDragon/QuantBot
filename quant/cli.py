@@ -12,6 +12,7 @@ from quant.datafeed import DataFeed
 from quant.observers.t_bitfinex import TrigangularArbitrer_Bitfinex
 from quant.observers.triangle_arbitrage_bch import TriangleArbitrage as TriangleArbitrageBch
 from quant.observers.triangle_arbitrage_eos import TriangleArbitrage as TriangleArbitrageEos
+from quant.observers.triangle_arbitrage_zec import TriangleArbitrage as TriangleArbitrageZec
 
 from quant.brokers import broker_factory
 from quant.snapshot import Snapshot
@@ -100,6 +101,8 @@ class CLI(object):
                 self.register_t_triangle_arbitrage_bch()
             if "t-watch-triangle-arbitrage-eos" in args.command:
                 self.register_t_triangle_arbitrage_eos()
+            if "t-watch-triangle-arbitrage-zec" in args.command:
+                self.register_t_triangle_arbitrage_zec()
 
         self.data_feed.run_loop()
 
@@ -133,6 +136,10 @@ class CLI(object):
 
     def register_t_triangle_arbitrage_eos(self):
         _observer = TriangleArbitrageEos(monitor_only=True)
+        self.data_feed.register_observer(_observer)
+
+    def register_t_triangle_arbitrage_zec(self):
+        _observer = TriangleArbitrageZec(monitor_only=True)
         self.data_feed.register_observer(_observer)
 
     def register_t_bitfinex_bcc(self):

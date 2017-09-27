@@ -6,6 +6,7 @@ from ._kkex import Kkex
 from ._liqui import Liqui
 from ._hitbtc import Hitbtc
 from ._cex import Cex
+from ._bittrex import Bittrex
 
 
 def create_markets(exchange_names):
@@ -19,6 +20,8 @@ def create_markets(exchange_names):
     for name in exchange_names:
         if name == "%s_BCH_USD" % constant.EX_BFX:
             ex = Bitfinex('bchusd')
+        elif name == "%s_ZEC_USD" % constant.EX_BFX:
+            ex = Bitfinex('zecusd')
         elif name == "%s_BCH_BTC" % constant.EX_BFX:
             ex = Bitfinex('bchbtc')
         elif name == "%s_BTC_USD" % constant.EX_BFX:
@@ -37,6 +40,8 @@ def create_markets(exchange_names):
             ex = Hitbtc('bccbtc')
         elif name == "%s_BCC_BTC" % constant.EX_CEX:
             ex = Cex('bccbtc')
+        elif name == "%s_ZEC_BTC" % constant.EX_BITTREX:
+            ex = Bittrex('BTC-ZEC')
         else:
             logging.warn('Exchange ' + name + ' not supported!')
             assert False
