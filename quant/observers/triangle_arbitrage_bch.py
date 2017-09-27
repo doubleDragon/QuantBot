@@ -40,12 +40,11 @@ class TriangleArbitrage(BasicBot):
         # 保留的小树位精度
         self.precision = 2
 
-        self.update_balance()
-
     def is_depths_available(self, depths):
         return self.base_pair in depths and self.pair_1 in depths and self.pair_2 in depths
 
     def tick(self, depths):
+        self.update_balance()
         if not self.is_depths_available(depths):
             # logging.debug("depths is not available")
             return
