@@ -107,18 +107,22 @@ class Bitfinex(Broker):
 
             currency = entry['currency'].upper()
             if currency not in (
-                    'BTC', 'BCH'):
+                    'btc', 'bch', 'usd'):
                 continue
 
-            if currency == 'BCH':
+            if currency == 'bch':
                 self.bch_available = float(entry['available'])
                 self.bch_balance = float(entry['amount'])
 
-            elif currency == 'BTC':
+            elif currency == 'btc':
                 self.btc_available = float(entry['available'])
                 self.btc_balance = float(entry['amount'])
 
-            elif currency == 'ZEC':
+            elif currency == 'zec':
+                self.btc_available = float(entry['available'])
+                self.btc_balance = float(entry['amount'])
+
+            elif currency == 'usd':
                 self.btc_available = float(entry['available'])
                 self.btc_balance = float(entry['amount'])
         return res

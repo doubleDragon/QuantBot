@@ -77,16 +77,18 @@ class TriangleArbitrage(BasicBot):
         hedge_bch_amount = min(hedge_bch_amount, pair_2to1_bch_amount)
         hedge_bch_amount = min(max_trade_amount, hedge_bch_amount)
 
-        if hedge_bch_amount < self.min_amount_bch:
-            """bitfinex限制bch_usd最小可交易的bch order size为0.001"""
-            logging.info('hedge_bch_amount is too small! %s' % hedge_bch_amount)
-            return
+        """base最多能买多少个bch, pair1 最多能卖多少个bch"""
+        hedge_bch_amount_max = min(self.brokers[self.pair_1].bch_available,
+                                   self.brokers[self.base_pair].usd_available * base_pair_ask_price)
+        hedge_bch_amount = min(hedge_bch_amount, hedge_bch_amount_max)
 
         hedge_btc_amount = hedge_bch_amount * pair1_bid_price
-        if hedge_btc_amount < self.min_amount_btc:
-            """bitfinex限制btc_usd最小可交易amount为0.005, liqui限制单次交易btc的amount为0.0001, 所以这里取0.005"""
-            logging.info('hedge_btc_amount is too small! %s' % hedge_btc_amount)
-            return
+
+        """pair2 最多能卖多少个btc"""
+        hedge_btc_amount_max = self.brokers[self.pair_2].btc_available
+        hedge_btc_amount = min(hedge_btc_amount, hedge_btc_amount_max)
+
+        logging.info("balance allow sell or buy bch: %s,  btc: %s" % (hedge_bch_amount_max, hedge_btc_amount_max))
 
         """合成后的价格对标bch_usd, 以目前的bfx的价格设置小数位保留2位比较合适"""
         synthetic_bid_price = round(pair1_bid_price * pair2_bid_price, self.precision)
@@ -98,6 +100,17 @@ class TriangleArbitrage(BasicBot):
         p_diff = synthetic_bid_price - t_price
         profit = p_diff * hedge_bch_amount
         logging.info('profit=%s' % profit)
+
+        if hedge_bch_amount < self.min_amount_bch:
+            """bitfinex限制bch_usd最小可交易的bch order size为0.001"""
+            logging.info('hedge_bch_amount is too small! %s' % hedge_bch_amount)
+            return
+
+        if hedge_btc_amount < self.min_amount_btc:
+            """bitfinex限制btc_usd最小可交易amount为0.005, liqui限制单次交易btc的amount为0.0001, 所以这里取0.005"""
+            logging.info('hedge_btc_amount is too small! %s' % hedge_btc_amount)
+            return
+
         if profit > 0:
             logging.info("find t!!!: p_diff:%s synthetic_bid_price: %s  base_pair_ask_price: %s t_price: %s" % (
                 p_diff,
@@ -151,27 +164,35 @@ class TriangleArbitrage(BasicBot):
         hedge_bch_amount = min(hedge_bch_amount, pair_2to1_bch_amount)
         hedge_bch_amount = min(max_trade_amount, hedge_bch_amount)
 
-        if hedge_bch_amount < self.min_amount_bch:
-            """bfx限制bch最小订单数量为0.001"""
-            logging.info('hedge_bch_amount is too small! %s' % hedge_bch_amount)
-            return
+        """base最多能卖多少个bch, pair1 最多能买多少个bch"""
+        hedge_bch_amount_max = min(self.brokers[self.base_pair].bch_available,
+                                   self.brokers[self.pair_1].btc_available * pair1_ask_price)
+        hedge_bch_amount = min(hedge_bch_amount, hedge_bch_amount_max)
 
         hedge_btc_amount = hedge_bch_amount * pair1_ask_price
-        if hedge_btc_amount < self.min_amount_btc:
-            """lq限制最小btc的total为0.0001, bfx的bch_usd交易订单限制amount为0.005"""
-            logging.info('hedge_btc_amount is too small! %s' % hedge_btc_amount)
-            return
+        """pair2 最多能买多少个btc"""
+        hedge_btc_amount_max = self.brokers[self.pair_2].usd_available * pair2_ask_price
+        hedge_btc_amount = min(hedge_btc_amount, hedge_btc_amount_max)
 
+        """计算合成价和t_price"""
         synthetic_ask_price = round(pair1_ask_price * pair2_ask_price, self.precision)
-
         t_price = round(base_pair_bid_price * config.TFEE * config.Diff, self.precision)
         logging.info("synthetic_ask_price: %s t_price:%s" % (synthetic_ask_price, t_price))
 
         """bch_usd卖，合成价格买, 所以p_diff=base价-合成价"""
         p_diff = t_price - synthetic_ask_price
-
         profit = round(p_diff * hedge_bch_amount, self.precision)
         logging.info('profit=%s' % profit)
+
+        if hedge_bch_amount < self.min_amount_bch:
+            """bfx限制bch最小订单数量为0.001"""
+            logging.info('hedge_bch_amount is too small! %s' % hedge_bch_amount)
+            return
+
+        if hedge_btc_amount < self.min_amount_btc:
+            """lq限制最小btc的total为0.0001, bfx的bch_usd交易订单限制amount为0.005"""
+            logging.info('hedge_btc_amount is too small! %s' % hedge_btc_amount)
+            return
 
         if profit > 0:
             logging.info("find t!!!: p_diff:%s synthetic_ask_price: %s  base_pair_bid_price: %s t_price: %s" % (
