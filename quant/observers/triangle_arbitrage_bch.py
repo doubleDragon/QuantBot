@@ -43,6 +43,11 @@ class TriangleArbitrage(BasicBot):
         self.profit_trigger = 1.5
         self.skip = False
 
+        # 分别的手续费
+        self.fee_base = 0.2
+        self.fee_pair1 = 0.25
+        self.fee_pair2 = 0.2
+
     def is_depths_available(self, depths):
         return self.base_pair in depths and self.pair_1 in depths and self.pair_2 in depths
 
@@ -114,10 +119,13 @@ class TriangleArbitrage(BasicBot):
             logging.info("forward======>hedge_btc_amount is too small! %s" % hedge_btc_amount)
             return
 
-        profit = p_diff * hedge_bch_amount
+        """profit为去除交易手续费后交易hedge_bch_amount的赢利"""
+        t_price = round(synthetic_bid_price * (1 - self.fee_pair2) - base_pair_ask_price * (1 + self.fee_base),
+                        self.precision)
+        profit = round(t_price * hedge_bch_amount, self.precision)
         if profit > 0:
-            logging.info("forward======>find profit!!!: profit:%s,  bch amount: %s and btc amount: %s" %
-                         (profit, hedge_bch_amount, hedge_btc_amount))
+            logging.info("forward======>find profit!!!: profit:%s,  bch amount: %s and btc amount: %s,  t_price: %s" %
+                         (profit, hedge_bch_amount, hedge_btc_amount, t_price))
             if profit < self.profit_trigger:
                 logging.warn("forward profit should >= %s usd" % self.profit_trigger)
                 return
@@ -197,17 +205,18 @@ class TriangleArbitrage(BasicBot):
             logging.info("reverse======>hedge_btc_amount is too small! %s" % hedge_btc_amount)
             return
 
-        profit = round(p_diff * hedge_bch_amount, self.precision)
-        logging.info('profit=%s' % profit)
+        t_price = round(base_pair_bid_price * (1 - self.fee_base) - synthetic_ask_price * (1 + self.fee_pair2),
+                        self.precision)
+        profit = round(t_price * hedge_bch_amount, self.precision)
         if profit > 0:
-            logging.info("reverse======>find profit!!!: profit:%s,  bch amount: %s and btc amount: %s" %
-                         (profit, hedge_bch_amount, hedge_btc_amount))
+            logging.info("reverse======>find profit!!!: profit:%s,  bch amount: %s and btc amount: %s, t_price: %s" %
+                         (profit, hedge_bch_amount, hedge_btc_amount, t_price))
             if profit < self.profit_trigger:
                 logging.warn("reverse======>profit should >= %s usd" % self.profit_trigger)
                 return
 
             current_time = time.time()
-            if current_time - self.last_trade < 10:
+            if current_time - self.last_trade < 5:
                 logging.warn("reverse======>Can't automate this trade, last trade " +
                              "occured %.2f seconds ago" %
                              (current_time - self.last_trade))
