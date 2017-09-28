@@ -80,7 +80,7 @@ class TriangleArbitrage(BasicBot):
         if pair1_bid_price == 0:
             return
 
-        pair_2to1_bch_amount = pair2_bid_amount / pair1_bid_price
+        pair_2to1_bch_amount = round(pair2_bid_amount / pair1_bid_price, 8)
 
         """市场限制base最多能买多少个bch, pair1 最多能卖多少个bch, 并且在上线和下线范围内[5, 0.05]"""
         max_trade_amount = config.bch_max_tx_volume
@@ -163,7 +163,7 @@ class TriangleArbitrage(BasicBot):
         if pair1_ask_price == 0 or pair2_ask_price == 0:
             return
 
-        pair_2to1_bch_amount = pair2_ask_amount / pair1_ask_price
+        pair_2to1_bch_amount = round(pair2_ask_amount / pair1_ask_price, 8)
 
         """市场限制base最多能卖多少个bch, pair1 最多能买多少个bch, 并且在上线和下线范围内[5, 0.05]"""
         max_trade_amount = config.bch_max_tx_volume
