@@ -97,7 +97,7 @@ class Bitfinex(Broker):
         """Get balance"""
         res = self.client.balances()
 
-        logging.debug("bitfinex get_balances response: %s" % res)
+        # logging.debug("bitfinex get_balances response: %s" % res)
         if not res:
             return
 

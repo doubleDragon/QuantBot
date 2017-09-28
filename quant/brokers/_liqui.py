@@ -65,7 +65,7 @@ class Liqui(Broker):
         return resp
 
     def _get_order(self, order_id):
-        res = self.client.get_order(str(order_id))
+        res = self.client.get_order(int(order_id))
         logging.info('get_order: %s' % res)
 
         r_id = None
@@ -90,9 +90,10 @@ class Liqui(Broker):
     def _get_balances(self):
         """Get balance"""
         res = self.client.balance()
-        res = res['return']['funds']
-
         # logging.debug("liqui get_balances response: %s" % res)
+        if not res or 'return' not in res:
+            return
+        res = res['return']['funds']
 
         for key, value in res.items():
             currency = key

@@ -26,7 +26,7 @@ observers = ["Logger"]
 
 market_expiration_time = 120  # in seconds: 2 minutes
 
-refresh_rate = 5
+refresh_rate = 2
 
 trade_wait = 10
 
@@ -46,7 +46,7 @@ LIQUID_HEDGE_MIN_AMOUNT = 0.01
 btc_profit_thresh = 0.001  # in BTC
 btc_perc_thresh = 0.01  # in 0.01%
 bch_max_tx_volume = 5  # in BCH
-bch_min_tx_volume = 0.5  # in BCH
+bch_min_tx_volume = 0.05  # in BCH
 bch_frozen_volume = 10
 
 zec_max_tx_volume = 5
