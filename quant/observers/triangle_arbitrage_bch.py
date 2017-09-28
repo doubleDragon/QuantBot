@@ -44,9 +44,9 @@ class TriangleArbitrage(BasicBot):
         self.skip = False
 
         # 分别的手续费
-        self.fee_base = 0.2
-        self.fee_pair1 = 0.25
-        self.fee_pair2 = 0.2
+        self.fee_base = 0.002
+        self.fee_pair1 = 0.0025
+        self.fee_pair2 = 0.002
 
     def is_depths_available(self, depths):
         return self.base_pair in depths and self.pair_1 in depths and self.pair_2 in depths
@@ -119,15 +119,19 @@ class TriangleArbitrage(BasicBot):
             logging.info("forward======>hedge_btc_amount is too small! %s" % hedge_btc_amount)
             return
 
-        """profit为去除交易手续费后交易hedge_bch_amount的赢利"""
-        t_price = round(synthetic_bid_price * (1 - self.fee_pair2) - base_pair_ask_price * (1 + self.fee_base),
+        """
+        计算的关键点在于bcc和btc的买卖amount除去手续费后是相同的，也就是进行一个循环交易后bcc和btc的总量是不变的, 变的是usd
+        profit=去除交易手续费后交易hedge_bch_amount的赢利
+        """
+        t_price = round(synthetic_bid_price * (1 - self.fee_pair2) * (1 - self.fee_pair1)
+                        - base_pair_ask_price * (1 + self.fee_base),
                         self.precision)
         profit = round(t_price * hedge_bch_amount, self.precision)
         if profit > 0:
             logging.info("forward======>find profit!!!: profit:%s,  bch amount: %s and btc amount: %s,  t_price: %s" %
                          (profit, hedge_bch_amount, hedge_btc_amount, t_price))
             if profit < self.profit_trigger:
-                logging.warn("forward profit should >= %s usd" % self.profit_trigger)
+                logging.warn("forward======>profit should >= %s usd" % self.profit_trigger)
                 return
 
             current_time = time.time()
@@ -139,9 +143,10 @@ class TriangleArbitrage(BasicBot):
 
             if not self.monitor_only:
                 logging.info("forward======>Ready to trade")
-                self.new_order(market=self.base_pair, order_type='buy', amount=hedge_bch_amount,
+                self.new_order(market=self.base_pair, order_type='buy', amount=hedge_bch_amount * (1 + self.fee_base),
                                price=base_pair_ask_price)
-                self.new_order(market=self.pair_1, order_type='sell', amount=hedge_bch_amount, price=pair1_bid_price)
+                self.new_order(market=self.pair_1, order_type='sell',
+                               amount=hedge_bch_amount, price=pair1_bid_price)
                 self.new_order(market=self.pair_2, order_type='sell', amount=hedge_bch_amount, price=pair2_bid_price)
                 self.skip = True
 
@@ -205,7 +210,12 @@ class TriangleArbitrage(BasicBot):
             logging.info("reverse======>hedge_btc_amount is too small! %s" % hedge_btc_amount)
             return
 
-        t_price = round(base_pair_bid_price * (1 - self.fee_base) - synthetic_ask_price * (1 + self.fee_pair2),
+        """
+        计算的关键点在于bcc和btc的买卖amount除去手续费后是相同的，也就是进行一个循环交易后bcc和btc的总量是不变的, 变的是usd
+        profit=去除交易手续费后交易hedge_bch_amount的赢利
+        """
+        t_price = round(base_pair_bid_price * (1 - self.fee_base) -
+                        synthetic_ask_price * (1 + self.fee_pair2) * (1 + self.fee_pair1),
                         self.precision)
         profit = round(t_price * hedge_bch_amount, self.precision)
         if profit > 0:
