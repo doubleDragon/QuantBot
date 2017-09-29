@@ -88,11 +88,13 @@ class TriangleArbitrage(BasicBot):
         pair_2to1_bch_amount = round(pair2_bid_amount / pair1_bid_price, 8)
 
         """市场限制base最多能买多少个bch, pair1 最多能卖多少个bch, 并且在上线和下线范围内[5, 0.05]"""
+        """吃单50%, 两个目的：1，增加成交几率； 2，避免委单的手续费部分不能成交"""
         max_trade_amount = config.bch_max_tx_volume
         min_trade_amount = config.bch_min_tx_volume
         hedge_bch_amount_market = min(base_pair_ask_amount, pair1_bid_amount)
         hedge_bch_amount_market = min(hedge_bch_amount_market, pair_2to1_bch_amount)
         hedge_bch_amount_market = min(max_trade_amount, hedge_bch_amount_market)
+        hedge_bch_amount_market = hedge_bch_amount_market / 2
         hedge_btc_amount_market = round(hedge_bch_amount_market * pair1_bid_price, 8)
 
         """余额限制base最多能买多少个bch, pair1 最多能卖多少个bch"""
@@ -143,11 +145,14 @@ class TriangleArbitrage(BasicBot):
 
             if not self.monitor_only:
                 logging.info("forward======>Ready to trade")
-                self.new_order(market=self.base_pair, order_type='buy', amount=hedge_bch_amount * (1 + self.fee_base),
+                amount_base = hedge_bch_amount * (1 + self.fee_base)
+                amount_pair2 = hedge_bch_amount * pair1_bid_price * (1 - self.fee_pair1)
+                self.new_order(market=self.base_pair, order_type='buy', amount=amount_base,
                                price=base_pair_ask_price)
                 self.new_order(market=self.pair_1, order_type='sell',
                                amount=hedge_bch_amount, price=pair1_bid_price)
-                self.new_order(market=self.pair_2, order_type='sell', amount=hedge_bch_amount, price=pair2_bid_price)
+                self.new_order(market=self.pair_2, order_type='sell', amount=amount_pair2,
+                               price=pair2_bid_price)
                 self.skip = True
 
             self.last_trade = time.time()
@@ -184,6 +189,7 @@ class TriangleArbitrage(BasicBot):
         hedge_bch_amount_market = min(base_pair_bid_amount, pair1_ask_amount)
         hedge_bch_amount_market = min(hedge_bch_amount_market, pair_2to1_bch_amount)
         hedge_bch_amount_market = min(max_trade_amount, hedge_bch_amount_market)
+        hedge_bch_amount_market = hedge_bch_amount_market / 2
         hedge_btc_amount_market = round(hedge_bch_amount_market * pair1_ask_price, 8)
 
         """余额限制base最多能卖多少个bch, pair1 最多能买多少个bch"""
@@ -233,10 +239,12 @@ class TriangleArbitrage(BasicBot):
                 return
             if not self.monitor_only:
                 logging.info("reverse======>Ready to trade")
+                amount_pair1 = hedge_bch_amount * (1 + self.fee_pair1)
+                amount_pair2 = hedge_bch_amount * pair1_ask_price * (1 + self.fee_pair2) * (1 + self.fee_pair1)
                 self.new_order(market=self.base_pair, order_type='sell', amount=hedge_bch_amount,
                                price=base_pair_bid_price)
-                self.new_order(market=self.pair_1, order_type='buy', amount=hedge_bch_amount, price=pair1_ask_price)
-                self.new_order(market=self.pair_2, order_type='buy', amount=hedge_bch_amount, price=pair2_ask_price)
+                self.new_order(market=self.pair_1, order_type='buy', amount=amount_pair1, price=pair1_ask_price)
+                self.new_order(market=self.pair_2, order_type='buy', amount=amount_pair2, price=pair2_ask_price)
                 self.skip = True
 
             self.last_trade = time.time()
