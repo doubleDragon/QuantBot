@@ -152,6 +152,8 @@ Viabtc_SECRET_TOKEN = ''
 Liqui_API_KEY = config('LIQUI_API_KEY')
 Liqui_SECRET_TOKEN = config('LIQUI_API_SECRET')
 
+Binance_API_KEY = ''
+Binance_SECRET_TOKEN = ''
 
 SUPPORT_ZMQ = False
 ZMQ_HOST = "127.0.0.1"

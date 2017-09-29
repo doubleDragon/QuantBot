@@ -7,6 +7,7 @@ from ._liqui import Liqui
 from ._hitbtc import Hitbtc
 from ._cex import Cex
 from ._bittrex import Bittrex
+from ._binance import Binance
 
 
 def create_markets(exchange_names):
@@ -42,19 +43,29 @@ def create_markets(exchange_names):
             ex = Cex('bccbtc')
         elif name == "%s_ZEC_BTC" % constant.EX_BITTREX:
             ex = Bittrex('BTC-ZEC')
+        elif name == "%s_BCC_BTC" % constant.EX_BINANCE:
+            ex = Binance('BCCBTC')
+        elif name == "%s_ETH_BTC" % constant.EX_BINANCE:
+            ex = Binance('ETHBTC')
+        elif name == "%s_BNB_BTC" % constant.EX_BINANCE:
+            ex = Binance('BNBBTC')
+        elif name == "%s_BNB_ETH" % constant.EX_BINANCE:
+            ex = Binance('BNBETH')
+        elif name == "%s_MCO_BTC" % constant.EX_BINANCE:
+            ex = Binance('MCOBTC')
+        elif name == "%s_MCO_ETH" % constant.EX_BINANCE:
+            ex = Binance('MCOETH')
+        elif name == "%s_QTUM_BTC" % constant.EX_BINANCE:
+            ex = Binance('QTUMBTC')
+        elif name == "%s_QTUM_ETH" % constant.EX_BINANCE:
+            ex = Binance('QTUMETH')
+        elif name == "%s_WTC_BTC" % constant.EX_BINANCE:
+            ex = Binance('WTCBTC')
+        elif name == "%s_WTC_ETH" % constant.EX_BINANCE:
+            ex = Binance('WTCETH')
         else:
             logging.warn('Exchange ' + name + ' not supported!')
             assert False
-        # if name == "Bitfinex_BCH_USD":
-        #     ex = Bitfinex('bchusd')
-        # elif name == "Bitfinex_BCH_BTC":
-        #     ex = Bitfinex('bchbtc')
-        # elif name == "Bitfinex_BTC_USD":
-        #     ex = Bitfinex('btcusd')
-        # else:
-        #     logging.warn('Exchange ' + name + ' not supported!')
-        #     assert False
-
         ex.name = name
 
         logging.info('%s market initialized' % ex.name)

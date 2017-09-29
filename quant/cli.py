@@ -9,10 +9,10 @@ import sys
 import time
 
 from quant.datafeed import DataFeed
-from quant.observers.t_bitfinex import TrigangularArbitrer_Bitfinex
 from quant.observers.triangle_arbitrage_bch import TriangleArbitrage as TriangleArbitrageBch
 from quant.observers.triangle_arbitrage_eos import TriangleArbitrage as TriangleArbitrageEos
 from quant.observers.triangle_arbitrage_zec import TriangleArbitrage as TriangleArbitrageZec
+from quant.observers.t_bfx_binance_bch import TriangleArbitrage as TriangleArbitrageBfxBch
 
 from quant.brokers import broker_factory
 from quant.snapshot import Snapshot
@@ -95,8 +95,8 @@ class CLI(object):
             pass
         else:
             self.create_data_feed(args)
-            if "t-watch-bitfinex-bch" in args.command:
-                self.register_t_bitfinex_bcc()
+            if "t-watch-bitfinex-binance-bch" in args.command:
+                self.register_t_bitfinex_binance_bch()
             if "t-watch-triangle-arbitrage-bch" in args.command:
                 self.register_t_triangle_arbitrage_bch()
             if "t-watch-triangle-arbitrage-eos" in args.command:
@@ -129,6 +129,10 @@ class CLI(object):
             snapshot.snapshot_balance('ALL', total_btc, total_bch)
 
             time.sleep(60 * 10)
+
+    def register_t_bitfinex_binance_bch(self):
+        _observer = TriangleArbitrageBfxBch(monitor_only=True)
+        self.data_feed.register_observer(_observer)
 
     def register_t_triangle_arbitrage_bch(self):
         _observer = TriangleArbitrageBch(monitor_only=True)

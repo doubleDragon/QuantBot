@@ -18,13 +18,13 @@ ORDER_STATE_PENDING = 1
 ORDER_STATE_CLOSED = 2
 ORDER_STATE_CANCELED = 4
 
-EX_OKEX = 'okex'
+EX_OKEX = 'Okex'
 EX_BFX = 'Bitfinex'
 EX_LQ = 'Liqui'
-EX_GDAX = 'gdax'
-EX_BINANCE = 'binance'
+EX_GDAX = 'Gdax'
+EX_BINANCE = 'Binance'
 EX_CEX = 'Cex'
-EX_EXMO = 'exmo'
+EX_EXMO = 'Exmo'
 EX_KKEX = 'Kkex'
 EX_HITBITC = 'Hitbtc'
 EX_BITTREX = 'Bittrex'
