@@ -120,8 +120,6 @@ class TriangleArbitrage(BasicBot):
         if self.monitor_only:
             hedge_quote_amount = hedge_quote_amount_market
             hedge_mid_amount = round(hedge_quote_amount * pair1_bid_price, 8)
-            logging.debug("hedge_quote_amount_market: %s,   hedge_mid_amount_market: %s" %
-                          (hedge_quote_amount_market, hedge_mid_amount_market))
             if hedge_quote_amount < self.min_amount_market:
                 """bitfinex限制bch_usd最小可交易的bch order size为0.001"""
                 logging.info("forward======>hedge_quote_amount is too small! %s" % hedge_quote_amount)
@@ -166,10 +164,12 @@ class TriangleArbitrage(BasicBot):
         logging.info("forward======>base_pair_ask_price_real: %s,  synthetic_bid_price_real: %s, [%s, %s]" %
                      (base_pair_ask_price_real, synthetic_bid_price_real, pair1_bid_price_real, pair2_bid_price_real))
         t_price = round(synthetic_bid_price_real - base_pair_ask_price_real, self.precision)
+        """差价百分比"""
+        t_price_percent = round(t_price / base_pair_ask_price_real * 100, 2)
         profit = round(t_price * hedge_quote_amount, self.precision)
-        logging.info("forward======>t_price: %s,  profit: %s" % (t_price, profit))
+        logging.info("forward======>t_price: %s, t_price_percent: %s, profit: %s" % (t_price,t_price_percent, profit))
         if profit > 0:
-            logging.info("forward======>find profit!!!: profit:%s,  quote amount: %s and btc amount: %s,  t_price: %s" %
+            logging.info("forward======>find profit!!!: profit:%s,  quote amount: %s and mid amount: %s,  t_price: %s" %
                          (profit, hedge_quote_amount, hedge_mid_amount, t_price))
             if profit < self.profit_trigger:
                 logging.warn("forward======>profit should >= %s usd" % self.profit_trigger)
@@ -278,10 +278,11 @@ class TriangleArbitrage(BasicBot):
         logging.info("reverse======>base_pair_bid_price_real: %s,  synthetic_ask_price_real: %s, [%s, %s]" %
                      (base_pair_bid_price_real, synthetic_ask_price_real, pair1_ask_price_real, pair2_ask_price_real))
         t_price = round(base_pair_bid_price_real - synthetic_ask_price_real, self.precision)
+        t_price_percent = round(t_price / synthetic_ask_price_real * 100, 2)
         profit = round(t_price * hedge_quote_amount, self.precision)
-        logging.info("reverse======>t_price: %s,  profit: %s" % (t_price, profit))
+        logging.info("reverse======>t_price: %s, t_price_percent: %s, profit: %s" % (t_price, t_price_percent, profit))
         if profit > 0:
-            logging.info("reverse======>find profit!!!: profit:%s,  bch amount: %s and btc amount: %s, t_price: %s" %
+            logging.info("reverse======>find profit!!!: profit:%s,  quote amount: %s and mid amount: %s, t_price: %s" %
                          (profit, hedge_quote_amount, hedge_mid_amount, t_price))
             if profit < self.profit_trigger:
                 logging.warn("reverse======>profit should >= %s usd" % self.profit_trigger)

@@ -217,13 +217,13 @@ class CLI(object):
                 self.register_t_bfx_bn_bfx('BTC', 'IOTA', 'ETH', **kwargs)
             if "t-watch-bfx-bn-bfx-usd-iota-btc" in args.command:
                 kwargs = {
-                    "precision": 2,
+                    "precision": 4,
                     "fee_base": 0.002,
                     "fee_pair1": 0.001,
                     "fee_pair2": 0.002,
                     "min_amount_market": 0.1,
                     "min_amount_mid": 0.005,
-                    "max_trade_amount": 20,
+                    "max_trade_amount": 80,
                     "min_trade_amount": 0.1,
                 }
                 self.register_t_bfx_bn_bfx('USD', 'IOTA', 'BTC', **kwargs)
