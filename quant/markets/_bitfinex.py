@@ -23,7 +23,13 @@ class Bitfinex(Market):
 
     @classmethod
     def get_available_pairs(cls, pair_code):
-        if pair_code == 'bchbtc':
+        if pair_code == 'ethusd':
+            base_currency = 'USD'
+            market_currency = 'ETH'
+        elif pair_code == 'ethbtc':
+            base_currency = 'BTC'
+            market_currency = 'ETH'
+        elif pair_code == 'bchbtc':
             base_currency = 'BTC'
             market_currency = 'BCH'
         elif pair_code == 'btcusd':
@@ -38,6 +44,21 @@ class Bitfinex(Market):
         elif pair_code == 'zecusd':
             base_currency = 'USD'
             market_currency = 'ZEC'
+        elif pair_code == 'neousd':
+            base_currency = 'USD'
+            market_currency = 'NEO'
+        elif pair_code == 'neobtc':
+            base_currency = 'BTC'
+            market_currency = 'NEO'
+        elif pair_code == 'neoeth':
+            base_currency = 'ETH'
+            market_currency = 'NEO'
+        elif pair_code == 'iotusd':
+            base_currency = 'USD'
+            market_currency = 'IOT'
+        elif pair_code == 'iotbtc':
+            base_currency = 'BTC'
+            market_currency = 'IOT'
         else:
             assert False
         return base_currency, market_currency

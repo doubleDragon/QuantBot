@@ -124,6 +124,18 @@ class Binance(Broker):
         elif pair_code == 'WTCETH':
             base_currency = 'ETH'
             market_currency = 'WTC'
+        elif pair_code == 'NEOBTC':
+            base_currency = 'BTC'
+            market_currency = 'NEO'
+        elif pair_code == 'NEOETH':
+            base_currency = 'ETH'
+            market_currency = 'NEO'
+        elif pair_code == 'IOTAETH':
+            base_currency = 'ETH'
+            market_currency = 'IOTA'
+        elif pair_code == 'IOTABTC':
+            base_currency = 'BTC'
+            market_currency = 'IOTA'
         else:
             assert False
         return base_currency, market_currency

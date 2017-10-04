@@ -11,41 +11,45 @@ from .basicbot import BasicBot
 
 class TriangleArbitrage(BasicBot):
     """
-    python -m quant.cli -mBitfinex_BCH_USD,Binance_BCC_BTC,Bitfinex_BTC_USD t-watch-bitfinex-binance-bch -d
+    python -m quant.cli -mBinance_WTC_BTC,Binance_WTC_ETH,Binance_ETH_BTC t-watch-binance-wtc -v
+    python -m quant.cli -mBinance_BNB_BTC,Binance_BNB_ETH,Binance_ETH_BTC t-watch-binance-bnb -v
+    python -m quant.cli -mBinance_MCO_BTC,Binance_MCO_ETH,Binance_ETH_BTC t-watch-binance-mco -v
+    python -m quant.cli -mBinance_QTUM_BTC,Binance_QTUM_ETH,Binance_ETH_BTC t-watch-binance-qtum -v
+    python -m quant.cli -mBinance_NEO_BTC,Binance_NEO_ETH,Binance_ETH_BTC t-watch-binance-neo -v
     Bitfinex Binance bch triangle arbitrage
     """
 
-    def __init__(self, monitor_only=False):
+    def __init__(self, base_pair, pair1, pair2, monitor_only=False):
         super(TriangleArbitrage, self).__init__()
 
-        self.base_pair = 'Bitfinex_BCH_USD'
-        self.pair_1 = 'Binance_BCC_BTC'
-        self.pair_2 = 'Bitfinex_BTC_USD'
+        self.base_pair = base_pair
+        self.pair_1 = pair1
+        self.pair_2 = pair2
         self.monitor_only = monitor_only
 
         self.brokers = broker_factory.create_brokers([self.base_pair, self.pair_1, self.pair_2])
 
         self.last_trade = 0
-        self.min_amount_bch = 0.001
+        self.min_amount_bch = 0.0001
         self.min_amount_btc = 0.005
         # 保留的小树位精度
-        self.precision = 2
+        self.precision = 8
         # 赢利触发点
         self.profit_trigger = 1.5
         self.skip = False
 
         # 分别的手续费
-        self.fee_base = 0.002
+        self.fee_base = 0.001
         self.fee_pair1 = 0.001
-        self.fee_pair2 = 0.002
+        self.fee_pair2 = 0.001
 
     def is_depths_available(self, depths):
         return self.base_pair in depths and self.pair_1 in depths and self.pair_2 in depths
 
     def tick(self, depths):
-        self.update_balance()
+        if not self.monitor_only:
+            self.update_balance()
         if not self.is_depths_available(depths):
-            # logging.debug("depths is not available")
             return
         self.skip = False
         self.forward(depths)

@@ -151,6 +151,6 @@ class DataFeed(object):
                 logging.info("APP Exit")
                 self.terminate()
                 break
-            sys.stdout.write(".")
+            sys.stdout.write(".\n\n")
             sys.stdout.flush()
             time.sleep(config.refresh_rate)

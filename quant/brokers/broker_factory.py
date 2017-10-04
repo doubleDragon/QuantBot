@@ -11,12 +11,28 @@ def create_brokers(exchange_names):
     for name in exchange_names:
         if name == 'Bitfinex_BCH_USD':
             chg = Bitfinex('bchusd', config.Bitfinex_API_KEY, config.Bitfinex_SECRET_TOKEN)
+        elif name == 'Bitfinex_ETH_USD':
+            chg = Bitfinex('ethusd', config.Bitfinex_API_KEY, config.Bitfinex_SECRET_TOKEN)
+        elif name == 'Bitfinex_ETH_BTC':
+            chg = Bitfinex('ethbtc', config.Bitfinex_API_KEY, config.Bitfinex_SECRET_TOKEN)
         elif name == 'Bitfinex_ZEC_USD':
             chg = Bitfinex('zecusd', config.Bitfinex_API_KEY, config.Bitfinex_SECRET_TOKEN)
         elif name == 'Bitfinex_BCH_BTC':
             chg = Bitfinex('bchbtc', config.Bitfinex_API_KEY, config.Bitfinex_SECRET_TOKEN)
         elif name == 'Bitfinex_BTC_USD':
             chg = Bitfinex('btcusd', config.Bitfinex_API_KEY, config.Bitfinex_SECRET_TOKEN)
+        elif name == 'Bitfinex_NEO_USD':
+            chg = Bitfinex('neousd', config.Bitfinex_API_KEY, config.Bitfinex_SECRET_TOKEN)
+        elif name == 'Bitfinex_NEO_BTC':
+            chg = Bitfinex('neobtc', config.Bitfinex_API_KEY, config.Bitfinex_SECRET_TOKEN)
+        elif name == 'Bitfinex_NEO_ETH':
+            chg = Bitfinex('neoeth', config.Bitfinex_API_KEY, config.Bitfinex_SECRET_TOKEN)
+        elif name == 'Bitfinex_IOT_ETH':
+            chg = Bitfinex('ioteth', config.Bitfinex_API_KEY, config.Bitfinex_SECRET_TOKEN)
+        elif name == 'Bitfinex_IOT_BTC':
+            chg = Bitfinex('iotbtc', config.Bitfinex_API_KEY, config.Bitfinex_SECRET_TOKEN)
+        elif name == 'Bitfinex_IOT_USD':
+            chg = Bitfinex('iotusd', config.Bitfinex_API_KEY, config.Bitfinex_SECRET_TOKEN)
         elif name == 'Liqui_BCC_BTC':
             chg = Liqui('bcc_btc', config.Liqui_API_KEY, config.Liqui_SECRET_TOKEN)
         elif name == 'Bittrex_ZEC_BTC':
@@ -41,6 +57,14 @@ def create_brokers(exchange_names):
             chg = Binance('WTCETH', config.Binance_API_KEY, config.Binance_SECRET_TOKEN)
         elif name == 'Binance_BCC_BTC':
             chg = Binance('BCCBTC', config.Binance_API_KEY, config.Binance_SECRET_TOKEN)
+        elif name == 'Binance_NEO_BTC':
+            chg = Binance('NEOBTC', config.Binance_API_KEY, config.Binance_SECRET_TOKEN)
+        elif name == 'Binance_NEO_ETH':
+            chg = Binance('NEOETH', config.Binance_API_KEY, config.Binance_SECRET_TOKEN)
+        elif name == 'Binance_IOTA_ETH':
+            chg = Binance('IOTAETH', config.Binance_API_KEY, config.Binance_SECRET_TOKEN)
+        elif name == 'Binance_IOTA_BTC':
+            chg = Binance('IOTABTC', config.Binance_API_KEY, config.Binance_SECRET_TOKEN)
         else:
             logging.warn('Exchange ' + name + ' not supported!')
             assert False

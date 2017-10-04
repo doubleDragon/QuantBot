@@ -19,7 +19,11 @@ def create_markets(exchange_names):
     """
     markets = {}
     for name in exchange_names:
-        if name == "%s_BCH_USD" % constant.EX_BFX:
+        if name == "%s_ETH_USD" % constant.EX_BFX:
+            ex = Bitfinex('ethusd')
+        elif name == "%s_ETH_BTC" % constant.EX_BFX:
+            ex = Bitfinex('ethbtc')
+        elif name == "%s_BCH_USD" % constant.EX_BFX:
             ex = Bitfinex('bchusd')
         elif name == "%s_ZEC_USD" % constant.EX_BFX:
             ex = Bitfinex('zecusd')
@@ -31,6 +35,16 @@ def create_markets(exchange_names):
             ex = Bitfinex('eosusd')
         elif name == "%s_EOS_BTC" % constant.EX_BFX:
             ex = Bitfinex('eosbtc')
+        elif name == "%s_NEO_BTC" % constant.EX_BFX:
+            ex = Bitfinex('neobtc')
+        elif name == "%s_NEO_ETH" % constant.EX_BFX:
+            ex = Bitfinex('neoeth')
+        elif name == "%s_NEO_USD" % constant.EX_BFX:
+            ex = Bitfinex('neousd')
+        elif name == "%s_IOT_USD" % constant.EX_BFX:
+            ex = Bitfinex('iotusd')
+        elif name == "%s_IOT_BTC" % constant.EX_BFX:
+            ex = Bitfinex('iotbtc')
         elif name == "%s_BCC_BTC" % constant.EX_KKEX:
             ex = Kkex('bccbtc')
         elif name == "%s_BCC_BTC" % constant.EX_LQ:
@@ -63,6 +77,14 @@ def create_markets(exchange_names):
             ex = Binance('WTCBTC')
         elif name == "%s_WTC_ETH" % constant.EX_BINANCE:
             ex = Binance('WTCETH')
+        elif name == "%s_NEO_BTC" % constant.EX_BINANCE:
+            ex = Binance('NEOBTC')
+        elif name == "%s_NEO_ETH" % constant.EX_BINANCE:
+            ex = Binance('NEOETH')
+        elif name == "%s_IOTA_ETH" % constant.EX_BINANCE:
+            ex = Binance('IOTAETH')
+        elif name == "%s_IOTA_BTC" % constant.EX_BINANCE:
+            ex = Binance('IOTABTC')
         else:
             logging.warn('Exchange ' + name + ' not supported!')
             assert False

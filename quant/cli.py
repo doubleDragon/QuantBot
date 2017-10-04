@@ -9,13 +9,13 @@ import sys
 import time
 
 from quant.datafeed import DataFeed
-from quant.observers.triangle_arbitrage_bch import TriangleArbitrage as TriangleArbitrageBch
-from quant.observers.triangle_arbitrage_eos import TriangleArbitrage as TriangleArbitrageEos
-from quant.observers.triangle_arbitrage_zec import TriangleArbitrage as TriangleArbitrageZec
-from quant.observers.t_bfx_binance_bch import TriangleArbitrage as TriangleArbitrageBfxBch
+from quant.observers.t_bfx_bn import TriangleArbitrage as TriangleArbitrageBfxBn
+from quant.observers.t_bfx_lq import TriangleArbitrage as TriangleArbitrageBfxLq
+from quant.observers.t_binance import TriangleArbitrage as TriangleArbitrageBinance
 
 from quant.brokers import broker_factory
 from quant.snapshot import Snapshot
+from quant.common.util import convert_currency_bfx
 
 
 class CLI(object):
@@ -95,14 +95,150 @@ class CLI(object):
             pass
         else:
             self.create_data_feed(args)
-            if "t-watch-bitfinex-binance-bch" in args.command:
-                self.register_t_bitfinex_binance_bch()
-            if "t-watch-triangle-arbitrage-bch" in args.command:
-                self.register_t_triangle_arbitrage_bch()
-            if "t-watch-triangle-arbitrage-eos" in args.command:
-                self.register_t_triangle_arbitrage_eos()
-            if "t-watch-triangle-arbitrage-zec" in args.command:
-                self.register_t_triangle_arbitrage_zec()
+            if "t-watch-bfx-bn-bfx-usd-bch-btc" in args.command:
+                kwargs = {
+                    "precision": 2,
+                    "fee_base": 0.002,
+                    "fee_pair1": 0.001,
+                    "fee_pair2": 0.002,
+                    "min_amount_market": 0.001,
+                    "min_amount_mid": 0.005,
+                    "max_trade_amount": 5,
+                    "min_trade_amount": 0.001,
+                }
+                self.register_t_bfx_bn_bfx('USD', 'BCC', 'BTC', **kwargs)
+            if "t-watch-bfx-bn-bfx-usd-neo-btc" in args.command:
+                kwargs = {
+                    "precision": 2,
+                    "fee_base": 0.002,
+                    "fee_pair1": 0.001,
+                    "fee_pair2": 0.002,
+                    "min_amount_market": 0.001,
+                    "min_amount_mid": 0.005,
+                    "max_trade_amount": 2,
+                    "min_trade_amount": 0.001,
+                }
+                self.register_t_bfx_bn_bfx('USD', 'NEO', 'BTC', **kwargs)
+            if "t-watch-bfx-bn-bfx-usd-neo-eth" in args.command:
+                kwargs = {
+                    "precision": 2,
+                    "fee_base": 0.002,
+                    "fee_pair1": 0.001,
+                    "fee_pair2": 0.002,
+                    "min_amount_market": 0.001,
+                    "min_amount_mid": 0.01,
+                    "max_trade_amount": 2,
+                    "min_trade_amount": 0.001,
+                }
+                self.register_t_bfx_bn_bfx('USD', 'NEO', 'ETH', **kwargs)
+            if "t-watch-bfx-bn-bfx-btc-neo-eth" in args.command:
+                kwargs = {
+                    "precision": 8,
+                    "fee_base": 0.002,
+                    "fee_pair1": 0.001,
+                    "fee_pair2": 0.002,
+                    "min_amount_market": 0.001,
+                    "min_amount_mid": 0.01,
+                    "max_trade_amount": 2,
+                    "min_trade_amount": 0.001,
+                }
+                self.register_t_bfx_bn_bfx('BTC', 'NEO', 'ETH', **kwargs)
+            if "t-watch-bfx-bfx-bn-btc-neo-eth" in args.command:
+                kwargs = {
+                    "precision": 8,
+                    "fee_base": 0.002,
+                    "fee_pair1": 0.002,
+                    "fee_pair2": 0.001,
+                    "min_amount_market": 0.001,
+                    "min_amount_mid": 0.01,
+                    "max_trade_amount": 2,
+                    "min_trade_amount": 0.001,
+                }
+                self.register_t_bfx_bfx_bn('BTC', 'NEO', 'ETH', **kwargs)
+            if "t-watch-bn-bfx-bfx-btc-neo-eth" in args.command:
+                kwargs = {
+                    "precision": 8,
+                    "fee_base": 0.001,
+                    "fee_pair1": 0.002,
+                    "fee_pair2": 0.002,
+                    "min_amount_market": 0.001,
+                    "min_amount_mid": 0.01,
+                    "max_trade_amount": 2,
+                    "min_trade_amount": 0.001,
+                }
+                self.register_t_bn_bfx_bfx('BTC', 'NEO', 'ETH', **kwargs)
+            if "t-watch-bn-bn-bfx-btc-neo-eth" in args.command:
+                kwargs = {
+                    "precision": 8,
+                    "fee_base": 0.001,
+                    "fee_pair1": 0.002,
+                    "fee_pair2": 0.002,
+                    "min_amount_market": 0.001,
+                    "min_amount_mid": 0.01,
+                    "max_trade_amount": 2,
+                    "min_trade_amount": 0.001,
+                }
+                self.register_t_bn_bn_bfx('BTC', 'NEO', 'ETH', **kwargs)
+            if "t-watch-bn-bfx-bn-btc-neo-eth" in args.command:
+                kwargs = {
+                    "precision": 8,
+                    "fee_base": 0.001,
+                    "fee_pair1": 0.002,
+                    "fee_pair2": 0.001,
+                    "min_amount_market": 0.001,
+                    "min_amount_mid": 0.01,
+                    "max_trade_amount": 2,
+                    "min_trade_amount": 0.001,
+                }
+                self.register_t_bn_bfx_bn('BTC', 'NEO', 'ETH', **kwargs)
+            if "t-watch-bfx-bn-bn-btc-neo-eth" in args.command:
+                kwargs = {
+                    "precision": 8,
+                    "fee_base": 0.002,
+                    "fee_pair1": 0.001,
+                    "fee_pair2": 0.001,
+                    "min_amount_market": 0.001,
+                    "min_amount_mid": 0.01,
+                    "max_trade_amount": 2,
+                    "min_trade_amount": 0.001,
+                }
+                self.register_t_bfx_bn_bn('BTC', 'NEO', 'ETH', **kwargs)
+            if "t-watch-bfx-bn-bfx-btc-iota-eth" in args.command:
+                kwargs = {
+                    "precision": 8,
+                    "fee_base": 0.002,
+                    "fee_pair1": 0.001,
+                    "fee_pair2": 0.002,
+                    "min_amount_market": 0.1,
+                    "min_amount_mid": 0.01,
+                    "max_trade_amount": 20,
+                    "min_trade_amount": 0.1,
+                }
+                self.register_t_bfx_bn_bfx('BTC', 'IOTA', 'ETH', **kwargs)
+            if "t-watch-bfx-bn-bfx-usd-iota-btc" in args.command:
+                kwargs = {
+                    "precision": 2,
+                    "fee_base": 0.002,
+                    "fee_pair1": 0.001,
+                    "fee_pair2": 0.002,
+                    "min_amount_market": 0.1,
+                    "min_amount_mid": 0.005,
+                    "max_trade_amount": 20,
+                    "min_trade_amount": 0.1,
+                }
+                self.register_t_bfx_bn_bfx('USD', 'IOTA', 'BTC', **kwargs)
+            if "t-watch-bitfinex-liqui-usd-bch-btc" in args.command:
+                self.register_t_bitfinex_liqui('USD', 'BCH', 'BTC')
+            if "t-watch-binance-wtc" in args.command:
+                self.register_t_binance_wtc(args)
+            if "t-watch-binance-bnb" in args.command:
+                self.register_t_binance_bnb(args)
+            if "t-watch-binance-mco" in args.command:
+                self.register_t_binance_mco(args)
+            if "t-watch-binance-qtum" in args.command:
+                self.register_t_binance_qtum(args)
+            if "t-watch-binance-neo" in args.command:
+                self.register_t_binance_neo(args)
 
         self.data_feed.run_loop()
 
@@ -130,27 +266,116 @@ class CLI(object):
 
             time.sleep(60 * 10)
 
-    def register_t_bitfinex_binance_bch(self):
-        _observer = TriangleArbitrageBfxBch(monitor_only=True)
+    def register_t_binance_wtc(self, args):
+        _observer = TriangleArbitrageBinance(base_pair='Binance_WTC_BTC',
+                                             pair1='Binance_WTC_ETH',
+                                             pair2='Binance_ETH_BTC',
+                                             monitor_only=True)
         self.data_feed.register_observer(_observer)
 
-    def register_t_triangle_arbitrage_bch(self):
-        _observer = TriangleArbitrageBch(monitor_only=True)
+    def register_t_binance_bnb(self, args):
+        _observer = TriangleArbitrageBinance(base_pair='Binance_BNB_BTC',
+                                             pair1='Binance_BNB_ETH',
+                                             pair2='Binance_ETH_BTC',
+                                             monitor_only=True)
         self.data_feed.register_observer(_observer)
 
-    def register_t_triangle_arbitrage_eos(self):
-        _observer = TriangleArbitrageEos(monitor_only=True)
+    def register_t_binance_mco(self, args):
+        _observer = TriangleArbitrageBinance(base_pair='Binance_MCO_BTC',
+                                             pair1='Binance_MCO_ETH',
+                                             pair2='Binance_ETH_BTC',
+                                             monitor_only=True)
         self.data_feed.register_observer(_observer)
 
-    def register_t_triangle_arbitrage_zec(self):
-        _observer = TriangleArbitrageZec(monitor_only=True)
+    def register_t_binance_qtum(self, args):
+        _observer = TriangleArbitrageBinance(base_pair='Binance_QTUM_BTC',
+                                             pair1='Binance_QTUM_ETH',
+                                             pair2='Binance_ETH_BTC',
+                                             monitor_only=True)
         self.data_feed.register_observer(_observer)
 
-    def register_t_bitfinex_bcc(self):
-        _observer = TrigangularArbitrer_Bitfinex(base_pair='Bitfinex_BCH_USD',
-                                                 pair1='Bitfinex_BCH_BTC',
-                                                 pair2='Bitfinex_BTC_USD',
-                                                 monitor_only=True)
+    def register_t_binance_neo(self, args):
+        _observer = TriangleArbitrageBinance(base_pair='Binance_NEO_BTC',
+                                             pair1='Binance_NEO_ETH',
+                                             pair2='Binance_ETH_BTC',
+                                             monitor_only=True)
+        self.data_feed.register_observer(_observer)
+
+    def register_t_bfx_bn_bfx(self, base_currency, market_currency, mid_currency, **kwargs):
+
+        base_pair = "Bitfinex_%s_%s" % (convert_currency_bfx(market_currency), base_currency)
+        pair1 = "Binance_%s_%s" % (market_currency, mid_currency)
+        pair2 = "Bitfinex_%s_%s" % (mid_currency, base_currency)
+        _observer = TriangleArbitrageBfxBn(base_pair=base_pair,
+                                           pair1=pair1,
+                                           pair2=pair2,
+                                           monitor_only=True,
+                                           **kwargs)
+        self.data_feed.register_observer(_observer)
+
+    def register_t_bfx_bfx_bn(self, base_currency, market_currency, mid_currency, **kwargs):
+        base_pair = "Bitfinex_%s_%s" % (convert_currency_bfx(market_currency), base_currency)
+        pair1 = "Bitfinex_%s_%s" % (convert_currency_bfx(market_currency), mid_currency)
+        pair2 = "Binance_%s_%s" % (mid_currency, base_currency)
+        _observer = TriangleArbitrageBfxBn(base_pair=base_pair,
+                                           pair1=pair1,
+                                           pair2=pair2,
+                                           monitor_only=True,
+                                           **kwargs)
+        self.data_feed.register_observer(_observer)
+
+    def register_t_bn_bfx_bfx(self, base_currency, market_currency, mid_currency, **kwargs):
+        base_pair = "Binance_%s_%s" % (market_currency, base_currency)
+        pair1 = "Bitfinex_%s_%s" % (convert_currency_bfx(market_currency), mid_currency)
+        pair2 = "Bitfinex_%s_%s" % (mid_currency, base_currency)
+        _observer = TriangleArbitrageBfxBn(base_pair=base_pair,
+                                           pair1=pair1,
+                                           pair2=pair2,
+                                           monitor_only=True,
+                                           **kwargs)
+        self.data_feed.register_observer(_observer)
+
+    def register_t_bn_bn_bfx(self, base_currency, market_currency, mid_currency, **kwargs):
+        base_pair = "Binance_%s_%s" % (market_currency, base_currency)
+        pair1 = "Binance_%s_%s" % (market_currency, mid_currency)
+        pair2 = "Bitfinex_%s_%s" % (mid_currency, base_currency)
+        _observer = TriangleArbitrageBfxBn(base_pair=base_pair,
+                                           pair1=pair1,
+                                           pair2=pair2,
+                                           monitor_only=True,
+                                           **kwargs)
+        self.data_feed.register_observer(_observer)
+
+    def register_t_bn_bfx_bn(self, base_currency, market_currency, mid_currency, **kwargs):
+        base_pair = "Binance_%s_%s" % (market_currency, base_currency)
+        pair1 = "Bitfinex_%s_%s" % (convert_currency_bfx(market_currency), mid_currency)
+        pair2 = "Binance_%s_%s" % (mid_currency, base_currency)
+        _observer = TriangleArbitrageBfxBn(base_pair=base_pair,
+                                           pair1=pair1,
+                                           pair2=pair2,
+                                           monitor_only=True,
+                                           **kwargs)
+        self.data_feed.register_observer(_observer)
+
+    def register_t_bfx_bn_bn(self, base_currency, market_currency, mid_currency, **kwargs):
+        base_pair = "Bitfinex_%s_%s" % (convert_currency_bfx(market_currency), base_currency)
+        pair1 = "Binance_%s_%s" % (market_currency, mid_currency)
+        pair2 = "Binance_%s_%s" % (mid_currency, base_currency)
+        _observer = TriangleArbitrageBfxBn(base_pair=base_pair,
+                                           pair1=pair1,
+                                           pair2=pair2,
+                                           monitor_only=True,
+                                           **kwargs)
+        self.data_feed.register_observer(_observer)
+
+    def register_t_bitfinex_liqui(self, base_currency, market_currency, mid_currency):
+        base_pair = "Bitfinex_%s_%s" % (market_currency, base_currency)
+        pair1 = "Liqui_%s_%s" % ('BCC' if market_currency == 'BCH' else market_currency, mid_currency)
+        pair2 = "Bitfinex_%s_%s" % (mid_currency, base_currency)
+        _observer = TriangleArbitrageBfxLq(base_pair=base_pair,
+                                           pair1=pair1,
+                                           pair2=pair2,
+                                           monitor_only=True)
         self.data_feed.register_observer(_observer)
 
     def create_data_feed(self, args):

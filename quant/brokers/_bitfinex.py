@@ -20,25 +20,6 @@ class Bitfinex(Broker):
 
         # self.get_balances()
 
-    @classmethod
-    def get_available_pairs(cls, pair_code):
-        """可交易的pair"""
-        if pair_code == 'bchusd':
-            base_currency = 'USD'
-            market_currency = 'BCH'
-        elif pair_code == 'bchbtc':
-            base_currency = 'BTC'
-            market_currency = 'BCH'
-        elif pair_code == 'btcusd':
-            base_currency = 'USD'
-            market_currency = 'BTC'
-        elif pair_code == 'zecusd':
-            base_currency = 'USD'
-            market_currency = 'ZEC'
-        else:
-            assert False
-        return base_currency, market_currency
-
     def _buy_limit(self, amount, price):
         """Create a buy limit order"""
         res = self.client.place_order(
@@ -126,3 +107,46 @@ class Bitfinex(Broker):
                 self.btc_available = float(entry['available'])
                 self.btc_balance = float(entry['amount'])
         return res
+
+    @classmethod
+    def get_available_pairs(cls, pair_code):
+        """可交易的pair"""
+        if pair_code == 'ethusd':
+            base_currency = 'USD'
+            market_currency = 'ETH'
+        elif pair_code == 'ethbtc':
+            base_currency = 'BTC'
+            market_currency = 'ETH'
+        elif pair_code == 'btcusd':
+            base_currency = 'USD'
+            market_currency = 'BTC'
+        elif pair_code == 'bchusd':
+            base_currency = 'USD'
+            market_currency = 'BCH'
+        elif pair_code == 'bchbtc':
+            base_currency = 'BTC'
+            market_currency = 'BCH'
+        elif pair_code == 'zecusd':
+            base_currency = 'USD'
+            market_currency = 'ZEC'
+        elif pair_code == 'neousd':
+            base_currency = 'USD'
+            market_currency = 'NEO'
+        elif pair_code == 'neobtc':
+            base_currency = 'BTC'
+            market_currency = 'NEO'
+        elif pair_code == 'neoeth':
+            base_currency = 'ETH'
+            market_currency = 'NEO'
+        elif pair_code == 'ioteth':
+            base_currency = 'ETH'
+            market_currency = 'IOT'
+        elif pair_code == 'iotbtc':
+            base_currency = 'BTC'
+            market_currency = 'IOT'
+        elif pair_code == 'iotusd':
+            base_currency = 'USD'
+            market_currency = 'IOT'
+        else:
+            assert False
+        return base_currency, market_currency
