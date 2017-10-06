@@ -35,6 +35,8 @@ def create_brokers(exchange_names):
             chg = Bitfinex('iotusd', config.Bitfinex_API_KEY, config.Bitfinex_SECRET_TOKEN)
         elif name == 'Liqui_BCC_BTC':
             chg = Liqui('bcc_btc', config.Liqui_API_KEY, config.Liqui_SECRET_TOKEN)
+        elif name == 'Liqui_BCC_ETH':
+            chg = Liqui('bcc_eth', config.Liqui_API_KEY, config.Liqui_SECRET_TOKEN)
         elif name == 'Bittrex_ZEC_BTC':
             chg = Bittrex('BTC-ZEC', config.Bittrex_API_KEY, config.Bittrex_SECRET_TOKEN)
         elif name == 'Binance_ETH_BTC':

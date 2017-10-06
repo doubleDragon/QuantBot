@@ -18,6 +18,9 @@ class Liqui(Market):
         if pair_code == 'bcc_btc':
             base_currency = 'BTC'
             market_currency = 'BCC'
+        elif pair_code == 'bcc_eth':
+            base_currency = 'ETH'
+            market_currency = 'BCC'
         elif pair_code == 'eos_btc':
             base_currency = 'BTC'
             market_currency = 'EOS'

@@ -49,6 +49,8 @@ def create_markets(exchange_names):
             ex = Kkex('bccbtc')
         elif name == "%s_BCC_BTC" % constant.EX_LQ:
             ex = Liqui('bcc_btc')
+        elif name == "%s_BCC_ETH" % constant.EX_LQ:
+            ex = Liqui('bcc_eth')
         elif name == "%s_EOS_BTC" % constant.EX_LQ:
             ex = Liqui('eos_btc')
         elif name == "%s_BCC_BTC" % constant.EX_HITBITC:

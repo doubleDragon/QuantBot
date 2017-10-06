@@ -26,6 +26,9 @@ class Liqui(Broker):
         if pair_code == 'bcc_btc':
             base_currency = 'btc'
             market_currency = 'bcc'
+        elif pair_code == 'bcc_eth':
+            base_currency = 'eth'
+            market_currency = 'bcc'
         else:
             assert False
         return base_currency, market_currency
