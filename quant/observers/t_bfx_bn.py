@@ -63,6 +63,11 @@ class TriangleArbitrage(BasicBot):
         self.skip = False
         self.brokers = broker_factory.create_brokers([self.base_pair, self.pair_1, self.pair_2])
 
+        # just for count for chance profit
+        self.count_forward = 0
+        self.count_reverse = 0
+        self.trigger_diff_percent = 1.0
+
         logging.debug('t_bfx_bn params: ' + str(kwargs))
 
     def is_depths_available(self, depths):
@@ -74,6 +79,7 @@ class TriangleArbitrage(BasicBot):
         if not self.is_depths_available(depths):
             # logging.debug("depths is not available")
             return
+        logging.info("count_forward: %s, count_reverse: %s" % (self.count_forward, self.count_reverse))
         self.skip = False
         self.forward(depths)
         self.reverse(depths)
@@ -167,8 +173,10 @@ class TriangleArbitrage(BasicBot):
         """差价百分比"""
         t_price_percent = round(t_price / base_pair_ask_price_real * 100, 2)
         profit = round(t_price * hedge_quote_amount, self.precision)
-        logging.info("forward======>t_price: %s, t_price_percent: %s, profit: %s" % (t_price,t_price_percent, profit))
+        logging.info("forward======>t_price: %s, t_price_percent: %s, profit: %s" % (t_price, t_price_percent, profit))
         if profit > 0:
+            if t_price_percent > self.trigger_diff_percent:
+                self.count_forward += 1
             logging.info("forward======>find profit!!!: profit:%s,  quote amount: %s and mid amount: %s,  t_price: %s" %
                          (profit, hedge_quote_amount, hedge_mid_amount, t_price))
             if profit < self.profit_trigger:
@@ -282,6 +290,8 @@ class TriangleArbitrage(BasicBot):
         profit = round(t_price * hedge_quote_amount, self.precision)
         logging.info("reverse======>t_price: %s, t_price_percent: %s, profit: %s" % (t_price, t_price_percent, profit))
         if profit > 0:
+            if t_price_percent > self.trigger_diff_percent:
+                self.count_reverse += 1
             logging.info("reverse======>find profit!!!: profit:%s,  quote amount: %s and mid amount: %s, t_price: %s" %
                          (profit, hedge_quote_amount, hedge_mid_amount, t_price))
             if profit < self.profit_trigger:
