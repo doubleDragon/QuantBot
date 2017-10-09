@@ -98,10 +98,12 @@ class Arbitrage(BasicBot):
                         cancel_res = self.brokers[market].cancel_order(order_id)
                         if not cancel_res:
                             if retry_count > 2:
+                                self.remove_order(order_id)
                                 break
                             retry_count += 1
                             time.sleep(1)
                             continue
+
                         logging.info("handle_order======>cancel order %s, place new sell order amount:%s, price: %s" %
                                      (order_id, remaining_amount, price_sell))
                         self.remove_order(order_id)
@@ -150,6 +152,7 @@ class Arbitrage(BasicBot):
                         cancel_res = self.brokers[market].cancel_order(order_id)
                         if not cancel_res:
                             if retry_count > 2:
+                                self.remove_order(order_id)
                                 break
                             retry_count += 1
                             continue
