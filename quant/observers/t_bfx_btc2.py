@@ -92,10 +92,15 @@ class Arbitrage(BasicBot):
                     if price_sell < 0.0:
                         # depth异常，直接return, 下次处理
                         continue
+                    retry_count = 0
                     while True:
                         # 先cancel再下单
                         cancel_res = self.brokers[market].cancel_order(order_id)
                         if not cancel_res:
+                            if retry_count > 2:
+                                break
+                            retry_count += 1
+                            time.sleep(1)
                             continue
                         logging.info("handle_order======>cancel order %s, place new sell order amount:%s, price: %s" %
                                      (order_id, remaining_amount, price_sell))
@@ -139,10 +144,14 @@ class Arbitrage(BasicBot):
                     if price_buy < 0.0:
                         # depth异常，直接return, 下次处理
                         continue
+                    retry_count = 0
                     while True:
                         # 先cancel再下单
                         cancel_res = self.brokers[market].cancel_order(order_id)
                         if not cancel_res:
+                            if retry_count > 2:
+                                break
+                            retry_count += 1
                             continue
                         logging.info("handle_order======>cancel order %s, place new buy order amount:%s, price: %s" %
                                      (order_id, remaining_amount, price_buy))
