@@ -64,7 +64,7 @@ class Bitfinex(Broker):
 
     def _get_order(self, order_id):
         res = self.client.get_order(int(order_id))
-        logging.info('get_order: %s' % res)
+        logging.info('get_order id: %s, res: %s' % (order_id, res))
 
         assert str(res['id']) == str(order_id)
         return self._order_status(res)

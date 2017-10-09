@@ -63,12 +63,19 @@ class Arbitrage(BasicBot):
             for order in orders_sell:
                 order_id = order['order_id']
                 market = order['market']
+                retry_count = 0
                 while True:
                     order_status = self.brokers[market].get_order(order_id)
                     if order_status:
                         break
                     else:
+                        if retry_count > 2:
+                            break
+                        retry_count += 1
                         time.sleep(1)
+                if not order_status:
+                    continue
+
                 if order_status['status'] == 'CLOSE':
                     self.remove_order(order_id)
                     continue
@@ -102,11 +109,15 @@ class Arbitrage(BasicBot):
             for order in orders_sell:
                 order_id = order['order_id']
                 market = order['market']
+                retry_count = 0
                 while True:
                     order_status = self.brokers[market].get_order(order_id)
                     if order_status:
                         break
                     else:
+                        if retry_count > 2:
+                            break
+                        retry_count += 1
                         time.sleep(1)
                 if order_status['status'] == 'CLOSE':
                     self.remove_order(order_id)
