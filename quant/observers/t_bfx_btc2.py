@@ -74,6 +74,8 @@ class Arbitrage(BasicBot):
                         retry_count += 1
                         time.sleep(1)
                 if not order_status:
+                    # 找了3次都找不到，就当不在了
+                    self.remove_order(order_id)
                     continue
 
                 if order_status['status'] == 'CLOSE':
@@ -119,6 +121,10 @@ class Arbitrage(BasicBot):
                             break
                         retry_count += 1
                         time.sleep(1)
+                if not order_status:
+                    # 找了3次都找不到，就当不在了
+                    self.remove_order(order_id)
+                    continue
                 if order_status['status'] == 'CLOSE':
                     self.remove_order(order_id)
                     continue
