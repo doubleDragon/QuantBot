@@ -35,6 +35,18 @@ class Bitfinex(Market):
         elif pair_code == 'btcusd':
             base_currency = 'USD'
             market_currency = 'BTC'
+        elif pair_code == 'bt1usd':
+            base_currency = 'USD'
+            market_currency = 'BT1'
+        elif pair_code == 'bt2usd':
+            base_currency = 'USD'
+            market_currency = 'BT2'
+        elif pair_code == 'bt1btc':
+            base_currency = 'BTC'
+            market_currency = 'BT1'
+        elif pair_code == 'bt2btc':
+            base_currency = 'BTC'
+            market_currency = 'BT2'
         elif pair_code == 'bchusd':
             base_currency = 'USD'
             market_currency = 'BCH'

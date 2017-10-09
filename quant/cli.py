@@ -15,6 +15,9 @@ from quant.observers.t_binance import TriangleArbitrage as TriangleArbitrageBina
 from quant.observers.t_lq_bn import TriangleArbitrage as TriangleArbitrageLqBn
 from quant.observers.t_bfx import TriangleArbitrage as TriangleArbitrageBfx
 
+from quant.observers.t_bfx_btc import Arbitrage as ArbitrageBfxBtc
+from quant.observers.t_bfx_btc2 import Arbitrage as ArbitrageBfxBtc2
+
 from quant.brokers import broker_factory
 from quant.snapshot import Snapshot
 from quant.common.util import convert_currency_bfx
@@ -245,6 +248,10 @@ class CLI(object):
                 self.register_t_binance_neo(args)
             if "t-watch-bfx-usd-bch-btc" in args.command:
                 self.register_t_bitfinex(args)
+            if "t-watch-bfx-btc" in args.command:
+                self.register_t_bitfinex_btc(args)
+            if "t-watch-bfx-btc2" in args.command:
+                self.register_t_bitfinex_btc2(args)
 
         self.data_feed.run_loop()
 
@@ -433,12 +440,19 @@ class CLI(object):
             "min_trade_amount": 0.001,
         }
         _observer = TriangleArbitrageBfx(base_pair=base_pair,
-                                          pair1=pair1,
-                                          pair2=pair2,
-                                          monitor_only=True,
-                                          **kwargs)
+                                         pair1=pair1,
+                                         pair2=pair2,
+                                         monitor_only=True,
+                                         **kwargs)
         self.data_feed.register_observer(_observer)
-        pass
+
+    def register_t_bitfinex_btc(self, args):
+        _observer = ArbitrageBfxBtc(monitor_only=True)
+        self.data_feed.register_observer(_observer)
+
+    def register_t_bitfinex_btc2(self, args):
+        _observer = ArbitrageBfxBtc2(monitor_only=False)
+        self.data_feed.register_observer(_observer)
 
     def create_data_feed(self, args):
         self.data_feed = DataFeed()

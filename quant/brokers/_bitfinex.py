@@ -19,6 +19,11 @@ class Bitfinex(Broker):
             api_secret if api_secret else config.Bitfinex_SECRET_TOKEN)
 
         # self.get_balances()
+        self.bt1_available = 0.0
+        self.bt1_balance = 0.0
+
+        self.bt2_available = 0.0
+        self.bt2_balance = 0.0
 
     def _buy_limit(self, amount, price):
         """Create a buy limit order"""
@@ -78,7 +83,7 @@ class Bitfinex(Broker):
         """Get balance"""
         res = self.client.balances()
 
-        # logging.debug("bitfinex get_balances response: %s" % res)
+        logging.debug("bitfinex get_balances response: %s" % res)
         if not res:
             return
 
@@ -86,9 +91,9 @@ class Bitfinex(Broker):
             if entry['type'] != 'exchange':
                 continue
 
-            currency = entry['currency'].upper()
+            currency = entry['currency']
             if currency not in (
-                    'btc', 'bch', 'usd'):
+                    'btc', 'bch', 'usd', 'bt1', 'bt2', 'zec'):
                 continue
 
             if currency == 'bch':
@@ -100,12 +105,20 @@ class Bitfinex(Broker):
                 self.btc_balance = float(entry['amount'])
 
             elif currency == 'zec':
-                self.btc_available = float(entry['available'])
-                self.btc_balance = float(entry['amount'])
+                self.zec_available = float(entry['available'])
+                self.zec_balance = float(entry['amount'])
 
             elif currency == 'usd':
-                self.btc_available = float(entry['available'])
-                self.btc_balance = float(entry['amount'])
+                self.usd_available = float(entry['available'])
+                self.usd_balance = float(entry['amount'])
+
+            elif currency == 'bt1':
+                self.bt1_available = float(entry['available'])
+                self.bt1_balance = float(entry['amount'])
+
+            elif currency == 'bt2':
+                self.bt2_available = float(entry['available'])
+                self.bt2_balance = float(entry['amount'])
         return res
 
     @classmethod
@@ -120,6 +133,18 @@ class Bitfinex(Broker):
         elif pair_code == 'btcusd':
             base_currency = 'USD'
             market_currency = 'BTC'
+        elif pair_code == 'bt1usd':
+            base_currency = 'USD'
+            market_currency = 'BT1'
+        elif pair_code == 'bt2usd':
+            base_currency = 'USD'
+            market_currency = 'BT2'
+        elif pair_code == 'bt1btc':
+            base_currency = 'BTC'
+            market_currency = 'BT1'
+        elif pair_code == 'bt2btc':
+            base_currency = 'BTC'
+            market_currency = 'BT2'
         elif pair_code == 'bchusd':
             base_currency = 'USD'
             market_currency = 'BCH'

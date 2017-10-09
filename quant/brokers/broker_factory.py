@@ -21,6 +21,14 @@ def create_brokers(exchange_names):
             chg = Bitfinex('bchbtc', config.Bitfinex_API_KEY, config.Bitfinex_SECRET_TOKEN)
         elif name == 'Bitfinex_BTC_USD':
             chg = Bitfinex('btcusd', config.Bitfinex_API_KEY, config.Bitfinex_SECRET_TOKEN)
+        elif name == 'Bitfinex_BT1_USD':
+            chg = Bitfinex('bt1usd', config.Bitfinex_API_KEY, config.Bitfinex_SECRET_TOKEN)
+        elif name == 'Bitfinex_BT2_USD':
+            chg = Bitfinex('bt2usd', config.Bitfinex_API_KEY, config.Bitfinex_SECRET_TOKEN)
+        elif name == 'Bitfinex_BT1_BTC':
+            chg = Bitfinex('bt1btc', config.Bitfinex_API_KEY, config.Bitfinex_SECRET_TOKEN)
+        elif name == 'Bitfinex_BT2_BTC':
+            chg = Bitfinex('bt2btc', config.Bitfinex_API_KEY, config.Bitfinex_SECRET_TOKEN)
         elif name == 'Bitfinex_NEO_USD':
             chg = Bitfinex('neousd', config.Bitfinex_API_KEY, config.Bitfinex_SECRET_TOKEN)
         elif name == 'Bitfinex_NEO_BTC':

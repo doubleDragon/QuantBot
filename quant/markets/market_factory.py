@@ -31,6 +31,14 @@ def create_markets(exchange_names):
             ex = Bitfinex('bchbtc')
         elif name == "%s_BTC_USD" % constant.EX_BFX:
             ex = Bitfinex('btcusd')
+        elif name == "%s_BT1_USD" % constant.EX_BFX:
+            ex = Bitfinex('bt1usd')
+        elif name == "%s_BT2_USD" % constant.EX_BFX:
+            ex = Bitfinex('bt2usd')
+        elif name == "%s_BT1_BTC" % constant.EX_BFX:
+            ex = Bitfinex('bt1btc')
+        elif name == "%s_BT2_BTC" % constant.EX_BFX:
+            ex = Bitfinex('bt2btc')
         elif name == "%s_EOS_USD" % constant.EX_BFX:
             ex = Bitfinex('eosusd')
         elif name == "%s_EOS_BTC" % constant.EX_BFX:
