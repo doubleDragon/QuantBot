@@ -112,22 +112,22 @@ class Broker(object):
             logging.error('%s %s except: %s' % (self.name, get_current_function_name(), e))
             return None
 
-    def get_order(self, order_id):
+    def get_order(self, order_id, symbol=None):
         if not order_id:
             return None
 
         try:
-            return self._get_order(order_id)
+            return self._get_order(order_id, symbol)
         except Exception as e:
             logging.error('%s %s except: %s' % (self.name, get_current_function_name(), e))
             return None
 
-    def cancel_order(self, order_id):
+    def cancel_order(self, order_id, symbol=None):
         if not order_id:
             return None
 
         try:
-            return self._cancel_order(order_id)
+            return self._cancel_order(order_id, symbol)
         except Exception as e:
             logging.error('%s %s except: %s' % (self.name, get_current_function_name(), e))
 
@@ -175,10 +175,10 @@ class Broker(object):
     def _sell_maker(self, amount, price):
         raise NotImplementedError("%s.sell_maker(self, amount, price)" % self.name)
 
-    def _get_order(self, order_id):
+    def _get_order(self, order_id, symbol):
         raise NotImplementedError("%s.get_order(self, order_id)" % self.name)
 
-    def _cancel_order(self, order_id):
+    def _cancel_order(self, order_id, symbol):
         raise NotImplementedError("%s.cancel_order(self, order_id)" % self.name)
 
     def _get_orders(self, order_ids):

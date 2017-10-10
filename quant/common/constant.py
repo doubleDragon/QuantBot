@@ -28,6 +28,7 @@ EX_EXMO = 'Exmo'
 EX_KKEX = 'Kkex'
 EX_HITBITC = 'Hitbtc'
 EX_BITTREX = 'Bittrex'
+EX_GATE = 'Gate'
 
 EX_SET = (
     EX_OKEX,

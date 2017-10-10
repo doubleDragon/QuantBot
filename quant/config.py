@@ -152,6 +152,9 @@ Viabtc_SECRET_TOKEN = ''
 Liqui_API_KEY = config('LIQUI_API_KEY')
 Liqui_SECRET_TOKEN = config('LIQUI_API_SECRET')
 
+Gate_API_KEY = config('GATE_API_KEY')
+Gate_SECRET_TOKEN = config('GATE_API_SECRET')
+
 Binance_API_KEY = ''
 Binance_SECRET_TOKEN = ''
 

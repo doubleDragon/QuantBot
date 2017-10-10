@@ -212,8 +212,8 @@ class Arbitrage(BasicBot):
                 logging.info("forward======>hedge_btc_amount is too small! %s" % hedge_btc_amount)
                 return
         else:
-            hedge_btc_amount_balance = round(min(self.brokers[self.pair_1].bt1_available,
-                                                 self.brokers[self.pair_2].bt2_available), 8)
+            hedge_btc_amount_balance = round(min(self.brokers[self.base_pair].bt1_available,
+                                                 self.brokers[self.base_pair].bt2_available), 8)
             hedge_btc_amount = min(hedge_btc_amount_market, hedge_btc_amount_balance, self.min_trade_amount)
             logging.info("forward======>balance allow btc: %s, market allow btc: %s " %
                          (hedge_btc_amount_balance, hedge_btc_amount_market))
@@ -280,9 +280,10 @@ class Arbitrage(BasicBot):
                 return
         else:
             btc_amount_balance = round(self.brokers[self.base_pair].btc_available, 8)
+
             hedge_bt1_amount_balance = round(btc_amount_balance / pair1_ask_price_real, 8)
             hedge_bt2_amount_balance = round(btc_amount_balance / pair2_ask_price_real, 8)
-            hedge_btc_amount_balance = round(min(hedge_bt1_amount_balance, hedge_bt2_amount_balance))
+            hedge_btc_amount_balance = round(min(hedge_bt1_amount_balance, hedge_bt2_amount_balance), 8)
 
             hedge_btc_amount = min(hedge_btc_amount_market, hedge_btc_amount_balance, self.min_trade_amount)
             logging.info("reverse======>balance allow btc: %s, market allow btc: %s " %
@@ -316,3 +317,6 @@ class Arbitrage(BasicBot):
                 self.skip = True
 
             self.last_trade = time.time()
+
+    def update_balance(self):
+        self.brokers[self.base_pair].get_balances()

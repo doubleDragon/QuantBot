@@ -8,6 +8,7 @@ from ._hitbtc import Hitbtc
 from ._cex import Cex
 from ._bittrex import Bittrex
 from ._binance import Binance
+from ._gate import Gate
 
 
 def create_markets(exchange_names):
@@ -95,6 +96,8 @@ def create_markets(exchange_names):
             ex = Binance('IOTAETH')
         elif name == "%s_IOTA_BTC" % constant.EX_BINANCE:
             ex = Binance('IOTABTC')
+        elif name == "%s_ETH_BTC" % constant.EX_GATE:
+            ex = Gate('eth_btc')
         else:
             logging.warn('Exchange ' + name + ' not supported!')
             assert False

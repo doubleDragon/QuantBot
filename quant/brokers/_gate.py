@@ -2,21 +2,21 @@
 # Copyright (C) 2017, Philsong <songbohr@gmail.com>
 from quant import config
 from .broker import Broker
-from quant.api.liqui import PrivateClient as LqClient
+from quant.api.gate import PrivateClient as GateClient
 import logging
 
 
 # python -m quant.cli -m Bitfinex_BCH_BTC get-balance
 
-class Liqui(Broker):
+class Gate(Broker):
     def __init__(self, pair_code, api_key=None, api_secret=None):
         base_currency, market_currency = self.get_available_pairs(pair_code)
 
-        super(Liqui, self).__init__(base_currency, market_currency, pair_code)
+        super(Gate, self).__init__(base_currency, market_currency, pair_code)
 
-        self.client = LqClient(
-            api_key if api_key else config.Liqui_API_KEY,
-            api_secret if api_secret else config.Liqui_SECRET_TOKEN)
+        self.client = GateClient(
+            api_key if api_key else config.Gate_API_KEY,
+            api_secret if api_secret else config.Gate_SECRET_TOKEN)
 
         # self.get_balances()
 
@@ -39,53 +39,51 @@ class Liqui(Broker):
         order_id == 0表示已全部成交
         """
         resp = self.client.buy(symbol=self.pair_code, price=str(price), amount=str(amount))
-        if resp and 'return' in resp and 'order_id' in resp['return']:
-            return resp['return']['order_id']
+        if resp and 'orderNumber' in resp:
+            return resp['orderNumber']
 
     def _sell_limit(self, amount, price):
         """Create a sell limit order"""
         resp = self.client.sell(symbol=self.pair_code, price=str(price), amount=str(amount))
-        if resp and 'return' in resp and 'order_id' in resp['return']:
-            return resp['return']['order_id']
+        if resp and 'orderNumber' in resp:
+            return resp['orderNumber']
 
     @classmethod
     def _order_status(cls, res, order_id):
         """avg_price equal price"""
         resp = {
             'order_id': order_id,
-            'amount': float(res['start_amount']),
-            'price': float(res['rate']),
-            'deal_amount': float(res['start_amount']) - float(res['amount']),
+            'amount': float(res['initialAmount']),
+            'price': float(res['initialRate']),
+            'deal_amount': float(res['initialAmount']) - float(res['amount']),
             'avg_price': float(res['rate'])}
 
-        if res['status'] == 1:
+        if res['status'] == 'done':
             resp['status'] = 'CLOSE'
-        if res['status'] == 0:
-            resp['status'] = 'OPEN'
-        else:
+        elif res['status'] == 'cancelled':
             resp['status'] = 'CANCELED'
+        else:
+            resp['status'] = 'OPEN'
 
         return resp
 
     def _get_order(self, order_id, symbol=None):
-        res = self.client.get_order(int(order_id))
+        res = self.client.get_order(order_id, symbol)
         logging.info('get_order: %s' % res)
 
         r_id = None
         r_order = None
-        if res and 'return' in res:
-            res = res['res']
-            r_id = res.keys()[0]
-            r_order = res[r_id]
+        if res and 'order' in res:
+            r_order = res['order']
+            r_id = r_order['id']
 
         assert str(r_id) == str(order_id)
         return self._order_status(r_order, r_id)
 
-    def _cancel_order(self, order_id, symbol=None):
-        res = self.client.cancel_order(int(order_id))
-        assert str(res['return']['order_id']) == str(order_id)
+    def _cancel_order(self, order_id, symbol):
+        res = self.client.cancel_order(order_id, symbol)
 
-        if res and res['success'] == 1:
+        if res and res['result'] is True:
             return True
         else:
             return False
@@ -93,22 +91,22 @@ class Liqui(Broker):
     def _get_balances(self):
         """Get balance"""
         res = self.client.balance()
-        # logging.debug("liqui get_balances response: %s" % res)
-        if not res or 'return' not in res:
-            return
-        res = res['return']['funds']
+        # logging.debug("gate get_balances response: %s" % res)
+        if not res:
+            return None
 
-        for key, value in res.items():
-            currency = key
-            if currency not in (
-                    'btc', 'bcc'):
-                continue
+        if 'available' in res:
+            res0 = res['available']
+            if 'BTC' in res0:
+                self.btc_available = float(res0['BTC'])
+            if 'ETH' in res0:
+                self.eth_available = float(res0['ETH'])
 
-            if currency == 'bcc':
-                self.bch_available = float(value)
-                self.bch_balance = float(value)
+        if 'locked' in res:
+            res1 = res['locked']
+            if 'BTC' in res1:
+                self.btc_balance = float(res1['BTC']) + self.btc_available
+            if 'BTC' in res1:
+                self.eth_available = float(res1['BTC']) + self.eth_available
 
-            elif currency == 'btc':
-                self.btc_available = float(value)
-                self.btc_balance = float(value)
         return res
