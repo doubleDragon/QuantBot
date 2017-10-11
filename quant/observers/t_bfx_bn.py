@@ -32,6 +32,12 @@ class TriangleArbitrage(BasicBot):
     python -m quant.cli -mBitfinex_IOT_BTC,Binance_IOTA_ETH,Bitfinex_ETH_BTC t-watch-bfx-bn-bfx-btc-iota-eth -v
     python -m quant.cli -mBitfinex_IOT_USD,Binance_IOTA_BTC,Bitfinex_BTC_USD t-watch-bfx-bn-bfx-usd-iota-btc -v
 
+
+
+    gate:
+    python -m quant.cli -mBitfinex_BCH_USD,Gate_BCC_BTC,Bitfinex_BTC_USD t-watch-bfx-bn-gate-eth -v
+
+
     Bitfinex Binance bch triangle arbitrage
     config below:
         bch: {min_amount_bch:0.001, min_amount_btc: 0.005}

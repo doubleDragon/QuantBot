@@ -3,6 +3,7 @@ from ._bitfinex import Bitfinex
 from ._liqui import Liqui
 from ._bittrex import Bittrex
 from ._binance import Binance
+from ._gate import Gate
 import logging
 
 
@@ -75,6 +76,8 @@ def create_brokers(exchange_names):
             chg = Binance('IOTAETH', config.Binance_API_KEY, config.Binance_SECRET_TOKEN)
         elif name == 'Binance_IOTA_BTC':
             chg = Binance('IOTABTC', config.Binance_API_KEY, config.Binance_SECRET_TOKEN)
+        elif name == 'Gate_BCC_BTC':
+            chg = Gate('bcc_btc', config.Gate_API_KEY, config.Gate_SECRET_TOKEN)
         else:
             logging.warn('Exchange ' + name + ' not supported!')
             assert False

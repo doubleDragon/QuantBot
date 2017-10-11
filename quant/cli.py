@@ -14,6 +14,7 @@ from quant.observers.t_bfx_lq_new import TriangleArbitrage as TriangleArbitrageB
 from quant.observers.t_binance import TriangleArbitrage as TriangleArbitrageBinance
 from quant.observers.t_lq_bn import TriangleArbitrage as TriangleArbitrageLqBn
 from quant.observers.t_bfx import TriangleArbitrage as TriangleArbitrageBfx
+from quant.observers.t_gate import TriangleArbitrage as TriangleArbitrageGate
 
 from quant.observers.t_bfx_btc import Arbitrage as ArbitrageBfxBtc
 from quant.observers.t_bfx_btc2 import Arbitrage as ArbitrageBfxBtc2
@@ -252,6 +253,8 @@ class CLI(object):
                 self.register_t_bitfinex_btc(args)
             if "t-watch-bfx-btc2" in args.command:
                 self.register_t_bitfinex_btc2(args)
+            if "t-watch-gate-bcc" in args.command:
+                self.register_t_gate(args)
 
         self.data_feed.run_loop()
 
@@ -452,6 +455,27 @@ class CLI(object):
 
     def register_t_bitfinex_btc2(self, args):
         _observer = ArbitrageBfxBtc2(monitor_only=False)
+        self.data_feed.register_observer(_observer)
+
+    def register_t_gate(self, args):
+        base_pair = "Bitfinex_BCH_USD"
+        pair1 = "Gate_BCC_BTC"
+        pair2 = "Bitfinex_BTC_USD"
+        kwargs = {
+            "precision": 2,
+            "fee_base": 0.002,
+            "fee_pair1": 0.002,
+            "fee_pair2": 0.002,
+            "min_amount_market": 0.001,
+            "min_amount_mid": 0.005,
+            "max_trade_amount": 5,
+            "min_trade_amount": 0.001,
+        }
+        _observer = TriangleArbitrageGate(base_pair=base_pair,
+                                          pair1=pair1,
+                                          pair2=pair2,
+                                          monitor_only=True,
+                                          **kwargs)
         self.data_feed.register_observer(_observer)
 
     def create_data_feed(self, args):

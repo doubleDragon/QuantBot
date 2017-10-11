@@ -18,6 +18,9 @@ class Gate(Market):
         if pair_code == 'eth_btc':
             base_currency = 'BTC'
             market_currency = 'ETH'
+        elif pair_code == 'bcc_btc':
+            base_currency = 'BTC'
+            market_currency = 'BCC'
         else:
             assert False
         return base_currency, market_currency
