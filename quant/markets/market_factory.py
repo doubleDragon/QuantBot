@@ -9,6 +9,7 @@ from ._cex import Cex
 from ._bittrex import Bittrex
 from ._binance import Binance
 from ._gate import Gate
+from ._bitflyer import Bitflyer
 
 
 def create_markets(exchange_names):
@@ -100,6 +101,12 @@ def create_markets(exchange_names):
             ex = Gate('eth_btc')
         elif name == "%s_BCC_BTC" % constant.EX_GATE:
             ex = Gate('bcc_btc')
+        elif name == "%s_BTC_JPY" % constant.EX_BITFLYER:
+            ex = Bitflyer('btc_jpy')
+        elif name == "%s_ETH_BTC" % constant.EX_BITFLYER:
+            ex = Bitflyer('eth_btc')
+        elif name == "%s_BCH_BTC" % constant.EX_BITFLYER:
+            ex = Bitflyer('bch_btc')
         else:
             logging.warn('Exchange ' + name + ' not supported!')
             assert False
