@@ -256,7 +256,7 @@ class CLI(object):
                 self.register_t_bitfinex_btc2(args)
             if "t-watch-gate-bcc" in args.command:
                 self.register_t_gate(args)
-            if "t-watch-bitflyer-bcc" in args.command:
+            if "t-watch-bitflyer-bch" in args.command:
                 self.register_t_bitflyer(args)
 
         self.data_feed.run_loop()
