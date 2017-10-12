@@ -474,7 +474,7 @@ class CLI(object):
             "max_trade_amount": 5,
             "min_trade_amount": 0.001,
         }
-        _observer = TriangleArbitrageBitflyer(base_pair=base_pair,
+        _observer = TriangleArbitrageGate(base_pair=base_pair,
                                           pair1=pair1,
                                           pair2=pair2,
                                           monitor_only=True,
@@ -495,7 +495,7 @@ class CLI(object):
             "max_trade_amount": 5,
             "min_trade_amount": 0.001,
         }
-        _observer = TriangleArbitrageGate(base_pair=base_pair,
+        _observer = TriangleArbitrageBitflyer(base_pair=base_pair,
                                           pair1=pair1,
                                           pair2=pair2,
                                           monitor_only=True,

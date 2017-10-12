@@ -55,8 +55,8 @@ class TriangleArbitrage(BasicBot):
         if not self.rate_usd_jpy:
             self.rate_usd_jpy = 112.0
 
-        # if not monitor_only:
-            # self.brokers = broker_factory.create_brokers([self.base_pair, self.pair_1, self.pair_2])
+        if not monitor_only:
+            self.brokers = broker_factory.create_brokers([self.base_pair, self.pair_1, self.pair_2])
 
         logging.debug('t_bfx params: ' + str(kwargs))
 
