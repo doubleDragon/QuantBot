@@ -17,7 +17,7 @@ from quant.observers.t_bfx import TriangleArbitrage as TriangleArbitrageBfx
 from quant.observers.t_gate import TriangleArbitrage as TriangleArbitrageGate
 from quant.observers.t_bitflyer import TriangleArbitrage as TriangleArbitrageBitflyer
 
-from quant.observers.t_bfx_btc import Arbitrage as ArbitrageBfxBtc
+from quant.observers.t_bfx_btc3 import Arbitrage as ArbitrageBfxBtc3
 from quant.observers.t_bfx_btc2 import Arbitrage as ArbitrageBfxBtc2
 
 from quant.brokers import broker_factory
@@ -453,7 +453,7 @@ class CLI(object):
         self.data_feed.register_observer(_observer)
 
     def register_t_bitfinex_btc(self, args):
-        _observer = ArbitrageBfxBtc(monitor_only=True)
+        _observer = ArbitrageBfxBtc3(monitor_only=False)
         self.data_feed.register_observer(_observer)
 
     def register_t_bitfinex_btc2(self, args):
