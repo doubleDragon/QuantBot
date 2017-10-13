@@ -55,10 +55,13 @@ class Bitfinex(Broker):
             'avg_price': float(res['avg_execution_price'])
         }
 
-        if res['is_live']:
-            resp['status'] = 'OPEN'
+        if res['is_cancelled']:
+            resp['status'] = 'CANCELED'
         else:
-            resp['status'] = 'CLOSE'
+            if res['is_live']:
+                resp['status'] = 'OPEN'
+            else:
+                resp['status'] = 'CLOSE'
 
         return resp
 

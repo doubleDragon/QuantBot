@@ -70,16 +70,16 @@ class Arbitrage(BasicBot):
                     if order_status:
                         break
                     else:
-                        if retry_count > 2:
+                        if retry_count > 1:
                             break
                         retry_count += 1
-                        time.sleep(1)
+                        time.sleep(0.5)
                 if not order_status:
                     # 找了3次都找不到，就当不在了
                     self.remove_order(order_id)
                     continue
 
-                if order_status['status'] == 'CLOSE':
+                if order_status['status'] == 'CLOSE' or order_status['status'] == 'CANCELED':
                     self.remove_order(order_id)
                     continue
                 else:
@@ -98,11 +98,11 @@ class Arbitrage(BasicBot):
                         # 先cancel再下单
                         cancel_res = self.brokers[market].cancel_order(order_id)
                         if not cancel_res:
-                            if retry_count > 2:
+                            if retry_count > 1:
                                 self.remove_order(order_id)
                                 break
                             retry_count += 1
-                            time.sleep(1)
+                            time.sleep(0.5)
                             continue
 
                         logging.info("handle_order======>cancel order %s, place new sell order amount:%s, price: %s" %
@@ -125,15 +125,15 @@ class Arbitrage(BasicBot):
                     if order_status:
                         break
                     else:
-                        if retry_count > 2:
+                        if retry_count > 1:
                             break
                         retry_count += 1
-                        time.sleep(1)
+                        time.sleep(0.5)
                 if not order_status:
                     # 找了3次都找不到，就当不在了
                     self.remove_order(order_id)
                     continue
-                if order_status['status'] == 'CLOSE':
+                if order_status['status'] == 'CLOSE' or order_status['status'] == 'CANCELED':
                     self.remove_order(order_id)
                     continue
                 else:
@@ -152,11 +152,11 @@ class Arbitrage(BasicBot):
                         # 先cancel再下单
                         cancel_res = self.brokers[market].cancel_order(order_id)
                         if not cancel_res:
-                            if retry_count > 2:
+                            if retry_count > 1:
                                 self.remove_order(order_id)
                                 break
                             retry_count += 1
-                            time.sleep(1)
+                            time.sleep(0.5)
                             continue
                         logging.info("handle_order======>cancel order %s, place new buy order amount:%s, price: %s" %
                                      (order_id, remaining_amount, price_buy))
