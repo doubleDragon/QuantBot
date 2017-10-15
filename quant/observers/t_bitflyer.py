@@ -15,10 +15,11 @@ class TriangleArbitrage(BasicBot):
     bch:
     python -m quant.cli -mBitfinex_BCH_USD,Bitflyer_BCH_BTC,Bitflyer_BTC_JPY t-watch-bitflyer-bch -v
 
-    Bitfinex Binance bch triangle arbitrage
-    config below:
-        bch: {min_amount_bch:0.001, min_amount_btc: 0.005}
-        bch: {min_amount_bch:0.001, min_amount_btc: 0.005}
+    eth
+    python -m quant.cli -mBitfinex_ETH_USD,Bitflyer_ETH_BTC,Bitflyer_BTC_JPY t-watch-bitflyer-eth -v
+
+
+    jpy换成美元
     """
 
     def __init__(self, base_pair, pair1, pair2, monitor_only=False, **kwargs):
@@ -308,9 +309,9 @@ class TriangleArbitrage(BasicBot):
 
             self.last_trade = time.time()
 
-            # def update_balance(self):
-            #     super(TriangleArbitrage, self).update_balance()
-            #     for name in self.brokers:
-            #         broker = self.brokers[name]
-            #         logging.info("%s btc balance: %s" % (broker.name, broker.btc_available))
-            #         logging.info("%s bch balance: %s" % (broker.name, broker.bch_available))
+    # def update_balance(self):
+    #     super(TriangleArbitrage, self).update_balance()
+    #     for name in self.brokers:
+    #         broker = self.brokers[name]
+    #         logging.info("%s btc balance: %s" % (broker.name, broker.btc_available))
+    #         logging.info("%s bch balance: %s" % (broker.name, broker.bch_available))
