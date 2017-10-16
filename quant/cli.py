@@ -257,7 +257,9 @@ class CLI(object):
             if "t-watch-gate-bcc" in args.command:
                 self.register_t_gate(args)
             if "t-watch-bitflyer-bch" in args.command:
-                self.register_t_bitflyer(args)
+                self.register_t_bitflyer_bch(args)
+            if "t-watch-bitflyer-eth" in args.command:
+                self.register_t_bitflyer_eth(args)
 
         self.data_feed.run_loop()
 
@@ -468,7 +470,7 @@ class CLI(object):
             "precision": 2,
             "fee_base": 0.002,
             "fee_pair1": 0.002,
-            "fee_pair2": 0.002,
+            "fee_pair2": 0.0015,
             "min_amount_market": 0.001,
             "min_amount_mid": 0.005,
             "max_trade_amount": 5,
@@ -481,25 +483,46 @@ class CLI(object):
                                           **kwargs)
         self.data_feed.register_observer(_observer)
 
-    def register_t_bitflyer(self, args):
+    def register_t_bitflyer_bch(self, args):
         base_pair = "Bitfinex_BCH_USD"
         pair1 = "Bitflyer_BCH_BTC"
         pair2 = "Bitflyer_BTC_JPY"
         kwargs = {
             "precision": 2,
             "fee_base": 0.002,
-            "fee_pair1": 0.0015,
+            "fee_pair1": 0.002,
             "fee_pair2": 0.0015,
-            "min_amount_market": 0.001,
+            "min_amount_market": 0.005,
             "min_amount_mid": 0.005,
             "max_trade_amount": 5,
             "min_trade_amount": 0.001,
         }
         _observer = TriangleArbitrageBitflyer(base_pair=base_pair,
-                                          pair1=pair1,
-                                          pair2=pair2,
-                                          monitor_only=True,
-                                          **kwargs)
+                                              pair1=pair1,
+                                              pair2=pair2,
+                                              monitor_only=True,
+                                              **kwargs)
+        self.data_feed.register_observer(_observer)
+
+    def register_t_bitflyer_eth(self, args):
+        base_pair = "Bitfinex_ETH_USD"
+        pair1 = "Bitflyer_ETH_BTC"
+        pair2 = "Bitflyer_BTC_JPY"
+        kwargs = {
+            "precision": 2,
+            "fee_base": 0.002,
+            "fee_pair1": 0.002,
+            "fee_pair2": 0.002,
+            "min_amount_market": 0.01,
+            "min_amount_mid": 0.005,
+            "max_trade_amount": 5,
+            "min_trade_amount": 0.01,
+        }
+        _observer = TriangleArbitrageBitflyer(base_pair=base_pair,
+                                              pair1=pair1,
+                                              pair2=pair2,
+                                              monitor_only=True,
+                                              **kwargs)
         self.data_feed.register_observer(_observer)
 
     def create_data_feed(self, args):
