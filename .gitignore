@@ -53,6 +53,7 @@ trade_history
 balance_history
 download.sh
 *.log
+*.log.*
 # marketmaker.py
 *.sublime-*
 snapshot_*.txt
