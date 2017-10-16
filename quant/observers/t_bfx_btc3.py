@@ -341,7 +341,8 @@ class Arbitrage(BasicBot):
             if not self.monitor_only:
                 logging.info("reverse======>prepare to trade")
                 amount_buy = hedge_btc_amount * (1 + self.fee_pair1)
-                self.new_order(market=self.base_pair, order_type='sell', amount=hedge_btc_amount, price=pair1_ask_price)
+                self.new_order(market=self.base_pair, order_type='sell', amount=hedge_btc_amount,
+                               price=base_pair_bid_price)
                 self.new_order(market=self.pair_1, order_type='buy', amount=amount_buy, price=pair1_ask_price)
                 self.new_order(market=self.pair_2, order_type='buy', amount=amount_buy, price=pair2_ask_price)
                 self.skip = True
