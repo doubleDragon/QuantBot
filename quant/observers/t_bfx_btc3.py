@@ -252,11 +252,16 @@ class Arbitrage(BasicBot):
 
             if not self.monitor_only:
                 logging.info("forward======>prepare to trade")
-                buy_amount_base = round(hedge_btc_amount * (1 + self.fee_base), 8)
-                self.new_order(market=self.base_pair, order_type='buy', amount=buy_amount_base,
-                               price=base_pair_ask_price)
-                self.new_order(market=self.pair_1, order_type='sell', amount=hedge_btc_amount, price=pair1_bid_price)
-                self.new_order(market=self.pair_2, order_type='sell', amount=hedge_btc_amount, price=pair2_bid_price)
+
+                r_sell1 = self.new_order(market=self.pair_1, order_type='sell', amount=hedge_btc_amount,
+                                         price=pair1_bid_price)
+                if r_sell1 and 'order_id' in r_sell1:
+                    r_sell2 = self.new_order(market=self.pair_2, order_type='sell', amount=hedge_btc_amount,
+                                             price=pair2_bid_price)
+                    if r_sell2 and 'order_id' in r_sell2:
+                        buy_amount_base = round(hedge_btc_amount * (1 + self.fee_base), 8)
+                        self.new_order(market=self.base_pair, order_type='buy', amount=buy_amount_base,
+                                       price=base_pair_ask_price)
                 self.skip = True
 
             self.last_trade = time.time()
@@ -341,11 +346,12 @@ class Arbitrage(BasicBot):
             if not self.monitor_only:
                 logging.info("reverse======>prepare to trade")
                 amount_buy = hedge_btc_amount * (1 + self.fee_pair1)
-                self.new_order(market=self.base_pair, order_type='sell', amount=hedge_btc_amount,
-                               price=base_pair_bid_price)
-                self.new_order(market=self.pair_1, order_type='buy', amount=amount_buy, price=pair1_ask_price)
-                self.new_order(market=self.pair_2, order_type='buy', amount=amount_buy, price=pair2_ask_price)
-                self.skip = True
+                r_sell = self.new_order(market=self.base_pair, order_type='sell', amount=hedge_btc_amount,
+                                        price=base_pair_bid_price)
+                if r_sell and 'order_id' in r_sell:
+                    self.new_order(market=self.pair_1, order_type='buy', amount=amount_buy, price=pair1_ask_price)
+                    self.new_order(market=self.pair_2, order_type='buy', amount=amount_buy, price=pair2_ask_price)
+                    self.skip = True
 
             self.last_trade = time.time()
 
