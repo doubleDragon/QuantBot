@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: UTF-8 -*-
+
 import logging
 
 from quant.common import constant
@@ -10,6 +13,7 @@ from ._bittrex import Bittrex
 from ._binance import Binance
 from ._gate import Gate
 from ._bitflyer import Bitflyer
+from ._kraken import Kraken
 
 
 def create_markets(exchange_names):
@@ -45,6 +49,8 @@ def create_markets(exchange_names):
             ex = Bitfinex('eosusd')
         elif name == "%s_EOS_BTC" % constant.EX_BFX:
             ex = Bitfinex('eosbtc')
+        elif name == "%s_EOS_ETH" % constant.EX_BFX:
+            ex = Bitfinex('eoseth')
         elif name == "%s_NEO_BTC" % constant.EX_BFX:
             ex = Bitfinex('neobtc')
         elif name == "%s_NEO_ETH" % constant.EX_BFX:
@@ -107,6 +113,22 @@ def create_markets(exchange_names):
             ex = Bitflyer('eth_btc')
         elif name == "%s_BCH_BTC" % constant.EX_BITFLYER:
             ex = Bitflyer('bch_btc')
+        elif name == "%s_ETH_EUR" % constant.EX_KRAKEN:
+            ex = Kraken('etheur')
+        elif name == "%s_ETH_USD" % constant.EX_KRAKEN:
+            ex = Kraken('ethusd')
+        elif name == "%s_BCH_EUR" % constant.EX_KRAKEN:
+            ex = Kraken('bcheur')
+        elif name == "%s_BCH_USD" % constant.EX_KRAKEN:
+            ex = Kraken('bchusd')
+        elif name == "%s_XBT_EUR" % constant.EX_KRAKEN:
+            ex = Kraken('xbteur')
+        elif name == "%s_XBT_USD" % constant.EX_KRAKEN:
+            ex = Kraken('xbtusd')
+        elif name == "%s_EOS_EUR" % constant.EX_KRAKEN:
+            ex = Kraken('eoseur')
+        elif name == "%s_EOS_USD" % constant.EX_KRAKEN:
+            ex = Kraken('eosusd')
         else:
             logging.warn('Exchange ' + name + ' not supported!')
             assert False

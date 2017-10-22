@@ -16,6 +16,7 @@ from quant.observers.t_lq_bn import TriangleArbitrage as TriangleArbitrageLqBn
 from quant.observers.t_bfx import TriangleArbitrage as TriangleArbitrageBfx
 from quant.observers.t_gate import TriangleArbitrage as TriangleArbitrageGate
 from quant.observers.t_bitflyer import TriangleArbitrage as TriangleArbitrageBitflyer
+from quant.observers.t_kraken2 import TriangleArbitrage as TriangleArbitrageKraken
 
 from quant.observers.t_bfx_btc3 import Arbitrage as ArbitrageBfxBtc3
 from quant.observers.t_bfx_btc2 import Arbitrage as ArbitrageBfxBtc2
@@ -260,6 +261,12 @@ class CLI(object):
                 self.register_t_bitflyer_bch(args)
             if "t-watch-bitflyer-eth" in args.command:
                 self.register_t_bitflyer_eth(args)
+            if "t-watch-kraken-bch-eur" in args.command:
+                self.register_t_kraken_bch(args)
+            if "t-watch-kraken-eth-eur" in args.command:
+                self.register_t_kraken_eth(args)
+            if "t-watch-kraken-eos-eur" in args.command:
+                self.register_t_kraken_eos(args)
 
         self.data_feed.run_loop()
 
@@ -523,6 +530,69 @@ class CLI(object):
                                               pair2=pair2,
                                               monitor_only=True,
                                               **kwargs)
+        self.data_feed.register_observer(_observer)
+
+    def register_t_kraken_bch(self, args):
+        base_pair = "Kraken_BCH_EUR"
+        pair1 = "Bitfinex_BCH_BTC"
+        pair2 = "Kraken_XBT_EUR"
+        kwargs = {
+            "precision": 2,
+            "fee_base": 0.002,
+            "fee_pair1": 0.002,
+            "fee_pair2": 0.002,
+            "min_amount_market": 0.001,
+            "min_amount_mid": 0.005,
+            "max_trade_amount": 5,
+            "min_trade_amount": 0.001,
+        }
+        _observer = TriangleArbitrageKraken(base_pair=base_pair,
+                                            pair1=pair1,
+                                            pair2=pair2,
+                                            monitor_only=True,
+                                            **kwargs)
+        self.data_feed.register_observer(_observer)
+
+    def register_t_kraken_eth(self, args):
+        base_pair = "Kraken_ETH_EUR"
+        pair1 = "Bitfinex_ETH_BTC"
+        pair2 = "Kraken_XBT_EUR"
+        kwargs = {
+            "precision": 2,
+            "fee_base": 0.002,
+            "fee_pair1": 0.002,
+            "fee_pair2": 0.002,
+            "min_amount_market": 0.01,
+            "min_amount_mid": 0.005,
+            "max_trade_amount": 5,
+            "min_trade_amount": 0.01,
+        }
+        _observer = TriangleArbitrageKraken(base_pair=base_pair,
+                                            pair1=pair1,
+                                            pair2=pair2,
+                                            monitor_only=True,
+                                            **kwargs)
+        self.data_feed.register_observer(_observer)
+
+    def register_t_kraken_eos(self, args):
+        base_pair = "Kraken_EOS_EUR"
+        pair1 = "Bitfinex_EOS_ETH"
+        pair2 = "Kraken_ETH_EUR"
+        kwargs = {
+            "precision": 2,
+            "fee_base": 0.002,
+            "fee_pair1": 0.002,
+            "fee_pair2": 0.002,
+            "min_amount_market": 0.001,
+            "min_amount_mid": 0.001,
+            "max_trade_amount": 5,
+            "min_trade_amount": 0.001,
+        }
+        _observer = TriangleArbitrageKraken(base_pair=base_pair,
+                                            pair1=pair1,
+                                            pair2=pair2,
+                                            monitor_only=True,
+                                            **kwargs)
         self.data_feed.register_observer(_observer)
 
     def create_data_feed(self, args):

@@ -30,6 +30,7 @@ EX_HITBITC = 'Hitbtc'
 EX_BITTREX = 'Bittrex'
 EX_GATE = 'Gate'
 EX_BITFLYER = 'Bitflyer'
+EX_KRAKEN = 'Kraken'
 
 EX_SET = (
     EX_OKEX,
@@ -40,7 +41,8 @@ EX_SET = (
     EX_CEX,
     EX_EXMO,
     EX_BITTREX,
-    EX_BITFLYER
+    EX_BITFLYER,
+    EX_KRAKEN
 )
 
 """

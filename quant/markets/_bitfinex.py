@@ -53,6 +53,9 @@ class Bitfinex(Market):
         elif pair_code == 'eosusd':
             base_currency = 'USD'
             market_currency = 'EOS'
+        elif pair_code == 'eoseth':
+            base_currency = 'ETH'
+            market_currency = 'EOS'
         elif pair_code == 'zecusd':
             base_currency = 'USD'
             market_currency = 'ZEC'
