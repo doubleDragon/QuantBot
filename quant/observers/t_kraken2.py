@@ -13,16 +13,16 @@ from .basicbot import BasicBot
 class TriangleArbitrage(BasicBot):
     """
     bch:
-    python -m quant.cli -mKraken_BCH_EUR,Bitfinex_BCH_BTC,Kraken_XBT_EUR t-watch-kraken-bch-eur -v
-    python -m quant.cli -mKraken_BCH_USD,Bitfinex_BCH_BTC,Kraken_XBT_USD t-watch-kraken-bch-btc -v
+    python -m quant.cli -mKraken_BCH_EUR,Bitfinex_BCH_BTC,Kraken_XBT_EUR t-watch-kraken-bch-eur2 -v
+    python -m quant.cli -mKraken_BCH_USD,Bitfinex_BCH_BTC,Kraken_XBT_USD t-watch-kraken-bch-btc2 -v
 
     eth:
-    python -m quant.cli -mKraken_ETH_EUR,Bitfinex_ETH_BTC,Kraken_XBT_EUR t-watch-kraken-eth-eur -v
-    python -m quant.cli -mKraken_ETH_USD,Bitfinex_ETH_BTC,Kraken_XBT_USD t-watch-kraken-eth-btc -v
+    python -m quant.cli -mKraken_ETH_EUR,Bitfinex_ETH_BTC,Kraken_XBT_EUR t-watch-kraken-eth-eur2 -v
+    python -m quant.cli -mKraken_ETH_USD,Bitfinex_ETH_BTC,Kraken_XBT_USD t-watch-kraken-eth-btc2 -v
 
 
     eos:
-    python -m quant.cli -mKraken_EOS_EUR,Bitfinex_EOS_ETH,Kraken_ETH_EUR t-watch-kraken-eos-eur -v
+    python -m quant.cli -mKraken_EOS_EUR,Bitfinex_EOS_ETH,Kraken_ETH_EUR t-watch-kraken-eos-eur2 -v
 
     和kraken1 不同的是，不需要转换为美元
 
