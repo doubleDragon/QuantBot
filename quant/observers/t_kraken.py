@@ -14,6 +14,7 @@ class TriangleArbitrage(BasicBot):
     """
     bch:
     # python -m quant.cli -mKraken_BCH_EUR,Bitfinex_BCH_BTC,Bitfinex_BTC_USD t-watch-kraken-bch -v
+    python -m quant.cli -mKraken_BCH_EUR,Bitfinex_BCH_BTC,Kraken_XBT_USD t-watch-kraken-bch -v
 
     eth:
     # python -m quant.cli -mKraken_ETH_EUR,Bitfinex_ETH_BTC,Bitfinex_BTC_USD t-watch-kraken-eth -v

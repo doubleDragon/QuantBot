@@ -264,6 +264,8 @@ class CLI(object):
                 self.register_t_bitflyer_eth(args)
             if "t-watch-kraken-bch-eur2" in args.command:
                 self.register_t_kraken_bch2(args)
+            if "t-watch-kraken-bch" in args.command:
+                self.register_t_kraken_bch(args)
             if "t-watch-kraken-eth-eur2" in args.command:
                 self.register_t_kraken_eth2(args)
             if "t-watch-kraken-eth" in args.command:
@@ -550,6 +552,27 @@ class CLI(object):
             "min_trade_amount": 0.001,
         }
         _observer = TriangleArbitrageKraken2(base_pair=base_pair,
+                                             pair1=pair1,
+                                             pair2=pair2,
+                                             monitor_only=True,
+                                             **kwargs)
+        self.data_feed.register_observer(_observer)
+
+    def register_t_kraken_bch(self, args):
+        base_pair = "Kraken_BCH_EUR"
+        pair1 = "Bitfinex_BCH_BTC"
+        pair2 = "Kraken_XBT_USD"
+        kwargs = {
+            "precision": 2,
+            "fee_base": 0.002,
+            "fee_pair1": 0.002,
+            "fee_pair2": 0.002,
+            "min_amount_market": 0.001,
+            "min_amount_mid": 0.005,
+            "max_trade_amount": 5,
+            "min_trade_amount": 0.001,
+        }
+        _observer = TriangleArbitrageKraken(base_pair=base_pair,
                                              pair1=pair1,
                                              pair2=pair2,
                                              monitor_only=True,
