@@ -21,7 +21,7 @@ class Market(object):
         self.fee_rate = fee_rate
 
         self.depth_updated = 0
-        self.update_rate = 3
+        self.update_rate = 1
 
         self.is_terminated = False
         self.request_timeout = 5  # 5s

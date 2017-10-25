@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-from bunch import Bunch
 
 
 def sort_and_format_list(l, reverse=False):

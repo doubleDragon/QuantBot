@@ -14,6 +14,7 @@ from ._binance import Binance
 from ._gate import Gate
 from ._bitflyer import Bitflyer
 from ._kraken import Kraken
+from ._coinegg import Coinegg
 
 
 def create_markets(exchange_names):
@@ -129,6 +130,10 @@ def create_markets(exchange_names):
             ex = Kraken('eoseur')
         elif name == "%s_EOS_USD" % constant.EX_KRAKEN:
             ex = Kraken('eosusd')
+        elif name == "%s_BCC_BTC" % constant.EX_COINEGG:
+            ex = Coinegg('bcc')
+        elif name == "%s_ETH_BTC" % constant.EX_COINEGG:
+            ex = Coinegg('eth')
         else:
             logging.warn('Exchange ' + name + ' not supported!')
             assert False

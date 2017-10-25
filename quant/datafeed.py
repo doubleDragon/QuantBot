@@ -89,7 +89,8 @@ class DataFeed(object):
 
         for market in self.markets:
             futures.append(self.thread_pool.submit(self.__get_market_depth, market, depths))
-        wait(futures, timeout=20)
+        # wait(futures, timeout=20)
+        wait(futures, timeout=2.5)
         return depths
 
     def print_tickers(self):
