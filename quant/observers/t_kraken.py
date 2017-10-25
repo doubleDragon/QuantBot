@@ -1,32 +1,32 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 from __future__ import division
-import logging
 
+import logging
 import time
 
 from quant.brokers import broker_factory
-from quant.tool.rate import Rate
+from quant.common import log
 from .basicbot import BasicBot
 
 
 class TriangleArbitrage(BasicBot):
     """
     bch:
-    # python -m quant.cli -mKraken_BCH_EUR,Bitfinex_BCH_BTC,Bitfinex_BTC_USD t-watch-kraken-bch -v
-    python -m quant.cli -mKraken_BCH_EUR,Bitfinex_BCH_BTC,Kraken_XBT_USD t-watch-kraken-bch -v
+    # python -m quant.cli -mKraken_BCH_EUR,Bitfinex_BCH_BTC,Kraken_XBT_EUR t-watch-kraken-bch -v
+    python -m quant.cli -mKraken_BCH_USD,Bitfinex_BCH_BTC,Kraken_XBT_USD t-watch-kraken-bch -v
 
     eth:
-    # python -m quant.cli -mKraken_ETH_EUR,Bitfinex_ETH_BTC,Bitfinex_BTC_USD t-watch-kraken-eth -v
-    python -m quant.cli -mKraken_ETH_EUR,Bitfinex_ETH_BTC,Kraken_XBT_USD t-watch-kraken-eth -v
+    # python -m quant.cli -mKraken_ETH_EUR,Bitfinex_ETH_BTC,Kraken_XBT_EUR t-watch-kraken-eth -v
+    python -m quant.cli -mKraken_ETH_USD,Bitfinex_ETH_BTC,Kraken_XBT_USD t-watch-kraken-eth -v
 
 
-    1，统一用美元来计算差价
-    2，下单的时候还是用原目标外汇, 比如欧元、日元
+    eos:
+    python -m quant.cli -mKraken_EOS_EUR,Bitfinex_EOS_ETH,Kraken_ETH_EUR t-watch-kraken-eos-eur2 -v
 
+    和kraken1 不同的是，不需要转换为美元
 
     目前的限制:
-    1, 目前只保存了base_pair的原价和转换价，如果pair1和pair2换成 kraken的eur或者jpy的时候，需要改动
     """
 
     def __init__(self, base_pair, pair1, pair2, monitor_only=False, **kwargs):
@@ -58,51 +58,57 @@ class TriangleArbitrage(BasicBot):
         self.count_reverse = 0
         self.trigger_diff_percent = 0.7
 
-        # 统一转换成usd, 这里默认用eur
-        self.rate_base = self.get_rate('EUR')
-        kwargs['rate_base'] = self.rate_base
-
         if not monitor_only:
             self.brokers = broker_factory.create_brokers([self.base_pair, self.pair_1, self.pair_2])
 
-        logging.debug('t_kraken params: ' + str(kwargs))
+        self.logger = log.get_logger(log_name="kraken", level=logging.INFO)
 
-    @classmethod
-    def get_rate(cls, target):
-        if not target or target == 'USD':
-            return 0
-        res = Rate().query('USD', target)
-        if res:
-            return res
-        if target == 'EUR':
-            return 1.1783
-        elif target == 'JPY':
-            return 0.008811
-        else:
-            assert False
+        self.logger.debug('t_kraken params: ' + str(kwargs))
 
     def is_depths_available(self, depths):
-        return self.base_pair in depths and self.pair_1 in depths and self.pair_2 in depths
+        res = self.base_pair in depths and self.pair_1 in depths and self.pair_2 in depths
+        if not res:
+            return False
+
+        # base empty
+        res = 'asks' in depths[self.base_pair] and 'bids' in depths[self.base_pair]
+        if not res:
+            return False
+        if len(depths[self.base_pair]['asks']) <= 0 or len(depths[self.base_pair]['bids']) <= 0:
+            return False
+
+        res = 'asks' in depths[self.pair_1] and 'bids' in depths[self.pair_1]
+        if not res:
+            return False
+        if len(depths[self.pair_1]['asks']) <= 0 or len(depths[self.pair_1]['bids']) <= 0:
+            return False
+
+        res = 'asks' in depths[self.pair_2] and 'bids' in depths[self.pair_2]
+        if not res:
+            return False
+        if len(depths[self.pair_2]['asks']) <= 0 or len(depths[self.pair_2]['bids']) <= 0:
+            return False
+
+        return True
 
     def tick(self, depths):
         if not self.monitor_only:
             self.update_balance()
         if not self.is_depths_available(depths):
-            # logging.debug("depths is not available")
+            # self.logger.debug("depths is not available")
             return
-        logging.info("count_forward: %s, count_reverse: %s" % (self.count_forward, self.count_reverse))
+        self.logger.info("count_forward: %s, count_reverse: %s" % (self.count_forward, self.count_reverse))
         self.skip = False
         self.forward(depths)
         self.reverse(depths)
 
     def forward(self, depths):
-        logging.info("==============正循环, base买 合成卖==============")
+        self.logger.info("==============正循环, base买 合成卖==============")
         base_pair_ask_amount = depths[self.base_pair]['asks'][0]['amount']
-        base_pair_ask_price_origin = depths[self.base_pair]['asks'][0]['price']
-        base_pair_ask_price = base_pair_ask_price_origin / self.rate_base
+        base_pair_ask_price = depths[self.base_pair]['asks'][0]['price']
         base_pair_ask_price_real = base_pair_ask_price * (1 + self.fee_base)
 
-        logging.info("forward======>base_pair: %s ask_price:%s" % (self.base_pair, base_pair_ask_price))
+        self.logger.info("forward======>base_pair: %s ask_price:%s" % (self.base_pair, base_pair_ask_price))
 
         """所有的real都是带手续费的价格"""
         pair1_bid_amount = depths[self.pair_1]['bids'][0]['amount']
@@ -118,9 +124,9 @@ class TriangleArbitrage(BasicBot):
         """价差， diff=卖－买"""
         p_diff = round(synthetic_bid_price - base_pair_ask_price, self.precision)
 
-        logging.info("forward======>%s bid_price: %s,  %s bid_price: %s" %
-                     (self.pair_1, pair1_bid_price, self.pair_2, pair2_bid_price))
-        logging.info("forward======>synthetic_bid_price: %s,   p_diff: %s" % (synthetic_bid_price, p_diff))
+        self.logger.info("forward======>%s bid_price: %s,  %s bid_price: %s" %
+                         (self.pair_1, pair1_bid_price, self.pair_2, pair2_bid_price))
+        self.logger.info("forward======>synthetic_bid_price: %s,   p_diff: %s" % (synthetic_bid_price, p_diff))
 
         if pair1_bid_price == 0:
             return
@@ -140,12 +146,12 @@ class TriangleArbitrage(BasicBot):
             hedge_mid_amount = round(hedge_quote_amount * pair1_bid_price, 8)
             if hedge_quote_amount < self.min_amount_market:
                 """bitfinex限制bch_usd最小可交易的bch order size为0.001"""
-                logging.info("forward======>hedge_quote_amount is too small! %s" % hedge_quote_amount)
+                self.logger.info("forward======>hedge_quote_amount is too small! %s" % hedge_quote_amount)
                 return
 
             if hedge_mid_amount < self.min_amount_mid:
                 """bitfinex限制btc_usd最小可交易amount为0.005, liqui限制单次交易btc的amount为0.0001, 所以这里取0.005"""
-                logging.info("forward======>hedge_mid_amount is too small! %s" % hedge_mid_amount)
+                self.logger.info("forward======>hedge_mid_amount is too small! %s" % hedge_mid_amount)
                 return
         else:
             """余额限制base最多能买多少个bch, pair1 最多能卖多少个bch, 要带上手续费"""
@@ -160,54 +166,57 @@ class TriangleArbitrage(BasicBot):
             hedge_quote_amount = min(hedge_quote_amount_market, hedge_quote_amount_balance, self.min_trade_amount)
             hedge_mid_amount = hedge_quote_amount * pair1_bid_price
 
-            logging.info("forward======>balance allow quote: %s and mid: %s, market allow quote: %s and btc: %s " %
-                         (hedge_quote_amount_balance, hedge_mid_amount_balance,
-                          hedge_quote_amount_market, hedge_mid_amount_market))
+            self.logger.info("forward======>balance allow quote: %s and mid: %s, market allow quote: %s and btc: %s " %
+                             (hedge_quote_amount_balance, hedge_mid_amount_balance,
+                              hedge_quote_amount_market, hedge_mid_amount_market))
 
             if hedge_quote_amount < self.min_amount_market:
                 """bitfinex限制bch_usd最小可交易的bch order size为0.001"""
-                logging.info("forward======>hedge_quote_amount is too small! %s" % hedge_quote_amount)
+                self.logger.info("forward======>hedge_quote_amount is too small! %s" % hedge_quote_amount)
                 return
 
             if hedge_mid_amount < self.min_amount_mid or hedge_mid_amount > hedge_mid_amount_balance:
                 """bitfinex限制btc_usd最小可交易amount为0.005, liqui限制单次交易btc的amount为0.0001, 所以这里取0.005"""
                 """btc余额不足也不行"""
-                logging.info("forward======>hedge_mid_amount is too small! %s" % hedge_mid_amount)
+                self.logger.info("forward======>hedge_mid_amount is too small! %s" % hedge_mid_amount)
                 return
 
         """
         计算的关键点在于bcc和btc的买卖amount除去手续费后是相同的，也就是进行一个循环交易后bcc和btc的总量是不变的, 变的是usd
         profit=去除交易手续费后交易hedge_quote_amount的赢利
         """
-        logging.info("forward======>base_pair_ask_price_real: %s,  synthetic_bid_price_real: %s, [%s, %s]" %
-                     (base_pair_ask_price_real, synthetic_bid_price_real, pair1_bid_price_real, pair2_bid_price_real))
+        self.logger.info("forward======>base_pair_ask_price_real: %s,  synthetic_bid_price_real: %s, [%s, %s]" %
+                         (base_pair_ask_price_real, synthetic_bid_price_real, pair1_bid_price_real,
+                          pair2_bid_price_real))
         t_price = round(synthetic_bid_price_real - base_pair_ask_price_real, self.precision)
         """差价百分比"""
         t_price_percent = round(t_price / base_pair_ask_price_real * 100, 2)
         profit = round(t_price * hedge_quote_amount, self.precision)
-        logging.info("forward======>t_price: %s, t_price_percent: %s, profit: %s" % (t_price, t_price_percent, profit))
+        self.logger.info(
+            "forward======>t_price: %s, t_price_percent: %s, profit: %s" % (t_price, t_price_percent, profit))
         if profit > 0:
             if t_price_percent > self.trigger_diff_percent:
                 self.count_forward += 1
-            logging.info("forward======>find profit!!!: profit:%s,  quote amount: %s and mid amount: %s,  t_price: %s" %
-                         (profit, hedge_quote_amount, hedge_mid_amount, t_price))
+            self.logger.info(
+                "forward======>find profit!!!: profit:%s,  quote amount: %s and mid amount: %s,  t_price: %s" %
+                (profit, hedge_quote_amount, hedge_mid_amount, t_price))
             if profit < self.profit_trigger:
-                logging.warn("forward======>profit should >= %s usd" % self.profit_trigger)
+                self.logger.warn("forward======>profit should >= %s usd" % self.profit_trigger)
                 return
 
             current_time = time.time()
             if current_time - self.last_trade < 5:
-                logging.warn("forward======>Can't automate this trade, last trade " +
-                             "occured %.2f seconds ago" %
-                             (current_time - self.last_trade))
+                self.logger.warn("forward======>Can't automate this trade, last trade " +
+                                 "occured %.2f seconds ago" %
+                                 (current_time - self.last_trade))
                 return
 
             if not self.monitor_only:
-                logging.info("forward======>Ready to trade")
+                self.logger.info("forward======>Ready to trade")
                 amount_base = hedge_quote_amount * (1 + self.fee_base)
                 amount_pair2 = hedge_quote_amount * pair1_bid_price * (1 - self.fee_pair1)
                 self.new_order(market=self.base_pair, order_type='buy', amount=amount_base,
-                               price=base_pair_ask_price_origin)
+                               price=base_pair_ask_price)
                 self.new_order(market=self.pair_1, order_type='sell',
                                amount=hedge_quote_amount, price=pair1_bid_price)
                 self.new_order(market=self.pair_2, order_type='sell', amount=amount_pair2,
@@ -219,13 +228,12 @@ class TriangleArbitrage(BasicBot):
     def reverse(self, depths):
         if self.skip and (not self.monitor_only):
             return
-        logging.info("==============逆循环, base卖 合成买==============")
+        self.logger.info("==============逆循环, base卖 合成买==============")
         base_pair_bid_amount = depths[self.base_pair]['bids'][0]['amount']
-        base_pair_bid_price_origin = depths[self.base_pair]['bids'][0]['price']
-        base_pair_bid_price = base_pair_bid_price_origin / self.rate_base
+        base_pair_bid_price = depths[self.base_pair]['bids'][0]['price']
         base_pair_bid_price_real = base_pair_bid_price * (1 - self.fee_base)
 
-        logging.info("reverse======>base_pair: %s bid_price:%s" % (self.base_pair, base_pair_bid_price))
+        self.logger.info("reverse======>base_pair: %s bid_price:%s" % (self.base_pair, base_pair_bid_price))
 
         pair1_ask_amount = depths[self.pair_1]['asks'][0]['amount']
         pair1_ask_price = depths[self.pair_1]['asks'][0]['price']
@@ -239,9 +247,9 @@ class TriangleArbitrage(BasicBot):
         synthetic_ask_price_real = round(pair1_ask_price_real * pair2_ask_price_real, self.precision)
         p_diff = round(base_pair_bid_price - synthetic_ask_price, self.precision)
 
-        logging.info("reverse======>%s ask_price: %s,  %s ask_price: %s" %
-                     (self.pair_1, pair1_ask_price, self.pair_2, pair2_ask_price))
-        logging.info("reverse======>synthetic_ask_price: %s,   p_diff: %s" % (synthetic_ask_price, p_diff))
+        self.logger.info("reverse======>%s ask_price: %s,  %s ask_price: %s" %
+                         (self.pair_1, pair1_ask_price, self.pair_2, pair2_ask_price))
+        self.logger.info("reverse======>synthetic_ask_price: %s,   p_diff: %s" % (synthetic_ask_price, p_diff))
         if pair1_ask_price == 0 or pair2_ask_price == 0:
             return
 
@@ -260,12 +268,12 @@ class TriangleArbitrage(BasicBot):
             hedge_mid_amount = round(hedge_quote_amount * pair1_ask_price, 8)
             if hedge_quote_amount < self.min_amount_market:
                 """bfx限制bch最小订单数量为0.001"""
-                logging.info("reverse======>hedge_quote_amount is too small! %s" % hedge_quote_amount)
+                self.logger.info("reverse======>hedge_quote_amount is too small! %s" % hedge_quote_amount)
                 return
 
             if hedge_mid_amount < self.min_amount_mid:
                 """lq限制最小btc的total为0.0001, bfx的bch_usd交易订单限制amount为0.005"""
-                logging.info("reverse======>hedge_mid_amount is too small! %s" % hedge_mid_amount)
+                self.logger.info("reverse======>hedge_mid_amount is too small! %s" % hedge_mid_amount)
                 return
         else:
             """余额限制base最多能卖多少个bch, pair1 最多能买多少个bch, 要带上手续费"""
@@ -277,52 +285,55 @@ class TriangleArbitrage(BasicBot):
             hedge_quote_amount = min(hedge_quote_amount_market, hedge_quote_amount_balance, self.min_trade_amount)
             hedge_mid_amount = hedge_quote_amount * pair1_ask_price
 
-            logging.info("reverse======>balance allow bch: %s and btc: %s, market allow bch: %s and btc: %s " %
-                         (hedge_quote_amount_balance, hedge_mid_amount_balance,
-                          hedge_quote_amount_market, hedge_mid_amount_market))
+            self.logger.info("reverse======>balance allow bch: %s and btc: %s, market allow bch: %s and btc: %s " %
+                             (hedge_quote_amount_balance, hedge_mid_amount_balance,
+                              hedge_quote_amount_market, hedge_mid_amount_market))
 
             if hedge_quote_amount < self.min_amount_market:
                 """bfx限制bch最小订单数量为0.001"""
-                logging.info("reverse======>hedge_quote_amount is too small! %s" % hedge_quote_amount)
+                self.logger.info("reverse======>hedge_quote_amount is too small! %s" % hedge_quote_amount)
                 return
 
             if hedge_mid_amount < self.min_amount_mid or hedge_mid_amount > hedge_mid_amount_balance:
                 """lq限制最小btc的total为0.0001, bfx的bch_usd交易订单限制amount为0.005"""
                 """并且不能大于余额的限制"""
-                logging.info("reverse======>hedge_mid_amount is too small! %s" % hedge_mid_amount)
+                self.logger.info("reverse======>hedge_mid_amount is too small! %s" % hedge_mid_amount)
                 return
 
         """
         计算的关键点在于bcc和btc的买卖amount除去手续费后是相同的，也就是进行一个循环交易后bcc和btc的总量是不变的, 变的是usd
         profit=去除交易手续费后交易hedge_quote_amount的赢利
         """
-        logging.info("reverse======>base_pair_bid_price_real: %s,  synthetic_ask_price_real: %s, [%s, %s]" %
-                     (base_pair_bid_price_real, synthetic_ask_price_real, pair1_ask_price_real, pair2_ask_price_real))
+        self.logger.info("reverse======>base_pair_bid_price_real: %s,  synthetic_ask_price_real: %s, [%s, %s]" %
+                         (base_pair_bid_price_real, synthetic_ask_price_real, pair1_ask_price_real,
+                          pair2_ask_price_real))
         t_price = round(base_pair_bid_price_real - synthetic_ask_price_real, self.precision)
         t_price_percent = round(t_price / synthetic_ask_price_real * 100, 2)
         profit = round(t_price * hedge_quote_amount, self.precision)
-        logging.info("reverse======>t_price: %s, t_price_percent: %s, profit: %s" % (t_price, t_price_percent, profit))
+        self.logger.info(
+            "reverse======>t_price: %s, t_price_percent: %s, profit: %s" % (t_price, t_price_percent, profit))
         if profit > 0:
             if t_price_percent > self.trigger_diff_percent:
                 self.count_reverse += 1
-            logging.info("reverse======>find profit!!!: profit:%s,  quote amount: %s and mid amount: %s, t_price: %s" %
-                         (profit, hedge_quote_amount, hedge_mid_amount, t_price))
+            self.logger.info(
+                "reverse======>find profit!!!: profit:%s,  quote amount: %s and mid amount: %s, t_price: %s" %
+                (profit, hedge_quote_amount, hedge_mid_amount, t_price))
             if profit < self.profit_trigger:
-                logging.warn("reverse======>profit should >= %s usd" % self.profit_trigger)
+                self.logger.warn("reverse======>profit should >= %s usd" % self.profit_trigger)
                 return
 
             current_time = time.time()
             if current_time - self.last_trade < 5:
-                logging.warn("reverse======>Can't automate this trade, last trade " +
-                             "occured %.2f seconds ago" %
-                             (current_time - self.last_trade))
+                self.logger.warn("reverse======>Can't automate this trade, last trade " +
+                                 "occured %.2f seconds ago" %
+                                 (current_time - self.last_trade))
                 return
             if not self.monitor_only:
-                logging.info("reverse======>Ready to trade")
+                self.logger.info("reverse======>Ready to trade")
                 amount_pair1 = hedge_quote_amount * (1 + self.fee_pair1)
                 amount_pair2 = hedge_quote_amount * pair1_ask_price * (1 + self.fee_pair2) * (1 + self.fee_pair1)
                 self.new_order(market=self.base_pair, order_type='sell', amount=hedge_quote_amount,
-                               price=base_pair_bid_price_origin)
+                               price=base_pair_bid_price)
                 self.new_order(market=self.pair_1, order_type='buy', amount=amount_pair1, price=pair1_ask_price)
                 self.new_order(market=self.pair_2, order_type='buy', amount=amount_pair2, price=pair2_ask_price)
                 self.skip = True
@@ -333,5 +344,5 @@ class TriangleArbitrage(BasicBot):
             #     super(TriangleArbitrage, self).update_balance()
             #     for name in self.brokers:
             #         broker = self.brokers[name]
-            #         logging.info("%s btc balance: %s" % (broker.name, broker.btc_available))
-            #         logging.info("%s bch balance: %s" % (broker.name, broker.bch_available))
+            #         self.logger.info("%s btc balance: %s" % (broker.name, broker.btc_available))
+            #         self.logger.info("%s bch balance: %s" % (broker.name, broker.bch_available))
