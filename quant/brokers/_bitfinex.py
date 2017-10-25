@@ -1,8 +1,12 @@
-# coding=utf-8
-# Copyright (C) 2017, Philsong <songbohr@gmail.com>
+#!/usr/bin/env python
+# -*- coding: UTF-8 -*-
+
+from __future__ import division
+
 from quant import config
 from .broker import Broker
 from quant.api.bitfinex import PrivateClient as BfxClient
+from quant.common import constant
 import logging
 
 
@@ -55,13 +59,15 @@ class Bitfinex(Broker):
             'avg_price': float(res['avg_execution_price'])
         }
 
-        if res['is_cancelled']:
-            resp['status'] = 'CANCELED'
+        is_cancelled = resp['is_cancelled']
+        is_completed = (resp['amount'] == resp['deal_amount'])
+        if is_completed:
+            resp['status'] = constant.ORDER_STATE_CLOSED
         else:
-            if res['is_live']:
-                resp['status'] = 'OPEN'
+            if is_cancelled:
+                resp['status'] = constant.ORDER_STATE_CANCELED
             else:
-                resp['status'] = 'CLOSE'
+                resp['status'] = constant.ORDER_STATE_PENDING
 
         return resp
 
@@ -69,7 +75,7 @@ class Bitfinex(Broker):
         res = self.client.get_order(int(order_id))
         if not res:
             return None
-        logging.info('get_order id: %s, res: %s' % (order_id, res))
+        logging.DEBUG('get_order id: %s, res: %s' % (order_id, res))
 
         assert str(res['id']) == str(order_id)
         return self._order_status(res)
@@ -127,6 +133,14 @@ class Bitfinex(Broker):
                 self.bt2_available = float(entry['available'])
                 self.bt2_balance = float(entry['amount'])
         return res
+
+    def _ticker(self):
+        resp = self.client.ticker(self.pair_code)
+        if resp:
+            return {
+                'bid': float(resp['bid']),
+                'ask': float(resp['ask'])
+            }
 
     @classmethod
     def get_available_pairs(cls, pair_code):

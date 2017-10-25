@@ -112,3 +112,6 @@ class Liqui(Broker):
                 self.btc_available = float(value)
                 self.btc_balance = float(value)
         return res
+
+    def _ticker(self):
+        pass

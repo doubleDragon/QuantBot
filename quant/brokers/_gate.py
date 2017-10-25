@@ -110,3 +110,6 @@ class Gate(Broker):
                 self.eth_available = float(res1['BTC']) + self.eth_available
 
         return res
+
+    def _ticker(self):
+        pass

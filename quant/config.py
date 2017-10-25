@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: UTF-8 -*-
+
 from decouple import config
 
 markets = [
@@ -23,6 +26,11 @@ markets = [
 # observers if any
 # ["Logger", "TraderBot", "TraderBotSim", "HistoryDumper", "Emailer", "SpecializedTraderBot"]
 observers = ["Logger"]
+
+# 重试时间间隔
+INTERVAL_MARKET = 1
+INTERVAL_API = 0.8
+INTERVAL_RETRY = 1
 
 # market_expiration_time = 120  # in seconds: 2 minutes
 market_expiration_time = 2  # in seconds: 2 minutes

@@ -163,6 +163,14 @@ class Broker(object):
             return None
         return res
 
+    def get_ticker(self):
+        try:
+            res = self._ticker()
+        except Exception as e:
+            logging.error('%s %s except: %s' % (self.name, get_current_function_name(), e))
+            return None
+        return res
+
     def _buy_limit(self, amount, price):
         raise NotImplementedError("%s.buy(self, amount, price)" % self.name)
 
@@ -198,6 +206,9 @@ class Broker(object):
 
     def _get_balances(self):
         raise NotImplementedError("%s.get_balances(self)" % self.name)
+
+    def _ticker(self):
+        raise NotImplementedError("%s.ticker(self)" % self.name)
 
     def test(self):
         raise

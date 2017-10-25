@@ -98,6 +98,9 @@ class Bittrex(Broker):
 
         return res
 
+    def _ticker(self):
+        pass
+
     def test(self):
         order_id = self.buy_limit(0.11, 0.02)
         print(order_id)

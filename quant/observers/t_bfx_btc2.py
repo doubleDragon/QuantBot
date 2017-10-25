@@ -5,6 +5,8 @@ import logging
 
 import time
 
+from quant import config
+from quant.common import constant
 from .basicbot import BasicBot
 from quant.brokers import broker_factory
 
@@ -40,6 +42,8 @@ class Arbitrage(BasicBot):
         self.skip = False
         self.brokers = broker_factory.create_brokers([self.base_pair, self.pair_1, self.pair_2])
 
+        self.error_count = 0
+
     def is_depths_available(self, depths):
         res = self.base_pair in depths and self.pair_1 in depths and self.pair_2 in depths
         if not res:
@@ -56,126 +60,11 @@ class Arbitrage(BasicBot):
 
         return True
 
-    def handle_order(self, depths):
-        """处理历史订单，如果未成交，则cancel掉并重新下单"""
-        if self.is_selling():
-            orders_sell = self.get_orders("sell")
-            for order in orders_sell:
-                order_id = order['order_id']
-                market = order['market']
-                retry_count = 0
-                while True:
-                    order_status = self.brokers[market].get_order(order_id)
-                    if order_status:
-                        break
-                    else:
-                        if retry_count > 1:
-                            break
-                        retry_count += 1
-                        time.sleep(0.5)
-                if not order_status:
-                    # 找了3次都找不到，就当不在了
-                    self.remove_order(order_id)
-                    continue
-
-                if order_status['status'] == 'CLOSE' or order_status['status'] == 'CANCELED':
-                    self.remove_order(order_id)
-                    continue
-                else:
-                    # is pending order
-                    remaining_amount = order_status['amount'] - order_status['deal_amount']
-                    if remaining_amount <= self.min_amount_market:
-                        # 未成交部分小于min_stock, 所以算完成了
-                        self.remove_order(order_id)
-                        continue
-                    price_sell = depths[market]['bids'][0]['price']
-                    if price_sell < 0.0:
-                        # depth异常，直接return, 下次处理
-                        continue
-                    retry_count = 0
-                    while True:
-                        # 先cancel再下单
-                        cancel_res = self.brokers[market].cancel_order(order_id)
-                        if not cancel_res:
-                            if retry_count > 1:
-                                self.remove_order(order_id)
-                                break
-                            retry_count += 1
-                            time.sleep(0.5)
-                            continue
-
-                        logging.info("handle_order======>cancel order %s, place new sell order amount:%s, price: %s" %
-                                     (order_id, remaining_amount, price_sell))
-                        self.remove_order(order_id)
-                        self.new_order(market=market, order_type='sell', amount=remaining_amount,
-                                       price=price_sell)
-                        break
-
-            return True
-
-        if self.is_buying():
-            orders_sell = self.get_orders("buy")
-            for order in orders_sell:
-                order_id = order['order_id']
-                market = order['market']
-                retry_count = 0
-                while True:
-                    order_status = self.brokers[market].get_order(order_id)
-                    if order_status:
-                        break
-                    else:
-                        if retry_count > 1:
-                            break
-                        retry_count += 1
-                        time.sleep(0.5)
-                if not order_status:
-                    # 找了2次都找不到，就当不在了
-                    self.remove_order(order_id)
-                    continue
-                if order_status['status'] == 'CLOSE' or order_status['status'] == 'CANCELED':
-                    self.remove_order(order_id)
-                    continue
-                else:
-                    # is pending order
-                    remaining_amount = order_status['amount'] - order_status['deal_amount']
-                    if remaining_amount <= self.min_amount_market:
-                        # 未成交部分小于min_stock, 所以算完成了
-                        self.remove_order(order_id)
-                        continue
-                    price_buy = depths[market]['asks'][0]['price']
-                    if price_buy < 0.0:
-                        # depth异常，直接return, 下次处理
-                        continue
-                    retry_count = 0
-                    while True:
-                        # 先cancel再下单
-                        cancel_res = self.brokers[market].cancel_order(order_id)
-                        if not cancel_res:
-                            if retry_count > 1:
-                                self.remove_order(order_id)
-                                break
-                            retry_count += 1
-                            time.sleep(0.5)
-                            continue
-                        logging.info("handle_order======>cancel order %s, place new buy order amount:%s, price: %s" %
-                                     (order_id, remaining_amount, price_buy))
-                        self.remove_order(order_id)
-                        self.new_order(market=market, order_type='buy', amount=remaining_amount,
-                                       price=price_buy)
-                        break
-
-            return True
-
-        return False
-
     def tick(self, depths):
         if not self.monitor_only:
             self.update_balance()
-        if not self.is_depths_available(depths):
-            return
 
-        if self.handle_order(depths):
-            """如果需要处理历史订单，则放弃该次机会直接return"""
+        if not self.is_depths_available(depths):
             return
 
         self.skip = False
@@ -239,13 +128,65 @@ class Arbitrage(BasicBot):
                 return
 
             if not self.monitor_only:
-                logging.info("forward======>prepare to sell amount: %s, price bt1:%s and bt2: %s" %
-                             (hedge_btc_amount, pair1_bid_price, pair2_bid_price))
-                r_sell1 = self.new_order(market=self.pair_1, order_type='sell', amount=hedge_btc_amount,
-                                         price=pair1_bid_price)
-                if r_sell1 and 'order_id' in r_sell1:
-                    self.new_order(market=self.pair_2, order_type='sell', amount=hedge_btc_amount,
-                                   price=pair2_bid_price)
+                sell_amount_1 = hedge_btc_amount
+                sell_price_1 = pair1_bid_price
+                logging.info("forward=====>%s place sell order, price=%s, amount=%s" %
+                             (self.pair_1, sell_price_1, sell_amount_1))
+                r_sell1 = self.new_order(market=self.pair_1, order_type='sell', amount=sell_amount_1,
+                                         price=sell_price_1)
+                if not r_sell1 or ('order_id' not in r_sell1):
+                    # bt1 place order failed
+                    logging.warn("forward======>%s place sell order failed, give up and return" % self.pair_1)
+                    return
+
+                order_id_1 = r_sell1['order_id']
+
+                # 计算bt1的成交额度
+                deal_amount_1 = self.get_deal_amount(market=self.pair_1, order_id=order_id_1)
+
+                logging.info("forward======>%s order %s deal amount %s, origin amount %s" %
+                             (self.pair_1, order_id_1, deal_amount_1, sell_amount_1))
+
+                if deal_amount_1 < self.min_trade_amount:
+                    logging.warn("forward======>%s order %s deal amount %s < %s, give up and return" %
+                                 (self.pair_1, order_id_1, deal_amount_1, self.min_trade_amount))
+                    return
+
+                sell_amount_2 = deal_amount_1
+                sell_price_2 = pair2_bid_price
+                while True:
+                    logging.info("forward=====>%s place sell order, price=%s, amount=%s" %
+                                 (self.pair_2, sell_price_2, sell_amount_2))
+                    r_sell2 = self.new_order(market=self.pair_2, order_type='sell', amount=sell_amount_2,
+                                             price=sell_price_2)
+                    if not r_sell2 or ('order_id' not in r_sell2):
+                        logging.warn("forward======>%s place sell order failed, %s seconds later retry" %
+                                     (self.pair_2, config.INTERVAL_API))
+                        time.sleep(config.INTERVAL_API)
+                        continue
+
+                    order_id_2 = r_sell2['order_id']
+                    time.sleep(config.INTERVAL_API)
+                    deal_amount_2 = self.get_deal_amount(market=self.pair_2, order_id=order_id_2)
+                    logging.info("forward======>%s order %s deal amount %s, origin amount %s" %
+                                 (self.pair_2, order_id_2, deal_amount_2, sell_amount_2))
+
+                    diff_amount = sell_amount_2 - deal_amount_2
+                    if diff_amount < self.min_trade_amount:
+                        logging.info("forward======>trade circle complete, and %s deal amount: %s" %
+                                     (self.pair_2, deal_amount_2))
+                        break
+
+                    while True:
+                        ticker_2 = self.brokers[self.pair_2].get_ticker()
+                        if ticker_2:
+                            break
+                        time.sleep(config.INTERVAL_API)
+
+                    sell_price_2 = ticker_2['bid']
+                    sell_amount_2 = diff_amount
+                    time.sleep(config.INTERVAL_API)
+
                 self.skip = True
 
             self.last_trade = time.time()
@@ -312,15 +253,96 @@ class Arbitrage(BasicBot):
                 return
 
             if not self.monitor_only:
-                logging.info("reverse======>prepare to buy amount: %s, price bt1:%s and bt2: %s" %
-                             (hedge_btc_amount, pair1_ask_price, pair2_ask_price))
-                r_buy1 = self.new_order(market=self.pair_1, order_type='buy', amount=hedge_btc_amount,
-                                        price=pair1_ask_price)
-                if r_buy1 and 'order_id' in r_buy1:
-                    self.new_order(market=self.pair_2, order_type='buy', amount=hedge_btc_amount, price=pair2_ask_price)
+                buy_amount_1 = hedge_btc_amount
+                buy_price_1 = pair1_ask_price
+                logging.info("reverse=====>%s place buy order, price=%s, amount=%s" %
+                             (self.pair_1, buy_price_1, buy_amount_1))
+                r_buy1 = self.new_order(market=self.pair_1, order_type='buy', amount=buy_amount_1,
+                                        price=buy_price_1)
+                if not r_buy1 or ('order_id' not in r_buy1):
+                    # bt1 place order failed
+                    logging.warn("reverse======>%s place buy order failed, give up and return" % self.pair_1)
+                    return
+
+                order_id_1 = r_buy1['order_id']
+
+                # 计算bt1的成交额度
+                deal_amount_1 = self.get_deal_amount(market=self.pair_1, order_id=order_id_1)
+
+                logging.info("reverse======>%s order %s deal amount %s, origin amount %s" %
+                             (self.pair_1, order_id_1, deal_amount_1, buy_amount_1))
+
+                if deal_amount_1 < self.min_trade_amount:
+                    logging.warn("reverse======>%s order %s deal amount %s < %s, give up and return" %
+                                 (self.pair_1, order_id_1, deal_amount_1, self.min_trade_amount))
+                    return
+
+                buy_amount_2 = deal_amount_1
+                buy_price_2 = pair2_ask_price
+                while True:
+                    logging.info("reverse=====>%s place buy order, price=%s, amount=%s" %
+                                 (self.pair_2, buy_price_2, buy_amount_2))
+                    r_buy2 = self.new_order(market=self.pair_2, order_type='buy', amount=buy_amount_2,
+                                            price=buy_price_2)
+                    if not r_buy2 or ('order_id' not in r_buy2):
+                        logging.warn("reverse======>%s place buy order failed, %s seconds later retry" %
+                                     (self.pair_2, config.INTERVAL_API))
+                        time.sleep(config.INTERVAL_API)
+                        continue
+
+                    order_id_2 = r_buy2['order_id']
+                    time.sleep(config.INTERVAL_API)
+                    deal_amount_2 = self.get_deal_amount(market=self.pair_2, order_id=order_id_2)
+                    logging.info("reverse======>%s order %s deal amount %s, origin amount %s" %
+                                 (self.pair_2, order_id_2, deal_amount_2, buy_amount_2))
+
+                    diff_amount = buy_amount_2 - deal_amount_2
+                    if diff_amount < self.min_trade_amount:
+                        logging.info("reverse======>trade circle complete, and %s deal amount: %s" %
+                                     (self.pair_2, deal_amount_2))
+                        break
+
+                    while True:
+                        ticker_2 = self.brokers[self.pair_2].get_ticker()
+                        if ticker_2:
+                            break
+                        time.sleep(config.INTERVAL_API)
+
+                    buy_price_2 = ticker_2['ask']
+                    buy_amount_2 = diff_amount
+                    time.sleep(config.INTERVAL_API)
+
                 self.skip = True
 
             self.last_trade = time.time()
 
+    def get_deal_amount(self, market, order_id):
+        while True:
+            order_status = self.brokers[market].get_order(order_id)
+            if not order_status:
+                time.sleep(config.INTERVAL_API)
+                continue
+            break
+
+        if order_status['status'] == constant.ORDER_STATE_PENDING:
+            self.brokers[market].cancel_order(order_id)
+            time.sleep(config.INTERVAL_RETRY)
+            return self.get_deal_amount(market, order_id)
+        else:
+            return order_status['deal_amount']
+
     def update_balance(self):
         self.brokers[self.base_pair].get_balances()
+
+        # check balance
+        bt1_bal = self.brokers[self.base_pair].bt1_available
+        bt2_bal = self.brokers[self.base_pair].bt2_available
+        diff = bt1_bal - bt2_bal
+        if diff >= self.min_trade_amount:
+            self.error_count += 1
+            logging.warn("error======>bt1 balance:%s not equal to bt2 balance:%s, error_count:%s" %
+                         (bt1_bal, bt2_bal, self.error_count))
+
+        if self.error_count > 3:
+            logging.warn("error======>error_count > 3, so raise exception")
+            assert False

@@ -91,6 +91,9 @@ class Binance(Broker):
 
         return res
 
+    def _ticker(self):
+        pass
+
     @classmethod
     def get_available_pairs(cls, pair_code):
         """可交易的pair"""
