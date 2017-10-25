@@ -61,7 +61,7 @@ class TriangleArbitrage(BasicBot):
         if not monitor_only:
             self.brokers = broker_factory.create_brokers([self.base_pair, self.pair_1, self.pair_2])
 
-        self.logger = log.get_logger(log_name="kraken", level=logging.INFO)
+        self.logger = log.get_logger(log_name="kraken.log", level=logging.INFO)
 
         self.logger.debug('t_kraken params: ' + str(kwargs))
 
