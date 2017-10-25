@@ -232,7 +232,7 @@ class Arbitrage(BasicBot):
                          (profit, hedge_btc_amount, t_price))
 
             current_time = time.time()
-            if current_time - self.last_trade < 3:
+            if current_time - self.last_trade < 1:
                 logging.warn("forward======>Can't automate this trade, last trade " +
                              "occured %.2f seconds ago" %
                              (current_time - self.last_trade))
@@ -305,7 +305,7 @@ class Arbitrage(BasicBot):
                          (profit, hedge_btc_amount, t_price))
 
             current_time = time.time()
-            if current_time - self.last_trade < 3:
+            if current_time - self.last_trade < 1:
                 logging.warn("reverse======>Can't automate this trade, last trade " +
                              "occured %.2f seconds ago" %
                              (current_time - self.last_trade))

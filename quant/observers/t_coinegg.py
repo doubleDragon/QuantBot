@@ -12,19 +12,12 @@ from .basicbot import BasicBot
 
 class TriangleArbitrage(BasicBot):
     """
-    bch:
-    # python -m quant.cli -mKraken_BCH_EUR,Bitfinex_BCH_BTC,Kraken_XBT_EUR t-watch-kraken-bch -v
-    python -m quant.cli -mKraken_BCH_USD,Bitfinex_BCH_BTC,Kraken_XBT_USD t-watch-kraken-bch -v
+    bcc:
+    python -m quant.cli -mBitfinex_BCH_USD,Coinegg_BCC_BTC,Bitfinex_BTC_USD t-watch-coinegg-bch -v
 
     eth:
-    # python -m quant.cli -mKraken_ETH_EUR,Bitfinex_ETH_BTC,Kraken_XBT_EUR t-watch-kraken-eth -v
-    python -m quant.cli -mKraken_ETH_USD,Bitfinex_ETH_BTC,Kraken_XBT_USD t-watch-kraken-eth -v
+    python -m quant.cli -mBitfinex_ETH_USD,Coinegg_ETH_BTC,Bitfinex_BTC_USD t-watch-coinegg-eth -v
 
-
-    eos:
-    python -m quant.cli -mKraken_EOS_EUR,Bitfinex_EOS_ETH,Kraken_ETH_EUR t-watch-kraken-eos-eur2 -v
-
-    和kraken1 不同的是，不需要转换为美元
 
     目前的限制:
     """
@@ -56,7 +49,7 @@ class TriangleArbitrage(BasicBot):
         # just for count for chance profit
         self.count_forward = 0
         self.count_reverse = 0
-        self.trigger_diff_percent = 0.5
+        self.trigger_diff_percent = 0.7
 
         if not monitor_only:
             self.brokers = broker_factory.create_brokers([self.base_pair, self.pair_1, self.pair_2])
@@ -195,19 +188,17 @@ class TriangleArbitrage(BasicBot):
         self.logger.info(
             "forward======>t_price: %s, t_price_percent: %s, profit: %s" % (t_price, t_price_percent, profit))
         if profit > 0:
-            if t_price_percent < self.trigger_diff_percent:
-                self.logger.warn("forward======>profit percent should >= %s usd" % self.trigger_diff_percent)
-                return
-            self.count_forward += 1
+            if t_price_percent > self.trigger_diff_percent:
+                self.count_forward += 1
             self.logger.info(
                 "forward======>find profit!!!: profit:%s,  quote amount: %s and mid amount: %s,  t_price: %s" %
                 (profit, hedge_quote_amount, hedge_mid_amount, t_price))
-            # if profit < self.profit_trigger:
-            #     self.logger.warn("forward======>profit should >= %s usd" % self.profit_trigger)
-            #     return
+            if profit < self.profit_trigger:
+                self.logger.warn("forward======>profit should >= %s usd" % self.profit_trigger)
+                return
 
             current_time = time.time()
-            if current_time - self.last_trade < 1:
+            if current_time - self.last_trade < 5:
                 self.logger.warn("forward======>Can't automate this trade, last trade " +
                                  "occured %.2f seconds ago" %
                                  (current_time - self.last_trade))
@@ -315,19 +306,17 @@ class TriangleArbitrage(BasicBot):
         self.logger.info(
             "reverse======>t_price: %s, t_price_percent: %s, profit: %s" % (t_price, t_price_percent, profit))
         if profit > 0:
-            if t_price_percent < self.trigger_diff_percent:
-                self.logger.warn("forward======>profit percent should >= %s usd" % self.trigger_diff_percent)
-                return
-            self.count_reverse += 1
+            if t_price_percent > self.trigger_diff_percent:
+                self.count_reverse += 1
             self.logger.info(
                 "reverse======>find profit!!!: profit:%s,  quote amount: %s and mid amount: %s, t_price: %s" %
                 (profit, hedge_quote_amount, hedge_mid_amount, t_price))
-            # if profit < self.profit_trigger:
-            #     self.logger.warn("reverse======>profit should >= %s usd" % self.profit_trigger)
-            #     return
+            if profit < self.profit_trigger:
+                self.logger.warn("reverse======>profit should >= %s usd" % self.profit_trigger)
+                return
 
             current_time = time.time()
-            if current_time - self.last_trade < 1:
+            if current_time - self.last_trade < 5:
                 self.logger.warn("reverse======>Can't automate this trade, last trade " +
                                  "occured %.2f seconds ago" %
                                  (current_time - self.last_trade))
