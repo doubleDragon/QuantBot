@@ -31,10 +31,10 @@ class Arbitrage(BasicBot):
         self.fee_pair1 = 0.002
         self.fee_pair2 = 0.002
         """交易所限制的最小交易量，由交易所和币种共同决定"""
-        self.min_amount_market = 0.001
+        self.min_amount_market = 0.02
         """单次交易的最大量和最小量"""
-        self.max_trade_amount = 1
-        self.min_trade_amount = 0.005
+        self.max_trade_amount = 0.1
+        self.min_trade_amount = 0.02
 
         # 赢利触发点，差价，百分比更靠谱?
         self.profit_trigger = 1.5
