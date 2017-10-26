@@ -63,6 +63,8 @@ class Arbitrage(BasicBot):
     def tick(self, depths):
         if not self.monitor_only:
             self.update_balance()
+            self.risk_protect()
+            self.cancel_all_orders(self.base_pair)
 
         if not self.is_depths_available(depths):
             return
@@ -331,18 +333,22 @@ class Arbitrage(BasicBot):
         else:
             return order_status['deal_amount']
 
+    def cancel_all_orders(self, market):
+        self.brokers[market].cancel_all()
+
     def update_balance(self):
         self.brokers[self.base_pair].get_balances()
 
-        # check balance
+    def risk_protect(self):
         bt1_bal = self.brokers[self.base_pair].bt1_available
         bt2_bal = self.brokers[self.base_pair].bt2_available
-        diff = bt1_bal - bt2_bal
+        diff = abs(bt1_bal - bt2_bal)
+        logging.info("risk======>bt1: %s, bt2: %s, diff: %s" % (bt1_bal, bt2_bal, diff))
         if diff >= self.min_trade_amount:
             self.error_count += 1
-            logging.warn("error======>bt1 balance:%s not equal to bt2 balance:%s, error_count:%s" %
+            logging.warn("risk======>bt1 balance:%s not equal to bt2 balance:%s, error_count:%s" %
                          (bt1_bal, bt2_bal, self.error_count))
 
         if self.error_count > 3:
-            logging.warn("error======>error_count > 3, so raise exception")
+            logging.warn("risk======>error_count > 3, so raise exception")
             assert False
