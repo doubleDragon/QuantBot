@@ -75,7 +75,7 @@ class Bitfinex(Broker):
         res = self.client.get_order(int(order_id))
         if not res:
             return None
-        logging.DEBUG('get_order id: %s, res: %s' % (order_id, res))
+        logging.debug('get_order id: %s, res: %s' % (order_id, res))
 
         assert str(res['id']) == str(order_id)
         return self._order_status(res)
