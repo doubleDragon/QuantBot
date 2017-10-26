@@ -40,6 +40,10 @@ class Arbitrage(BasicBot):
         self.profit_trigger = 1.5
         self.last_trade = 0
         self.skip = False
+
+        self.btc_all_origin = 0
+        self.error_count = 0
+
         if not monitor_only:
             self.brokers = broker_factory.create_brokers([self.base_pair, self.pair_1, self.pair_2])
 
@@ -62,6 +66,7 @@ class Arbitrage(BasicBot):
     def tick(self, depths):
         if not self.monitor_only:
             self.update_balance()
+            self.risk_protect()
         if not self.is_depths_available(depths):
             return
 
@@ -137,17 +142,90 @@ class Arbitrage(BasicBot):
                 return
 
             if not self.monitor_only:
-                logging.info("forward======>prepare to trade")
+                sell_amount_2 = hedge_btc_amount
+                sell_price_2 = pair2_bid_price
 
-                r_sell1 = self.new_order(market=self.pair_1, order_type='sell', amount=hedge_btc_amount,
-                                         price=pair1_bid_price)
-                if r_sell1 and 'order_id' in r_sell1:
-                    r_sell2 = self.new_order(market=self.pair_2, order_type='sell', amount=hedge_btc_amount,
-                                             price=pair2_bid_price)
-                    if r_sell2 and 'order_id' in r_sell2:
-                        buy_amount_base = round(hedge_btc_amount * (1 + self.fee_base), 8)
-                        self.new_order(market=self.base_pair, order_type='buy', amount=buy_amount_base,
-                                       price=base_pair_ask_price)
+                logging.info("forward=====>%s place sell order, price=%s, amount=%s" %
+                             (self.pair_2, sell_price_2, sell_amount_2))
+                r_sell2 = self.new_order(market=self.pair_2, order_type='sell', amount=sell_amount_2,
+                                         price=sell_price_2)
+                if not r_sell2 or ('order_id' not in r_sell2):
+                    logging.warn("forward======>%s place sell order failed, give up and return" % self.pair_2)
+                    return
+
+                order_id_2 = r_sell2['order_id']
+                time.sleep(config.INTERVAL_API)
+                deal_amount_2 = self.get_deal_amount(market=self.pair_2, order_id=order_id_2)
+                if deal_amount_2 < self.min_trade_amount:
+                    logging.warn("forward======>%s order %s deal amount %s < %s, give up and return" %
+                                 (self.pair_2, order_id_2, deal_amount_2, self.min_trade_amount))
+                    return
+
+                sell_amount_1 = deal_amount_2
+                sell_price_1 = pair1_bid_price
+
+                buy_amount_base = round(deal_amount_2 * (1 + self.fee_base), 8)
+                buy_price_base = base_pair_ask_price
+
+                done_1 = False
+                done_base = False
+                while True:
+                    order_id_1 = -1
+                    order_id_base = -1
+
+                    if not done_1:
+                        logging.info("forward=====>%s place sell order, price=%s, amount=%s" %
+                                     (self.pair_1, sell_price_1, sell_amount_1))
+                        r_sell1 = self.new_order(market=self.pair_1, order_type='sell', amount=sell_amount_1,
+                                                 price=sell_price_1)
+                        if not r_sell1 or ('order_id' not in r_sell1):
+                            continue
+                        order_id_1 = r_sell1['order_id']
+                        if order_id_1 < 0:
+                            assert False
+
+                    if not done_base:
+                        logging.info("forward=====>%s place buy order, price=%s, amount=%s" %
+                                     (self.base_pair, buy_price_base, buy_amount_base))
+                        r_buy_base = self.new_order(market=self.base_pair, order_type='buy', amount=buy_amount_base,
+                                                    price=buy_price_base)
+                        if not r_buy_base or ('order_id' not in r_buy_base):
+                            continue
+                        order_id_base = r_buy_base['order_id']
+                        if order_id_base < 0:
+                            assert False
+
+                    time.sleep(config.INTERVAL_API)
+                    if not done_1:
+                        deal_amount_1 = self.get_deal_amount(self.pair_1, order_id_1)
+                        logging.info("forward======>%s order %s deal amount %s, origin amount %s" %
+                                     (self.pair_1, order_id_1, deal_amount_1, sell_amount_1))
+                        diff_amount_1 = sell_amount_1 - deal_amount_1
+                        if diff_amount_1 < self.min_trade_amount:
+                            logging.info("forward======>%s trade complete" % self.pair_1)
+                            done_1 = True
+                        else:
+                            ticker1 = self.get_new_ticker(self.pair_1)
+                            sell_price_1 = ticker1['bid']
+                            sell_amount_1 = diff_amount_1
+
+                    if not done_base:
+                        deal_amount_base = self.get_deal_amount(self.base_pair, order_id_base)
+                        logging.info("forward======>%s order %s deal amount %s, origin amount %s" %
+                                     (self.base_pair, order_id_base, deal_amount_base, buy_amount_base))
+                        diff_amount_base = buy_amount_base - deal_amount_base
+                        if diff_amount_base < self.min_trade_amount:
+                            logging.info("forward======>%s trade complete" % self.base_pair)
+                            done_base = True
+                        else:
+                            ticker_base = self.get_new_ticker(self.base_pair)
+                            buy_price_base = ticker_base['ask']
+                            buy_amount_base = diff_amount_base
+
+                    if done_1 and done_base:
+                        logging.info("forward======>trade all complete")
+                        break
+
                 self.skip = True
 
             self.last_trade = time.time()
@@ -232,11 +310,11 @@ class Arbitrage(BasicBot):
             if not self.monitor_only:
                 # sell first, buy second base on deal_amount
                 sell_amount = hedge_btc_amount
-                self_price = base_pair_bid_price
+                sell_price = base_pair_bid_price
                 logging.info("reverse=====>%s place sell order, price=%s, amount=%s" %
-                             (self.base_pair, self_price, sell_amount))
+                             (self.base_pair, sell_price, sell_amount))
                 r_sell = self.new_order(market=self.base_pair, order_type='sell', amount=sell_amount,
-                                        price=base_pair_bid_price)
+                                        price=sell_price)
 
                 if not r_sell or ('order_id' not in r_sell):
                     # bt1 place order failed
@@ -244,7 +322,8 @@ class Arbitrage(BasicBot):
                     return
 
                 order_id_base = r_sell['order_id']
-                deal_amount_base = self.get_deal_amount(market=self.pair_1, order_id=order_id_base)
+                time.sleep(config.INTERVAL_API)
+                deal_amount_base = self.get_deal_amount(market=self.base_pair, order_id=order_id_base)
                 logging.info("reverse======>%s order %s deal amount %s, origin amount %s" %
                              (self.base_pair, order_id_base, deal_amount_base, sell_amount))
 
@@ -261,15 +340,63 @@ class Arbitrage(BasicBot):
                 buy_price_2 = pair2_ask_price
 
                 # bt1 bt2 先一起下单，保证都下单成功
-                r_buy1 = None
-                r_buy2 = None
+                done_1 = False
+                done_2 = False
                 while True:
-                    if r_buy1 and r_buy2:
+                    order_id_1 = -1
+                    order_id_2 = -1
+
+                    if not done_1:
+                        r_buy1 = self.new_order(market=self.pair_1, order_type='buy', amount=buy_amount_1,
+                                                price=buy_price_1)
+                        if not r_buy1 or ('order_id' not in r_buy1):
+                            continue
+
+                        order_id_1 = r_buy1['order_id']
+                        if order_id_1 < 0:
+                            assert False
+
+                    if not done_2:
+                        r_buy2 = self.new_order(market=self.pair_2, order_type='buy', amount=buy_amount_2,
+                                                price=buy_price_2)
+                        if not r_buy2 or ('order_id' not in r_buy2):
+                            continue
+
+                        order_id_2 = r_buy2['order_id']
+                        if order_id_2 < 0:
+                            assert False
+
+                    time.sleep(config.INTERVAL_API)
+
+                    if not done_1:
+                        deal_amount_1 = self.get_deal_amount(self.pair_1, order_id_1)
+                        logging.info("reverse======>%s order %s deal amount %s, origin amount %s" %
+                                     (self.pair_1, order_id_1, deal_amount_1, buy_amount_1))
+                        diff_amount_1 = buy_amount_1 - deal_amount_1
+                        if diff_amount_1 < self.min_trade_amount:
+                            logging.info("reverse======>%s trade complete" % self.pair_1)
+                            done_1 = True
+                        else:
+                            ticker1 = self.get_new_ticker(self.pair_1)
+                            buy_price_1 = ticker1['ask']
+                            buy_amount_1 = diff_amount_1
+
+                    if not done_2:
+                        deal_amount_2 = self.get_deal_amount(self.pair_2, order_id_2)
+                        logging.info("reverse======>%s order %s deal amount %s, origin amount %s" %
+                                     (self.pair_2, order_id_2, deal_amount_2, buy_amount_2))
+                        diff_amount_2 = buy_amount_2 - deal_amount_2
+                        if diff_amount_2 < self.min_trade_amount:
+                            logging.info("reverse======>%s trade complete" % self.pair_2)
+                            done_2 = True
+                        else:
+                            ticker2 = self.get_new_ticker(self.pair_2)
+                            buy_price_2 = ticker2['ask']
+                            buy_amount_2 = diff_amount_2
+
+                    if done_1 and done_2:
+                        logging.info("reverse======>trade all complete")
                         break
-                    if not r_buy1:
-                        r_buy1 = self.new_order(market=self.pair_1, order_type='buy', amount=buy_amount_1, price=buy_price_1)
-                    if not r_buy2:
-                        r_buy2 = self.new_order(market=self.pair_2, order_type='buy', amount=buy_amount_2, price=buy_price_2)
 
                 self.skip = True
 
@@ -290,5 +417,39 @@ class Arbitrage(BasicBot):
         else:
             return order_status['deal_amount']
 
+    def get_new_ticker(self, market):
+        while True:
+            ticker = self.brokers[market].get_ticker()
+            if ticker:
+                break
+            time.sleep(config.INTERVAL_API)
+
+        return ticker
+
     def update_balance(self):
         self.brokers[self.base_pair].get_balances()
+
+    def risk_protect(self):
+        bt1_bal = self.brokers[self.base_pair].bt1_available
+        bt2_bal = self.brokers[self.base_pair].bt2_available
+        btc_bal = self.brokers[self.base_pair].btc_available
+
+        if bt1_bal == 0 and bt2_bal == 0 and btc_bal == 0:
+            return
+        btc_total = round(bt1_bal + bt2_bal + btc_bal, 8)
+        if self.btc_all_origin == 0:
+            self.btc_all_origin = btc_total
+            logging.info("risk======>btc all origin: %s" % self.btc_all_origin)
+
+        btc_all_now = btc_total
+
+        diff = abs(btc_all_now - self.btc_all_origin)
+        logging.info("risk======>btc_all_now: %s, btc_all_origin: %s, diff: %s" %
+                     (btc_all_now, self.btc_all_origin, diff))
+        if diff >= self.min_trade_amount:
+            self.error_count += 1
+            logging.warn("risk======>diff: %s, error_count: %s" % (diff, self.error_count))
+
+        if self.error_count > 3:
+            logging.warn("risk======>error_count > 3, so raise exception")
+            assert False

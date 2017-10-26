@@ -142,10 +142,10 @@ class Arbitrage(BasicBot):
                     return
 
                 order_id_1 = r_sell1['order_id']
+                time.sleep(config.INTERVAL_API)
 
                 # 计算bt1的成交额度
                 deal_amount_1 = self.get_deal_amount(market=self.pair_1, order_id=order_id_1)
-
                 logging.info("forward======>%s order %s deal amount %s, origin amount %s" %
                              (self.pair_1, order_id_1, deal_amount_1, sell_amount_1))
 
@@ -179,12 +179,7 @@ class Arbitrage(BasicBot):
                                      (self.pair_2, deal_amount_2))
                         break
 
-                    while True:
-                        ticker_2 = self.brokers[self.pair_2].get_ticker()
-                        if ticker_2:
-                            break
-                        time.sleep(config.INTERVAL_API)
-
+                    ticker_2 = self.get_new_ticker(self.pair_2)
                     sell_price_2 = ticker_2['bid']
                     sell_amount_2 = diff_amount
                     time.sleep(config.INTERVAL_API)
@@ -267,10 +262,10 @@ class Arbitrage(BasicBot):
                     return
 
                 order_id_1 = r_buy1['order_id']
+                time.sleep(config.INTERVAL_API)
 
                 # 计算bt1的成交额度
                 deal_amount_1 = self.get_deal_amount(market=self.pair_1, order_id=order_id_1)
-
                 logging.info("reverse======>%s order %s deal amount %s, origin amount %s" %
                              (self.pair_1, order_id_1, deal_amount_1, buy_amount_1))
 
@@ -304,12 +299,7 @@ class Arbitrage(BasicBot):
                                      (self.pair_2, deal_amount_2))
                         break
 
-                    while True:
-                        ticker_2 = self.brokers[self.pair_2].get_ticker()
-                        if ticker_2:
-                            break
-                        time.sleep(config.INTERVAL_API)
-
+                    ticker_2 = self.get_new_ticker(self.pair_2)
                     buy_price_2 = ticker_2['ask']
                     buy_amount_2 = diff_amount
                     time.sleep(config.INTERVAL_API)
@@ -335,6 +325,15 @@ class Arbitrage(BasicBot):
 
     def cancel_all_orders(self, market):
         self.brokers[market].cancel_all()
+
+    def get_new_ticker(self, market):
+        while True:
+            ticker = self.brokers[market].get_ticker()
+            if ticker:
+                break
+            time.sleep(config.INTERVAL_API)
+
+        return ticker
 
     def update_balance(self):
         self.brokers[self.base_pair].get_balances()
