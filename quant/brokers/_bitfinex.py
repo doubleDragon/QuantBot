@@ -59,7 +59,7 @@ class Bitfinex(Broker):
             'avg_price': float(res['avg_execution_price'])
         }
 
-        is_cancelled = resp['is_cancelled']
+        is_cancelled = res['is_cancelled']
         is_completed = (resp['amount'] == resp['deal_amount'])
         if is_completed:
             resp['status'] = constant.ORDER_STATE_CLOSED
