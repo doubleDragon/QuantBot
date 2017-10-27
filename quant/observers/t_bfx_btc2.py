@@ -348,6 +348,6 @@ class Arbitrage(BasicBot):
             logging.warn("risk======>bt1 balance:%s not equal to bt2 balance:%s, error_count:%s" %
                          (bt1_bal, bt2_bal, self.error_count))
 
-        if self.error_count > 3:
-            logging.warn("risk======>error_count > 3, so raise exception")
+        if self.error_count > 5:
+            logging.warn("risk======>error_count > 5, so raise exception")
             assert False
