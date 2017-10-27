@@ -65,6 +65,7 @@ class Arbitrage(BasicBot):
 
     def tick(self, depths):
         if not self.monitor_only:
+            self.cancel_all_orders(self.base_pair)
             self.update_balance()
             self.risk_protect()
         if not self.is_depths_available(depths):
@@ -425,6 +426,9 @@ class Arbitrage(BasicBot):
             time.sleep(config.INTERVAL_API)
 
         return ticker
+
+    def cancel_all_orders(self, market):
+        self.brokers[market].cancel_all()
 
     def update_balance(self):
         self.brokers[self.base_pair].get_balances()

@@ -62,9 +62,9 @@ class Arbitrage(BasicBot):
 
     def tick(self, depths):
         if not self.monitor_only:
+            self.cancel_all_orders(self.base_pair)
             self.update_balance()
             self.risk_protect()
-            self.cancel_all_orders(self.base_pair)
 
         if not self.is_depths_available(depths):
             return
