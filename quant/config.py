@@ -149,8 +149,13 @@ KKEX_SECRET_TOKEN = ''
 BITSTAR_API_KEY = ''
 BITSTAR_SECRET_TOKEN = ''
 
+# bitfinex Primary Account
 Bitfinex_API_KEY = config('BFX_API_KEY')
 Bitfinex_SECRET_TOKEN = config('BFX_API_SECRET')
+# bitfinex Sub Account
+# Bitfinex_API_KEY = config('BFX_API_SECOND_KEY')
+# Bitfinex_SECRET_TOKEN = config('BFX_API_SECOND_SECRET')
+
 
 Bittrex_API_KEY = config('BITTREX_API_KEY')
 Bittrex_SECRET_TOKEN = config('BITTREX_API_SECRET')
