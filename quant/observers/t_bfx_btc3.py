@@ -15,7 +15,7 @@ class Arbitrage(BasicBot):
     """
     btc和bt1 bt2的合成与分解套利
     兑换比例1btc=1bt1+1bt2
-    python -m quant.cli -mBitfinex_BTC_USD,Bitfinex_BT1_USD,Bitfinex_BT2_USD t-watch-bfx-btc -v
+    python -m quant.cli -mBitfinex_BTC_USD,Bitfinex_BT1_USD,Bitfinex_BT2_USD t-watch-bfx-btc -fbfx_btc_usd.log -v
     """
 
     def __init__(self, monitor_only=False):

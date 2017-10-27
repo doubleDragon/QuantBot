@@ -42,8 +42,12 @@ class CLI(object):
 
         logging.basicConfig(format='%(asctime)s [%(levelname)s] %(message)s',
                             level=level)
+        if args.file:
+            filename_logging = args.file
+        else:
+            filename_logging = 'quant.log'
 
-        rt_handler = RotatingFileHandler('quant.log', maxBytes=100 * 1024 * 1024, backupCount=10)
+        rt_handler = RotatingFileHandler(filename_logging, maxBytes=100 * 1024 * 1024, backupCount=10)
         rt_handler.setLevel(level)
         formatter = logging.Formatter('%(asctime)-12s [%(levelname)s] %(message)s')
         rt_handler.setFormatter(formatter)
@@ -608,6 +612,8 @@ class CLI(object):
 
     def main(self):
         parser = argparse.ArgumentParser()
+        parser.add_argument("-f", "--file", type=str,
+                            help="logging file name, example: -fbtc")
         parser.add_argument("-d", "--debug", help="debug verbose mode",
                             action="store_true")
         parser.add_argument("-v", "--verbose", help="info verbose mode",
