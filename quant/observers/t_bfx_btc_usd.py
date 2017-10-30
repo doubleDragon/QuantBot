@@ -166,6 +166,8 @@ class Arbitrage(BasicBot):
                     logging.warn("forward======>%s order %s deal amount %s < %s, give up and return" %
                                  (self.pair_2, order_id_2, deal_amount_2, self.min_trade_amount))
                     return
+                logging.warn("forward======>%s order %s deal amount %s > %s, continue" %
+                             (self.pair_2, order_id_2, deal_amount_2, self.min_trade_amount))
 
                 sell_amount_1 = deal_amount_2
                 sell_price_1 = pair1_bid_price
@@ -330,13 +332,13 @@ class Arbitrage(BasicBot):
                 order_id_base = r_sell['order_id']
                 time.sleep(config.INTERVAL_API)
                 deal_amount_base = self.get_deal_amount(market=self.base_pair, order_id=order_id_base)
-                logging.info("reverse======>%s order %s deal amount %s, origin amount %s" %
-                             (self.base_pair, order_id_base, deal_amount_base, sell_amount))
-
                 if deal_amount_base < self.min_trade_amount:
                     logging.warn("reverse======>%s order %s deal amount %s < %s, give up and return" %
                                  (self.base_pair, order_id_base, deal_amount_base, self.min_trade_amount))
                     return
+
+                logging.warn("reverse======>%s order %s deal amount %s > %s, continue" %
+                             (self.base_pair, order_id_base, deal_amount_base, self.min_trade_amount))
 
                 # bt1 bt2分别买进buy_amount
                 buy_amount_1 = deal_amount_base * (1 + self.fee_pair1)
@@ -353,6 +355,8 @@ class Arbitrage(BasicBot):
                     order_id_2 = -1
 
                     if not done_1:
+                        logging.info("reverse=====>%s place buy order, price=%s, amount=%s" %
+                                     (self.pair_1, buy_price_1, buy_amount_1))
                         r_buy1 = self.new_order(market=self.pair_1, order_type='buy', amount=buy_amount_1,
                                                 price=buy_price_1)
                         if not r_buy1 or ('order_id' not in r_buy1):
@@ -363,6 +367,8 @@ class Arbitrage(BasicBot):
                             assert False
 
                     if not done_2:
+                        logging.info("reverse=====>%s place buy order, price=%s, amount=%s" %
+                                     (self.pair_2, buy_price_2, buy_amount_2))
                         r_buy2 = self.new_order(market=self.pair_2, order_type='buy', amount=buy_amount_2,
                                                 price=buy_price_2)
                         if not r_buy2 or ('order_id' not in r_buy2):
