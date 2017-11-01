@@ -67,7 +67,7 @@ def create_markets(exchange_names):
         elif name == "%s_IOT_BTC" % constant.EX_BFX:
             ex = Bitfinex('iotbtc')
         elif name == "%s_BCC_BTC" % constant.EX_KKEX:
-            ex = Kkex('bccbtc')
+            ex = Kkex('BCCBTC')
         elif name == "%s_BCC_BTC" % constant.EX_LQ:
             ex = Liqui('bcc_btc')
         elif name == "%s_BCC_ETH" % constant.EX_LQ:

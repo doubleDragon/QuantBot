@@ -14,18 +14,15 @@ class Kkex(Market):
 
     @classmethod
     def get_available_pairs(cls, pair_code):
-        if pair_code == 'bccbtc':
+        if pair_code == 'BCCBTC':
             base_currency = 'BTC'
             market_currency = 'BCC'
         else:
             assert False
         return base_currency, market_currency
 
-    def symbol(self):
-        return "%s%s" % (self.market_currency.upper(), self.base_currency.upper())
-
     def update_depth(self):
-        depth_raw = self.client.depth(self.symbol())
+        depth_raw = self.client.depth(self.pair_code)
 
         if depth_raw:
             self.depth = self.format_depth(depth_raw)

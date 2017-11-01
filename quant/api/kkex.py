@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
+from urllib import urlencode
+from urlparse import urljoin
+
 import requests
+from hashlib import md5
 
 BASE_URL = 'https://kkex.com/api/v1'
 TIMEOUT = 5
@@ -54,8 +58,85 @@ class PublicClient(object):
         return self._get(url, params)
 
 
-class PrivateCliet(PublicClient):
+class PrivateClient(PublicClient):
     def __init__(self, api_key, api_secret):
-        super(PrivateCliet, self).__init__()
+        super(PrivateClient, self).__init__()
         self._key = api_key
         self._secret = api_secret
+        self.api_root = 'https://kkex.com'
+
+    def _sign(self, params):
+        sign = list(sorted(params.items()) + [('secret_key', self._secret)])
+        signer = md5()
+        signer.update(urlencode(sign).encode('utf-8'))
+        return signer.hexdigest().upper()
+
+    def _post(self, path, params=None):
+        if params is None:
+            params = {}
+
+        params['api_key'] = self._key
+        sign = self._sign(params)
+        params['sign'] = sign
+
+        url = urljoin(self.api_root, path)
+        try:
+            resp = requests.post(url, data=params, timeout=5)
+        except requests.exceptions.RequestException as e:
+            raise e
+        else:
+            if resp.status_code == requests.codes.ok:
+                return resp.json()
+
+    def profile(self):
+        return self._post('/api/v1/profile')
+
+    def balance(self):
+        return self._post('/api/v1/userinfo')
+
+    def buy_limit(self, symbol, amount, price):
+        params = {
+            'symbol': symbol,
+            'type': 'buy',
+            'price': price,
+            'amount': amount
+        }
+        return self._post('/api/v1/trade', params)
+
+    def sell_limit(self, symbol, amount, price):
+        params = {
+            'symbol': symbol,
+            'type': 'sell',
+            'price': price,
+            'amount': amount
+        }
+        return self._post('/api/v1/trade', params)
+
+    def cancel_order(self, symbol, order_id):
+        params = {'symbol': symbol,
+                  'order_id': order_id}
+        return self.trade_api('/api/v1/cancel_order', params)
+
+    def order_info(self, symbol, order_id):
+        params = {
+            'symbol': symbol,
+            'order_id': order_id
+        }
+        return self._post('/api/v1/order_info', params)
+
+    def orders_info(self, symbol, order_ids):
+        order_id_p = ','.join(order_ids)
+        params = {
+            'symbol': symbol,
+            'order_id': order_id_p
+        }
+        return self._post('/api/v1/orders_info', params)
+
+    def get_orders_history(self, symbol, status=0, page=1, pagesize=10):
+        params = {
+            'symbol': symbol,
+            'status': status,
+            'current_page': page,
+            'page_length': pagesize
+        }
+        return self._post('/api/v1/order_history', params)
