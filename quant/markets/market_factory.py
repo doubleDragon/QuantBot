@@ -28,6 +28,10 @@ def create_markets(exchange_names):
     for name in exchange_names:
         if name == "%s_ETH_USD" % constant.EX_BFX:
             ex = Bitfinex('ethusd')
+        elif name == "%s_ETC_BTC" % constant.EX_BFX:
+            ex = Bitfinex('etcbtc')
+        elif name == "%s_ETC_USD" % constant.EX_BFX:
+            ex = Bitfinex('etcusd')
         elif name == "%s_ETH_BTC" % constant.EX_BFX:
             ex = Bitfinex('ethbtc')
         elif name == "%s_BCH_USD" % constant.EX_BFX:
@@ -134,6 +138,10 @@ def create_markets(exchange_names):
             ex = Coinegg('bcc')
         elif name == "%s_ETH_BTC" % constant.EX_COINEGG:
             ex = Coinegg('eth')
+        elif name == "%s_NEO_BTC" % constant.EX_COINEGG:
+            ex = Coinegg('neo')
+        elif name == "%s_ETC_BTC" % constant.EX_COINEGG:
+            ex = Coinegg('etc')
         else:
             logging.warn('Exchange ' + name + ' not supported!')
             assert False

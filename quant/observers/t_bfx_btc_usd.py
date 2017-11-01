@@ -448,23 +448,24 @@ class Arbitrage(BasicBot):
         bt1_bal = self.brokers[self.base_pair].bt1_available
         bt2_bal = self.brokers[self.base_pair].bt2_available
         btc_bal = self.brokers[self.base_pair].btc_available
+        logging.info("balance======>bt1:%s, bt2:%s, btc:%s" % (bt1_bal, bt2_bal, btc_bal))
 
         if bt1_bal == 0 and bt2_bal == 0 and btc_bal == 0:
             return
         btc_total = round(bt1_bal + bt2_bal + btc_bal, 8)
         if self.btc_all_origin == 0:
             self.btc_all_origin = btc_total
-            logging.info("risk======>btc all origin: %s" % self.btc_all_origin)
+            logging.info("balance======>btc all origin: %s" % self.btc_all_origin)
 
         btc_all_now = btc_total
 
         diff = abs(btc_all_now - self.btc_all_origin)
-        logging.info("risk======>btc_all_now: %s, btc_all_origin: %s, diff: %s" %
+        logging.info("balance======>btc_all_now: %s, btc_all_origin: %s, diff: %s" %
                      (btc_all_now, self.btc_all_origin, diff))
-        if diff >= self.min_trade_amount:
-            self.error_count += 1
-            logging.warn("risk======>diff: %s, error_count: %s" % (diff, self.error_count))
-
-        if self.error_count > 3:
-            logging.warn("risk======>error_count > 3, so raise exception")
-            assert False
+        # if diff >= self.min_trade_amount:
+        #     self.error_count += 1
+        #     logging.warn("risk======>diff: %s, error_count: %s" % (diff, self.error_count))
+        #
+        # if self.error_count > 3:
+        #     logging.warn("risk======>error_count > 3, so raise exception")
+        #     assert False

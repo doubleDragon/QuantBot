@@ -9,23 +9,19 @@ from quant.brokers import broker_factory
 from .basicbot import BasicBot
 
 
-class T_CoinEgg(BasicBot):
+class T_Lq(BasicBot):
     """
-    bcc:
-    python -m quant.cli -mBitfinex_BCH_USD,Coinegg_BCC_BTC,Bitfinex_BTC_USD -o=T_CoinEgg_BCH -f=coinegg_bch -v
-
-    eth:
-    python -m quant.cli -mBitfinex_ETH_USD,Coinegg_ETH_BTC,Bitfinex_BTC_USD -o=T_CoinEgg_ETH -f=coinegg_eth -v
-
+    bch:
+    python -m quant.cli -mBitfinex_BCH_USD,Liqui_BCC_BTC,Bitfinex_BTC_USD -o=T_Lq_BCH -f=liqui_bch -v
 
     目前的限制:
     """
 
-    def __init__(self, base_pair, pair1, pair2, **kwargs):
-        super(T_CoinEgg, self).__init__()
+    def __init__(self, base_pair, pair_1, pair_2, **kwargs):
+        super(T_Lq, self).__init__()
         self.base_pair = base_pair
-        self.pair_1 = pair1
-        self.pair_2 = pair2
+        self.pair_1 = pair_1
+        self.pair_2 = pair_2
         self.monitor_only = kwargs['monitor_only']
         """小数位进度，usd定价为2, btc定价为8"""
         self.precision = kwargs['precision']
@@ -41,16 +37,19 @@ class T_CoinEgg(BasicBot):
         self.min_trade_amount = kwargs['min_trade_amount']
 
         # 赢利触发点，差价，百分比更靠谱?
-        self.profit_trigger = 0.5
+        self.profit_trigger = 1.5
         self.last_trade = 0
         self.skip = False
 
         # just for count for chance profit
         self.count_forward = 0
         self.count_reverse = 0
+        self.trigger_diff_percent = 0.5
 
         if not self.monitor_only:
             self.brokers = broker_factory.create_brokers([self.base_pair, self.pair_1, self.pair_2])
+
+        logging.debug("T_Lq params: " + str(kwargs))
 
     def is_depths_available(self, depths):
         res = self.base_pair in depths and self.pair_1 in depths and self.pair_2 in depths
@@ -168,6 +167,9 @@ class T_CoinEgg(BasicBot):
                 logging.info("forward======>hedge_mid_amount is too small! %s" % hedge_mid_amount)
                 return
 
+        logging.info("forward======>hedge_quote_amount: %s, hedge_mid_amount:%s" %
+                     (hedge_quote_amount, hedge_mid_amount))
+
         """
         计算的关键点在于bcc和btc的买卖amount除去手续费后是相同的，也就是进行一个循环交易后bcc和btc的总量是不变的, 变的是usd
         profit=去除交易手续费后交易hedge_quote_amount的赢利
@@ -182,13 +184,16 @@ class T_CoinEgg(BasicBot):
         logging.info(
             "forward======>t_price: %s, t_price_percent: %s, profit: %s" % (t_price, t_price_percent, profit))
         if profit > 0:
-            if t_price_percent < self.profit_trigger:
-                logging.warn("forward======>t_price_percent should >= %s" % self.profit_trigger)
+            if t_price_percent < self.trigger_diff_percent:
+                logging.warn("forward======>profit percent should >= %s usd" % self.trigger_diff_percent)
                 return
             self.count_forward += 1
             logging.info(
-                "forward======>find profit!!!: profit:%s, t_price: %s, t_price_percent: %s" %
-                (profit, t_price, t_price_percent))
+                "forward======>find profit!!!: profit:%s,  quote amount: %s and mid amount: %s,  t_price: %s" %
+                (profit, hedge_quote_amount, hedge_mid_amount, t_price))
+            # if profit < self.profit_trigger:
+            #     logging.warn("forward======>profit should >= %s usd" % self.profit_trigger)
+            #     return
 
             current_time = time.time()
             if current_time - self.last_trade < 1:
@@ -198,16 +203,15 @@ class T_CoinEgg(BasicBot):
                 return
 
             # if not self.monitor_only:
-            #     logging.info("forward======>Ready to trade")
-            #     amount_base = hedge_quote_amount * (1 + self.fee_base)
-            #     amount_pair2 = hedge_quote_amount * pair1_bid_price * (1 - self.fee_pair1)
-            #     self.new_order(market=self.base_pair, order_type='buy', amount=amount_base,
-            #                    price=base_pair_ask_price)
-            #     self.new_order(market=self.pair_1, order_type='sell',
-            #                    amount=hedge_quote_amount, price=pair1_bid_price)
-            #     self.new_order(market=self.pair_2, order_type='sell', amount=amount_pair2,
-            #                    price=pair2_bid_price)
-            #     self.skip = True
+            # amount_base = hedge_quote_amount * (1 + self.fee_base)
+            # amount_pair2 = hedge_quote_amount * pair1_bid_price * (1 - self.fee_pair1)
+            # self.new_order(market=self.base_pair, order_type='buy', amount=amount_base,
+            #                price=base_pair_ask_price)
+            # self.new_order(market=self.pair_1, order_type='sell',
+            #                amount=hedge_quote_amount, price=pair1_bid_price)
+            # self.new_order(market=self.pair_2, order_type='sell', amount=amount_pair2,
+            #                price=pair2_bid_price)
+            # self.skip = True
 
             self.last_trade = time.time()
 
@@ -286,6 +290,9 @@ class T_CoinEgg(BasicBot):
                 logging.info("reverse======>hedge_mid_amount is too small! %s" % hedge_mid_amount)
                 return
 
+        logging.info("reverse======>hedge_quote_amount: %s, hedge_mid_amount:%s" %
+                     (hedge_quote_amount, hedge_mid_amount))
+
         """
         计算的关键点在于bcc和btc的买卖amount除去手续费后是相同的，也就是进行一个循环交易后bcc和btc的总量是不变的, 变的是usd
         profit=去除交易手续费后交易hedge_quote_amount的赢利
@@ -299,13 +306,17 @@ class T_CoinEgg(BasicBot):
         logging.info(
             "reverse======>t_price: %s, t_price_percent: %s, profit: %s" % (t_price, t_price_percent, profit))
         if profit > 0:
-            if t_price_percent < self.profit_trigger:
-                logging.warn("reverse======>t_price_percent should >= %s" % self.profit_trigger)
+            if t_price_percent < self.trigger_diff_percent:
+                logging.warn("forward======>profit percent should >= %s usd" % self.trigger_diff_percent)
                 return
             self.count_reverse += 1
             logging.info(
-                "reverse======>find profit!!!: profit:%s, t_price: %s, t_price_percent: %s" %
-                (profit, t_price, t_price_percent))
+                "reverse======>find profit!!!: profit:%s,  quote amount: %s and mid amount: %s, t_price: %s" %
+                (profit, hedge_quote_amount, hedge_mid_amount, t_price))
+            # if profit < self.profit_trigger:
+            #     logging.warn("reverse======>profit should >= %s usd" % self.profit_trigger)
+            #     return
+
             current_time = time.time()
             if current_time - self.last_trade < 1:
                 logging.warn("reverse======>Can't automate this trade, last trade " +
@@ -313,14 +324,13 @@ class T_CoinEgg(BasicBot):
                              (current_time - self.last_trade))
                 return
             # if not self.monitor_only:
-            #     logging.info("reverse======>Ready to trade")
-            #     amount_pair1 = hedge_quote_amount * (1 + self.fee_pair1)
-            #     amount_pair2 = hedge_quote_amount * pair1_ask_price * (1 + self.fee_pair2) * (1 + self.fee_pair1)
-            #     self.new_order(market=self.base_pair, order_type='sell', amount=hedge_quote_amount,
-            #                    price=base_pair_bid_price)
-            #     self.new_order(market=self.pair_1, order_type='buy', amount=amount_pair1, price=pair1_ask_price)
-            #     self.new_order(market=self.pair_2, order_type='buy', amount=amount_pair2, price=pair2_ask_price)
-            #     self.skip = True
+            # amount_pair1 = hedge_quote_amount * (1 + self.fee_pair1)
+            # amount_pair2 = hedge_quote_amount * pair1_ask_price * (1 + self.fee_pair2) * (1 + self.fee_pair1)
+            # self.new_order(market=self.base_pair, order_type='sell', amount=hedge_quote_amount,
+            #                price=base_pair_bid_price)
+            # self.new_order(market=self.pair_1, order_type='buy', amount=amount_pair1, price=pair1_ask_price)
+            # self.new_order(market=self.pair_2, order_type='buy', amount=amount_pair2, price=pair2_ask_price)
+            # self.skip = True
 
             self.last_trade = time.time()
 

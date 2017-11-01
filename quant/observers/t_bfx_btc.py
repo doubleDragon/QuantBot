@@ -347,12 +347,12 @@ class Arbitrage(BasicBot):
         bt1_bal = self.brokers[self.base_pair].bt1_available
         bt2_bal = self.brokers[self.base_pair].bt2_available
         diff = abs(bt1_bal - bt2_bal)
-        logging.info("risk======>bt1: %s, bt2: %s, diff: %s" % (bt1_bal, bt2_bal, diff))
-        if diff >= self.min_trade_amount:
-            self.error_count += 1
-            logging.warn("risk======>bt1 balance:%s not equal to bt2 balance:%s, error_count:%s" %
-                         (bt1_bal, bt2_bal, self.error_count))
-
-        if self.error_count > 5:
-            logging.warn("risk======>error_count > 5, so raise exception")
-            assert False
+        logging.info("balance======>bt1: %s, bt2: %s, diff: %s" % (bt1_bal, bt2_bal, diff))
+        # if diff >= self.min_trade_amount:
+        #     self.error_count += 1
+        #     logging.warn("risk======>bt1 balance:%s not equal to bt2 balance:%s, error_count:%s" %
+        #                  (bt1_bal, bt2_bal, self.error_count))
+        #
+        # if self.error_count > 5:
+        #     logging.warn("risk======>error_count > 5, so raise exception")
+        #     assert False

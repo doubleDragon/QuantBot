@@ -22,6 +22,12 @@ class Coinegg(Market):
         elif pair_code == 'eth':
             base_currency = 'BTC'
             market_currency = 'ETH'
+        elif pair_code == 'neo':
+            base_currency = 'BTC'
+            market_currency = 'NEO'
+        elif pair_code == 'etc':
+            base_currency = 'BTC'
+            market_currency = 'ETC'
         else:
             assert False
         return base_currency, market_currency

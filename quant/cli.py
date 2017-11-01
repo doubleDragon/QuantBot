@@ -15,7 +15,6 @@ from quant.observers.t_lq_bn import TriangleArbitrage as TriangleArbitrageLqBn
 from quant.observers.t_gate import TriangleArbitrage as TriangleArbitrageGate
 from quant.observers.t_bitflyer import TriangleArbitrage as TriangleArbitrageBitflyer
 from quant.observers.t_kraken import TriangleArbitrage as TriangleArbitrageKraken
-from quant.observers.t_coinegg import TriangleArbitrage as TriangleArbitrageCoinegg
 
 from quant.observers.t_bfx_btc_usd import Arbitrage as ArbitrageBfxBtcUsd
 from quant.observers.t_bfx_btc import Arbitrage as ArbitrageBfxBtc
@@ -135,8 +134,6 @@ class CLI(object):
                 self.register_t_kraken_bch(args)
             if "t-watch-kraken-eth" in args.command:
                 self.register_t_kraken_eth(args)
-            if "t-watch-coinegg-bch" in args.command:
-                self.register_t_coinegg_bch(args)
 
         self.data_feed.run_loop()
 
@@ -354,27 +351,6 @@ class CLI(object):
                                             pair2=pair2,
                                             monitor_only=True,
                                             **kwargs)
-        self.data_feed.register_observer(_observer)
-
-    def register_t_coinegg_bch(self, args):
-        base_pair = "Bitfinex_BCH_USD"
-        pair1 = "Coinegg_BCC_BTC"
-        pair2 = "Bitfinex_BTC_USD"
-        kwargs = {
-            "precision": 2,
-            "fee_base": 0.002,
-            "fee_pair1": 0.001,
-            "fee_pair2": 0.002,
-            "min_amount_market": 0.001,
-            "min_amount_mid": 0.005,
-            "max_trade_amount": 5,
-            "min_trade_amount": 0.001,
-        }
-        _observer = TriangleArbitrageCoinegg(base_pair=base_pair,
-                                             pair1=pair1,
-                                             pair2=pair2,
-                                             monitor_only=True,
-                                             **kwargs)
         self.data_feed.register_observer(_observer)
 
     def create_data_feed(self, args):
