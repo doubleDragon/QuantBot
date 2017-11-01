@@ -57,11 +57,13 @@ class Kkex(Broker):
             'avg_price': float(res['avg_price']),
             'type': res['type']
         }
-
-        if res['status'] == 0 or res['status'] == 1 or res['status'] == 4:
-            resp['status'] = constant.ORDER_STATE_PENDING
-        else:
+        if res['status'] == 2:
             resp['status'] = constant.ORDER_STATE_CLOSED
+        elif res['status'] == -1:
+            resp['status'] = constant.ORDER_STATE_CANCELED
+        else:
+            # 0 1 4 pending status
+            resp['status'] = constant.ORDER_STATE_PENDING
 
         return resp
 
