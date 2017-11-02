@@ -3,6 +3,8 @@
 import logging
 import inspect
 
+import time
+
 from quant import config
 
 
@@ -51,6 +53,13 @@ class Broker(object):
                                                  "usd_available": self.usd_available
                                                  }))
 
+    def buy_limit_c(self, amount, price, client_id=None):
+        while True:
+            order_id = self.buy_limit(amount, price, client_id)
+            if order_id:
+                break
+            time.sleep(config.INTERVAL_API)
+
     def buy_limit(self, amount, price, client_id=None):
         if amount > config.RISK_PROTECT_MAX_VOLUMN:
             logging.error('risk alert: amount %s > risk amount:%s' % (amount, config.RISK_PROTECT_MAX_VOLUMN))
@@ -67,6 +76,13 @@ class Broker(object):
         except Exception as e:
             logging.error('%s %s except: %s' % (self.name, get_current_function_name(), e))
             return None
+
+    def sell_limit_c(self, amount, price, client_id=None):
+        while True:
+            order_id = self.sell_limit(amount, price, client_id)
+            if order_id:
+                break
+            time.sleep(config.INTERVAL_API)
 
     def sell_limit(self, amount, price, client_id=None):
         if amount > config.RISK_PROTECT_MAX_VOLUMN:
@@ -112,22 +128,22 @@ class Broker(object):
             logging.error('%s %s except: %s' % (self.name, get_current_function_name(), e))
             return None
 
-    def get_order(self, order_id, symbol=None):
+    def get_order(self, order_id):
         if not order_id:
             return None
 
         try:
-            return self._get_order(order_id, symbol)
+            return self._get_order(order_id)
         except Exception as e:
             logging.error('%s %s except: %s' % (self.name, get_current_function_name(), e))
             return None
 
-    def cancel_order(self, order_id, symbol=None):
+    def cancel_order(self, order_id):
         if not order_id:
             return None
 
         try:
-            return self._cancel_order(order_id, symbol)
+            return self._cancel_order(order_id)
         except Exception as e:
             logging.error('%s %s except: %s' % (self.name, get_current_function_name(), e))
 
@@ -163,6 +179,13 @@ class Broker(object):
             return None
         return res
 
+    def get_ticker_c(self):
+        while True:
+            res = self.get_ticker()
+            if res:
+                break
+            time.sleep(config.INTERVAL_API)
+
     def get_ticker(self):
         try:
             res = self._ticker()
@@ -183,10 +206,10 @@ class Broker(object):
     def _sell_maker(self, amount, price):
         raise NotImplementedError("%s.sell_maker(self, amount, price)" % self.name)
 
-    def _get_order(self, order_id, symbol):
+    def _get_order(self, order_id):
         raise NotImplementedError("%s.get_order(self, order_id)" % self.name)
 
-    def _cancel_order(self, order_id, symbol):
+    def _cancel_order(self, order_id):
         raise NotImplementedError("%s.cancel_order(self, order_id)" % self.name)
 
     def _get_orders(self, order_ids):

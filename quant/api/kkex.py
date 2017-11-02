@@ -115,7 +115,13 @@ class PrivateClient(PublicClient):
     def cancel_order(self, symbol, order_id):
         params = {'symbol': symbol,
                   'order_id': order_id}
-        return self.trade_api('/api/v1/cancel_order', params)
+        return self._post('/api/v1/cancel_order', params)
+
+    def cancel_all_orders(self, symbol):
+        params = {
+            'symbol': symbol
+        }
+        return self._post('/api/v1/cancel_all_orders', params)
 
     def order_info(self, symbol, order_id):
         params = {

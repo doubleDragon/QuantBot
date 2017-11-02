@@ -33,7 +33,8 @@ class Liquid(BasicBot):
 
         self.LIQUID_MIN_DIFF = 0.01
         self.LIQUID_MAX_DIFF = 0.05
-        self.LIQUID_HEDGE_MIN_AMOUNT = 0.001
+        # bfx bch min trade amount = 0.04
+        self.LIQUID_HEDGE_MIN_AMOUNT = 0.04
         self.LIQUID_MAX_BCH_AMOUNT = 1
         self.LIQUID_MIN_BCH_AMOUNT = 0.1
         self.LIQUID_BUY_ORDER_PAIRS = 5
@@ -41,12 +42,17 @@ class Liquid(BasicBot):
         self.LIQUID_INIT_DIFF = 0.03  # 3%
 
         self.cancel_all_orders(self.mm_market)
+        self.cancel_all_orders(self.hedge_market)
+
+        self.fee_hedge_market = 0.002
+        self.fee_mm_market = 0.002
 
         logging.info('Liquid Setup complete')
 
     def terminate(self):
         super(Liquid, self).terminate()
         self.cancel_all_orders(self.mm_market)
+        self.cancel_all_orders(self.hedge_market)
 
         logging.info('Liquid terminate complete')
 
@@ -73,7 +79,8 @@ class Liquid(BasicBot):
                 continue
 
         if (refer_ask_price == 0) or (refer_bid_price == 0):
-            # depth invalid
+            logging.warn('no available market depths')
+            self.risk_protect()
             return
 
         if not refer_market:
@@ -81,13 +88,12 @@ class Liquid(BasicBot):
             self.risk_protect()
             return
 
-        if self.hedge_market:
-            try:
-                self.hedge_bid_price, self.hedge_ask_price = self.get_ticker(depths, self.hedge_market)
-            except Exception as e:
-                logging.warn('%s exception when get_ticker:%s' % (self.hedge_market, e))
-                self.risk_protect()
-                return
+        try:
+            self.hedge_bid_price, self.hedge_ask_price = self.get_ticker(depths, self.hedge_market)
+        except Exception as e:
+            logging.warn('%s exception when get_ticker:%s' % (self.hedge_market, e))
+            self.risk_protect()
+            return
 
         try:
             mm_bid_price, mm_ask_price = self.get_ticker(depths, self.mm_market)
@@ -123,7 +129,11 @@ class Liquid(BasicBot):
                         order['order_id'], order['status'], order['amount'], order['price'], order['deal_amount']))
                     self.remove_order(order['order_id'])
                     return
-
+                """
+                cancel订单条件:
+                1, 订单超过10小时则cancel掉
+                2, 当前bfx的价格变化，相对于kkex委托的历史订单，如果出现了对冲亏损则cancel掉该订单
+                """
                 if order['type'] == 'buy':
                     if order['price'] > max_buy_price or time_diff > timeout_adjust:
                         logging.info(
@@ -161,15 +171,45 @@ class Liquid(BasicBot):
         logging.info('hedge [%s] to %s: %s %s %s', client_id, self.hedge_market, hedge_side, amount, price)
 
         if hedge_side == 'sell':
-            self.brokers[self.hedge_market].sell_limit(amount, self.hedge_bid_price * (1 - self.slappage))
+            self.hedge_order_sell(amount=amount, price=self.hedge_bid_price * (1 - self.slappage))
         else:
-            self.brokers[self.hedge_market].buy_limit(amount, self.hedge_ask_price * (1 + self.slappage))
-
+            self.hedge_order_buy(amount=amount * (1 + self.fee_hedge_market),
+                                 price=self.hedge_ask_price * (1 + self.slappage))
         # update the deal_amount of local order
         self.remove_order(order_id)
         order['deal_amount'] = deal_amount
         order['deal_index'] += 1
         self.orders.append(order)
+
+    def hedge_order_sell(self, amount, price):
+        """confirm hedge order all executed"""
+        sell_amount = amount
+        sell_price = price
+        while True:
+            # sell_limit_c confirm sell_limit success, order_id must exist
+            order_id = self.brokers[self.hedge_market].sell_limit_c(amount=sell_amount, price=sell_price)
+            deal_amount = self.get_deal_amount(self.hedge_market, order_id)
+            diff_amount = round(sell_amount - deal_amount, 8)
+            if diff_amount < self.LIQUID_HEDGE_MIN_AMOUNT:
+                break
+            ticker = self.get_latest_ticker(self.hedge_market)
+            sell_amount = diff_amount
+            sell_price = ticker['bid']
+
+    def hedge_order_buy(self, amount, price):
+        """confirm hedge order all executed"""
+        buy_amount = amount
+        buy_price = price
+        while True:
+            # sell_limit_c confirm sell_limit success, order_id must exist
+            order_id = self.brokers[self.hedge_market].buy_limit_c(amount=buy_amount, price=buy_price)
+            deal_amount = self.get_deal_amount(self.hedge_market, order_id)
+            diff_amount = round(buy_amount - deal_amount, 8)
+            if diff_amount < self.LIQUID_HEDGE_MIN_AMOUNT:
+                break
+            ticker = self.get_latest_ticker(self.hedge_market)
+            buy_amount = diff_amount
+            buy_price = ticker['ask']
 
     def place_orders(self, refer_bid_price, refer_ask_price, mm_bid_price, mm_ask_price):
         self.update_balance()
@@ -187,7 +227,7 @@ class Liquid(BasicBot):
             # -10% random price base on buy_price
             price = round(buy_price * (1 - liquid_max_diff * random.random()), 5)
 
-            min_bch_amount_balance = min(self.mm_broker.btc_balance / price, self.hedge_broker.bch_available)
+            min_bch_amount_balance = round(min(self.mm_broker.btc_balance / price, self.hedge_broker.bch_available), 8)
 
             if min_bch_amount_balance < amount or amount < min_bch_trade_amount:
                 logging.info(
@@ -198,7 +238,7 @@ class Liquid(BasicBot):
 
                 len_buy_over = (self.buying_len() < self.LIQUID_BUY_ORDER_PAIRS)
                 if (0 < mm_ask_price < buy_price) or len_buy_over:
-                    self.new_order(self.mm_market, 'buy', amount=amount, price=price)
+                    self.new_order(market=self.mm_market, order_type='buy', amount=amount, price=price)
 
         if self.selling_len() < 2 * self.LIQUID_SELL_ORDER_PAIRS:
             sell_price = refer_ask_price * (1 + self.LIQUID_INIT_DIFF)
@@ -207,7 +247,8 @@ class Liquid(BasicBot):
             # +10% random price base on sell_price
             price = round(sell_price * (1 + liquid_max_diff * random.random()), 5)
 
-            min_bch_amount_balance = min(self.mm_broker.bch_available, self.hedge_broker.btc_available / price)
+            min_bch_amount_balance = round(min(self.mm_broker.bch_available, self.hedge_broker.btc_available / price),
+                                           8)
 
             if min_bch_amount_balance < amount or amount < min_bch_trade_amount:
                 logging.info(
@@ -218,7 +259,7 @@ class Liquid(BasicBot):
 
                 len_sell_over = (self.selling_len() < self.LIQUID_SELL_ORDER_PAIRS)
                 if (mm_bid_price > 0 and mm_bid_price > sell_price) or len_sell_over:
-                    self.new_order(self.mm_market, 'sell', amount=amount, price=price)
+                    self.new_order(market=self.mm_market, order_type='sell', amount=amount, price=price)
 
         return
 
@@ -227,3 +268,6 @@ class Liquid(BasicBot):
         bid_price = depths[market]["bids"][0]['price']
         ask_price = depths[market]["asks"][0]['price']
         return bid_price, ask_price
+
+    def cancel_all_orders(self, market):
+        self.brokers[market].cancel_all()

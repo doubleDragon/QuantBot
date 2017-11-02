@@ -32,19 +32,13 @@ class Kkex(Broker):
     def _buy_limit(self, amount, price):
         """Create a buy limit order"""
         res = self.client.buy_limit(symbol=self.pair_code, amount=str(amount), price=str(price))
-
         logging.info('_buy_limit: %s' % res)
-
         return res['order_id']
 
     def _sell_limit(self, amount, price):
         """Create a sell limit order"""
-        res = self.client.sell_limit(
-            symbol=self.pair_code,
-            amount=str(amount),
-            price=str(price))
+        res = self.client.sell_limit(symbol=self.pair_code, amount=str(amount), price=str(price))
         logging.info('_sell_limit: %s' % res)
-
         return res['order_id']
 
     @classmethod
@@ -67,7 +61,7 @@ class Kkex(Broker):
 
         return resp
 
-    def _get_order(self, order_id, symbol=None):
+    def _get_order(self, order_id):
         res = self.client.order_info(self.pair_code, int(order_id))
         logging.info('get_order: %s' % res)
 
@@ -77,20 +71,23 @@ class Kkex(Broker):
     def _get_orders(self, order_ids):
         orders = []
         res = self.client.orders_info(self.pair_code, order_ids)
-
         for order in res['orders']:
             resp_order = self._order_status(order)
             orders.append(resp_order)
 
         return orders
 
-    def _cancel_order(self, order_id, symbol=None):
+    def _cancel_order(self, order_id):
         res = self.client.cancel_order(self.pair_code, int(order_id))
         logging.info('cancel_order: %s' % res)
 
         assert str(res['order_id']) == str(order_id)
 
         return True
+
+    def _cancel_all(self):
+        res = self.client.cancel_all_orders(self.pair_code)
+        return res['result']
 
     def _get_balances(self):
         """Get balance"""
@@ -109,8 +106,9 @@ class Kkex(Broker):
     def _get_orders_history(self):
         orders = []
         res = self.client.get_orders_history(self.pair_code, pagesize=200)
-        for order in res['orders']:
-            resp_order = self._order_status(order)
-            orders.append(resp_order)
+        if res:
+            for order in res['orders']:
+                resp_order = self._order_status(order)
+                orders.append(resp_order)
 
-        return orders
+            return orders

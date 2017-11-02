@@ -2,8 +2,12 @@
 # -*- coding: UTF-8 -*-
 
 import logging
-from .observer import Observer
+
 import time
+
+from quant import config
+from quant.common import constant
+from .observer import Observer
 
 
 class BasicBot(Observer):
@@ -110,10 +114,28 @@ class BasicBot(Observer):
             while True:
                 result = self.cancel_order(market, order['type'], order['order_id'])
                 if not result:
-                    time.sleep(10)
+                    time.sleep(2)
                 else:
                     break
 
     def update_balance(self):
         for broker in self.brokers:
             self.brokers[broker].get_balances()
+
+    def get_deal_amount(self, market, order_id):
+        while True:
+            order_status = self.brokers[market].get_order(order_id)
+            if not order_status:
+                time.sleep(config.INTERVAL_API)
+                continue
+            break
+
+        if order_status['status'] == constant.ORDER_STATE_PENDING:
+            self.brokers[market].cancel_order(order_id)
+            time.sleep(config.INTERVAL_RETRY)
+            return self.get_deal_amount(market, order_id)
+        else:
+            return order_status['deal_amount']
+
+    def get_latest_ticker(self, market):
+        return self.brokers[market].get_ticker_c()

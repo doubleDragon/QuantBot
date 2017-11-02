@@ -6,9 +6,8 @@ import logging
 import time
 
 from quant import config
-from quant.common import constant
-from .basicbot import BasicBot
 from quant.brokers import broker_factory
+from .basicbot import BasicBot
 
 
 class Arbitrage(BasicBot):
@@ -413,21 +412,6 @@ class Arbitrage(BasicBot):
                 self.skip = True
 
             self.last_trade = time.time()
-
-    def get_deal_amount(self, market, order_id):
-        while True:
-            order_status = self.brokers[market].get_order(order_id)
-            if not order_status:
-                time.sleep(config.INTERVAL_API)
-                continue
-            break
-
-        if order_status['status'] == constant.ORDER_STATE_PENDING:
-            self.brokers[market].cancel_order(order_id)
-            time.sleep(config.INTERVAL_RETRY)
-            return self.get_deal_amount(market, order_id)
-        else:
-            return order_status['deal_amount']
 
     def get_new_ticker(self, market):
         while True:
