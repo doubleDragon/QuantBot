@@ -13,6 +13,10 @@ from .basicbot import BasicBot
 
 
 class Liquid(BasicBot):
+
+    """
+    python -m quant.cli -mKkex_BCC_BTC,Bitfinex_BCH_BTC -oLiquid -f=liquid -d
+    """
     def __init__(self):
         super(Liquid, self).__init__()
         self.mm_market = 'Kkex_BCC_BTC'
