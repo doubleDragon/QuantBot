@@ -153,6 +153,9 @@ BITSTAR_SECRET_TOKEN = ''
 Bitfinex_API_KEY = config('BFX_API_KEY')
 Bitfinex_SECRET_TOKEN = config('BFX_API_SECRET')
 
+Bitfinex_SUB_API_KEY = config('BFX_SUB_API_KEY')
+Bitfinex_SUB_SECRET_TOKEN = config('BFX_SUB_API_SECRET')
+
 
 Bittrex_API_KEY = config('BITTREX_API_KEY')
 Bittrex_SECRET_TOKEN = config('BITTREX_API_SECRET')

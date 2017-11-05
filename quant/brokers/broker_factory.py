@@ -88,3 +88,12 @@ def create_brokers(exchange_names):
 
         brokers[name] = chg
     return brokers
+
+
+def create_bfx_sub_broker(exchange_name):
+    if exchange_name == 'Bitfinex_BCH_BTC':
+        pair_code = 'bchbtc'
+    else:
+        logging.warn('Exchange ' + exchange_name + ' not supported!')
+        assert False
+    return Bitfinex(pair_code, config.Bitfinex_SUB_API_KEY, config.Bitfinex_SUB_SECRET_TOKEN)
