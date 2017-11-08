@@ -44,7 +44,7 @@ class Liquid(BasicBot):
         self.LIQUID_MIN_BCH_AMOUNT = 0.1
         self.LIQUID_BUY_ORDER_PAIRS = 5
         self.LIQUID_SELL_ORDER_PAIRS = 5
-        self.LIQUID_INIT_DIFF = 0.03  # 3%
+        self.LIQUID_INIT_DIFF = 0.015  # 1%
 
         self.cancel_all_orders(self.mm_market)
         self.cancel_all_orders(self.hedge_market)
