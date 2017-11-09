@@ -15,6 +15,7 @@ from ._gate import Gate
 from ._bitflyer import Bitflyer
 from ._kraken import Kraken
 from ._coinegg import Coinegg
+from ._bithumb import Bithumb
 
 
 def create_markets(exchange_names):
@@ -142,6 +143,12 @@ def create_markets(exchange_names):
             ex = Coinegg('neo')
         elif name == "%s_ETC_BTC" % constant.EX_COINEGG:
             ex = Coinegg('etc')
+        elif name == "%s_BTC_KRW" % constant.EX_BITHUMB:
+            ex = Bithumb('btc')
+        elif name == "%s_ETH_KRW" % constant.EX_BITHUMB:
+            ex = Bithumb('eth')
+        elif name == "%s_BCH_KRW" % constant.EX_BITHUMB:
+            ex = Bithumb('bch')
         else:
             logging.warn('Exchange ' + name + ' not supported!')
             assert False

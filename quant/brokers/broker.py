@@ -59,6 +59,7 @@ class Broker(object):
             if order_id:
                 break
             time.sleep(config.INTERVAL_API)
+        return order_id
 
     def buy_limit(self, amount, price, client_id=None):
         if amount > config.RISK_PROTECT_MAX_VOLUMN:
@@ -83,6 +84,7 @@ class Broker(object):
             if order_id:
                 break
             time.sleep(config.INTERVAL_API)
+        return order_id
 
     def sell_limit(self, amount, price, client_id=None):
         if amount > config.RISK_PROTECT_MAX_VOLUMN:
