@@ -38,14 +38,13 @@ class T_Bithumb(BasicBot):
         self.min_trade_amount = kwargs['min_trade_amount']
 
         # 赢利触发点，差价，百分比更靠谱?
-        self.profit_trigger = 1.5
+        self.trigger_percent = 1.0
         self.last_trade = 0
         self.skip = False
 
         # just for count for chance profit
         self.count_forward = 0
         self.count_reverse = 0
-        self.trigger_diff_percent = 0.5
 
         if not self.monitor_only:
             self.brokers = broker_factory.create_brokers([self.base_pair, self.pair_1, self.pair_2])
@@ -184,8 +183,8 @@ class T_Bithumb(BasicBot):
         logging.info(
             "forward======>t_price: %s, t_price_percent: %s, profit: %s" % (t_price, t_price_percent, profit))
         if profit > 0:
-            if t_price_percent < self.trigger_diff_percent:
-                logging.warn("forward======>profit percent should >= %s usd" % self.trigger_diff_percent)
+            if t_price_percent < self.trigger_percent:
+                logging.warn("forward======>profit percent should >= %s usd" % self.trigger_percent)
                 return
             self.count_forward += 1
             logging.info(
@@ -238,25 +237,23 @@ class T_Bithumb(BasicBot):
                                      (self.pair_1, sell_price_1, sell_amount_1))
                         r_sell1 = self.new_order(market=self.pair_1, order_type='sell', amount=sell_amount_1,
                                                  price=sell_price_1)
-                        if not r_sell1 or ('order_id' not in r_sell1):
-                            continue
-                        order_id_1 = r_sell1['order_id']
-                        if order_id_1 < 0:
-                            assert False
+                        if r_sell1 and ('order_id' in r_sell1):
+                            order_id_1 = r_sell1['order_id']
+                            if order_id_1 < 0:
+                                assert False
 
                     if not done_base:
                         logging.info("forward=====>%s place buy order, price=%s, amount=%s" %
                                      (self.base_pair, buy_price_base, buy_amount_base))
                         r_buy_base = self.new_order(market=self.base_pair, order_type='buy', amount=buy_amount_base,
                                                     price=buy_price_base)
-                        if not r_buy_base or ('order_id' not in r_buy_base):
-                            continue
-                        order_id_base = r_buy_base['order_id']
-                        if order_id_base < 0:
-                            assert False
+                        if r_buy_base and ('order_id' in r_buy_base):
+                            order_id_base = r_buy_base['order_id']
+                            if order_id_base < 0:
+                                assert False
 
                     time.sleep(config.INTERVAL_API)
-                    if not done_1:
+                    if not done_1 and order_id_1 and order_id_1 >= 0:
                         deal_amount_1 = self.get_deal_amount(self.pair_1, order_id_1)
                         logging.info("forward======>%s order %s deal amount %s, origin amount %s" %
                                      (self.pair_1, order_id_1, deal_amount_1, sell_amount_1))
@@ -269,7 +266,7 @@ class T_Bithumb(BasicBot):
                             sell_price_1 = ticker1['bid']
                             sell_amount_1 = diff_amount_1
 
-                    if not done_base:
+                    if not done_base and order_id_base and order_id_base >= 0:
                         deal_amount_base = self.get_deal_amount(self.base_pair, order_id_base)
                         logging.info("forward======>%s order %s deal amount %s, origin amount %s" %
                                      (self.base_pair, order_id_base, deal_amount_base, buy_amount_base))
@@ -381,8 +378,8 @@ class T_Bithumb(BasicBot):
         logging.info(
             "reverse======>t_price: %s, t_price_percent: %s, profit: %s" % (t_price, t_price_percent, profit))
         if profit > 0:
-            if t_price_percent < self.trigger_diff_percent:
-                logging.warn("forward======>profit percent should >= %s usd" % self.trigger_diff_percent)
+            if t_price_percent < self.trigger_percent:
+                logging.warn("forward======>profit percent should >= %s usd" % self.trigger_percent)
                 return
             self.count_reverse += 1
             logging.info(
@@ -431,36 +428,32 @@ class T_Bithumb(BasicBot):
                 done_1 = False
                 done_2 = False
                 while True:
-                    order_id_1 = -1
-                    order_id_2 = -1
+                    order_id_1 = None
+                    order_id_2 = None
 
                     if not done_1:
                         logging.info("reverse=====>%s place buy order, price=%s, amount=%s" %
                                      (self.pair_1, buy_price_1, buy_amount_1))
                         r_buy1 = self.new_order(market=self.pair_1, order_type='buy', amount=buy_amount_1,
                                                 price=buy_price_1)
-                        if not r_buy1 or ('order_id' not in r_buy1):
-                            continue
-
-                        order_id_1 = r_buy1['order_id']
-                        if order_id_1 < 0:
-                            assert False
+                        if r_buy1 and ('order_id' in r_buy1):
+                            order_id_1 = r_buy1['order_id']
+                            if order_id_1 < 0:
+                                assert False
 
                     if not done_2:
                         logging.info("reverse=====>%s place buy order, price=%s, amount=%s" %
                                      (self.pair_2, buy_price_2, buy_amount_2))
                         r_buy2 = self.new_order(market=self.pair_2, order_type='buy', amount=buy_amount_2,
                                                 price=buy_price_2)
-                        if not r_buy2 or ('order_id' not in r_buy2):
-                            continue
-
-                        order_id_2 = r_buy2['order_id']
-                        if order_id_2 < 0:
-                            assert False
+                        if r_buy2 and ('order_id' in r_buy2):
+                            order_id_2 = r_buy2['order_id']
+                            if order_id_2 < 0:
+                                assert False
 
                     time.sleep(config.INTERVAL_API)
 
-                    if not done_1:
+                    if not done_1 and order_id_1 and order_id_1 >= 0:
                         deal_amount_1 = self.get_deal_amount(self.pair_1, order_id_1)
                         logging.info("reverse======>%s order %s deal amount %s, origin amount %s" %
                                      (self.pair_1, order_id_1, deal_amount_1, buy_amount_1))
@@ -473,7 +466,7 @@ class T_Bithumb(BasicBot):
                             buy_price_1 = ticker1['ask']
                             buy_amount_1 = diff_amount_1
 
-                    if not done_2:
+                    if not done_2 and order_id_2 and order_id_2 >= 0:
                         deal_amount_2 = self.get_deal_amount(self.pair_2, order_id_2)
                         logging.info("reverse======>%s order %s deal amount %s, origin amount %s" %
                                      (self.pair_2, order_id_2, deal_amount_2, buy_amount_2))
