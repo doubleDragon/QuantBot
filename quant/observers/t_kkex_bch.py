@@ -242,7 +242,7 @@ class T_Kkex_BCH(BasicBot):
                             logging.info("forward======>%s trade complete" % self.pair_1)
                             done_1 = True
                         else:
-                            ticker1 = self.get_new_ticker(self.pair_1)
+                            ticker1 = self.get_latest_ticker(self.pair_1)
                             sell_price_1 = ticker1['bid']
                             sell_amount_1 = diff_amount_1
 
@@ -255,7 +255,7 @@ class T_Kkex_BCH(BasicBot):
                             logging.info("forward======>%s trade complete" % self.base_pair)
                             done_base = True
                         else:
-                            ticker_base = self.get_new_ticker(self.base_pair)
+                            ticker_base = self.get_latest_ticker(self.base_pair)
                             buy_price_base = ticker_base['ask']
                             buy_amount_base = diff_amount_base
 
@@ -437,7 +437,7 @@ class T_Kkex_BCH(BasicBot):
                             logging.info("reverse======>%s trade complete" % self.pair_1)
                             done_1 = True
                         else:
-                            ticker1 = self.get_new_ticker(self.pair_1)
+                            ticker1 = self.get_latest_ticker(self.pair_1)
                             buy_price_1 = ticker1['ask']
                             buy_amount_1 = diff_amount_1
 
@@ -450,7 +450,7 @@ class T_Kkex_BCH(BasicBot):
                             logging.info("reverse======>%s trade complete" % self.pair_2)
                             done_2 = True
                         else:
-                            ticker2 = self.get_new_ticker(self.pair_2)
+                            ticker2 = self.get_latest_ticker(self.pair_2)
                             buy_price_2 = ticker2['ask']
                             buy_amount_2 = diff_amount_2
 
@@ -461,30 +461,6 @@ class T_Kkex_BCH(BasicBot):
                 self.skip = True
 
             self.last_trade = time.time()
-
-    def get_deal_amount(self, market, order_id):
-        while True:
-            order_status = self.brokers[market].get_order(order_id)
-            if not order_status:
-                time.sleep(config.INTERVAL_API)
-                continue
-            break
-
-        if order_status['status'] == constant.ORDER_STATE_PENDING:
-            self.brokers[market].cancel_order(order_id)
-            time.sleep(config.INTERVAL_RETRY)
-            return self.get_deal_amount(market, order_id)
-        else:
-            return order_status['deal_amount']
-
-    def get_new_ticker(self, market):
-        while True:
-            ticker = self.brokers[market].get_ticker()
-            if ticker:
-                break
-            time.sleep(config.INTERVAL_API)
-
-        return ticker
 
     def cancel_all_orders(self, market):
         self.brokers[market].cancel_all()

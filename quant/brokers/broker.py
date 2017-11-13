@@ -187,6 +187,7 @@ class Broker(object):
             if res:
                 break
             time.sleep(config.INTERVAL_API)
+        return res
 
     def get_ticker(self):
         try:
