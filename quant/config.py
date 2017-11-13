@@ -172,6 +172,9 @@ Gate_SECRET_TOKEN = config('GATE_API_SECRET')
 Binance_API_KEY = ''
 Binance_SECRET_TOKEN = ''
 
+Bithumb_API_KEY = config('BITHUMB_API_KEY')
+Bithumb_SECRET_TOKEN = config('BITHUMB_API_SECRET')
+
 SUPPORT_ZMQ = False
 ZMQ_HOST = "127.0.0.1"
 ZMQ_PORT = 18031
