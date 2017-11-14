@@ -24,9 +24,9 @@ class T_Bithumb_BCH(T_Bithumb):
             'fee_base': 0.0015,
             'fee_pair1': 0.002,
             'fee_pair2': 0.0015,
-            'min_amount_market': 0.04,
+            'min_amount_market': 0.02,
             'min_amount_mid': 0.004,
             'max_trade_amount': 1,
-            'min_trade_amount': 0.04
+            'min_trade_amount': 0.02
         }
         super(T_Bithumb_BCH, self).__init__(base_pair, pair_1, pair_2, **kwargs)

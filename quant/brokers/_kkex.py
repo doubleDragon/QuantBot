@@ -61,7 +61,7 @@ class Kkex(Broker):
 
         return resp
 
-    def _get_order(self, order_id):
+    def _get_order(self, order_id, order_type=None):
         res = self.client.order_info(self.pair_code, int(order_id))
         logging.info('get_order: %s' % res)
 
@@ -77,7 +77,7 @@ class Kkex(Broker):
 
         return orders
 
-    def _cancel_order(self, order_id):
+    def _cancel_order(self, order_id, currency=None, order_type=None):
         res = self.client.cancel_order(self.pair_code, int(order_id))
         logging.info('cancel_order: %s' % res)
 

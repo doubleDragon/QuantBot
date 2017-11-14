@@ -71,7 +71,7 @@ class Bitfinex(Broker):
 
         return resp
 
-    def _get_order(self, order_id):
+    def _get_order(self, order_id, order_type=None):
         res = self.client.get_order(int(order_id))
         if not res:
             return None
@@ -80,7 +80,7 @@ class Bitfinex(Broker):
         assert str(res['id']) == str(order_id)
         return self._order_status(res)
 
-    def _cancel_order(self, order_id):
+    def _cancel_order(self, order_id, currency=None, order_type=None):
         res = self.client.cancel_order(int(order_id))
         if not res:
             return False

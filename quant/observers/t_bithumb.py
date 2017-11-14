@@ -204,8 +204,10 @@ class T_Bithumb(BasicBot):
 
                 logging.info("forward=====>%s place sell order, price=%s, amount=%s" %
                              (self.pair_2, sell_price_2, sell_amount_2))
+
                 r_sell2 = self.new_order(market=self.pair_2, order_type='sell', amount=sell_amount_2,
                                          price=sell_price_2)
+
                 if not r_sell2 or ('order_id' not in r_sell2):
                     logging.warn("forward======>%s place sell order failed, give up and return" % self.pair_2)
                     return

@@ -153,15 +153,18 @@ class PrivateClient(PublicClient):
         curl_handle.setopt(curl_handle.WRITEFUNCTION, self.http_body_callback)
         curl_handle.perform()
 
-        # response_code = curl_handle.getinfo(pycurl.RESPONSE_CODE); # Get http response status code.
+        # Get http response status code. Just for test
+        # response_code = curl_handle.getinfo(pycurl.RESPONSE_CODE)
+        # print(self.contents)
 
         curl_handle.close()
-
         return json.loads(self.contents)
 
-    def balance(self, currency=None):
+    def balances(self, currency):
+        """
+        currency必须传, 目前传ALL 有bug
+        """
         endpoint = '/info/balance'
-        currency = 'all' if not currency else currency
         params = {
             'currency': currency
         }
@@ -178,9 +181,9 @@ class PrivateClient(PublicClient):
         endpoint = '/trade/place'
         params = {
             'order_currency': currency,
-            'Payment_currency': 'KRW',
+            'payment_currency': 'KRW',
             'units': float(amount),
-            'price': float(price),
+            'price': int(price),
             'type': order_type
         }
         return self._api_call(endpoint, params)
@@ -191,10 +194,7 @@ class PrivateClient(PublicClient):
     def sell(self, currency, price, amount):
         return self.place_order(currency, price, amount, 'ask')
 
-    def active_orders(self):
-        pass
-
-    def get_order(self, currency, order_id, order_type):
+    def order_detail(self, currency, order_id, order_type):
         endpoint = '/info/order_detail'
         params = {
             'order_id': str(order_id),
@@ -204,11 +204,30 @@ class PrivateClient(PublicClient):
 
         return self._api_call(endpoint, params)
 
-    def cancel(self, currency, order_id, order_type):
+    def cancel_order(self, order_id, currency, order_type):
         endpoint = '/trade/cancel'
         params = {
             'order_id': str(order_id),
             'type': order_type,
             'currency': currency
+        }
+        return self._api_call(endpoint, params)
+
+    def get_order(self, order_id, currency, order_type, after=None, count=1):
+        """
+        经验证，所有参数必须传，单次只能获取一个订单信息，需要逻辑处自己存储订单id和订单类型
+        after 默认为1个小时
+        """
+        endpoint = '/trade/orders'
+        if not after:
+            now = int(round(time.time() * 1000))
+            before = 1000 * 60 * 60
+            after = now - before
+        params = {
+            'order_id': str(order_id),
+            'type': order_type,
+            'currency': currency,
+            'count': count,
+            'after': after
         }
         return self._api_call(endpoint, params)
