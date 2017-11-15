@@ -7,7 +7,7 @@ from quant.api.bithumb import PrivateClient
 from quant.brokers._bithumb import Bithumb
 
 """test api client"""
-# client = PrivateClient(config.Bithumb_API_KEY, config.Bithumb_SECRET_TOKEN)
+client = PrivateClient(config.Bithumb_API_KEY, config.Bithumb_SECRET_TOKEN)
 
 # print(client.account())
 # res = client.balances('bch')
@@ -18,7 +18,7 @@ from quant.brokers._bithumb import Bithumb
 
 
 '''test sell order'''
-# res = client.sell(currency='btc', price=7600000, amount=0.001)
+# res = client.sell(currency='btc', price=1500000, amount=0.0001)
 # if res:
 #     print('place order success======>' + str(res))
 # else:
@@ -48,7 +48,7 @@ from quant.brokers._bithumb import Bithumb
 
 
 """test broker"""
-broker = Bithumb(pair_code='btc', api_key=config.Bithumb_API_KEY, api_secret=config.Bithumb_SECRET_TOKEN)
+# broker = Bithumb(pair_code='btc', api_key=config.Bithumb_API_KEY, api_secret=config.Bithumb_SECRET_TOKEN)
 '''test sell order'''
 # price = 7600000
 # amount = 0.001

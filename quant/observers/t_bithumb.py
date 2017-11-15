@@ -24,7 +24,7 @@ class T_Bithumb(BasicBot):
         self.pair_1 = pair_1
         self.pair_2 = pair_2
         self.monitor_only = kwargs['monitor_only']
-        """小数位进度，usd定价为2, btc定价为8"""
+        """小数位进度，krw定价为2, btc定价为8"""
         self.precision = kwargs['precision']
         """交易所和币种对应的手续费, 一般为1%, 2%, 2.5%"""
         self.fee_base = kwargs['fee_base']
@@ -130,21 +130,21 @@ class T_Bithumb(BasicBot):
             hedge_quote_amount = hedge_quote_amount_market
             hedge_mid_amount = round(hedge_quote_amount * pair1_bid_price, 8)
             if hedge_quote_amount < self.min_amount_market:
-                """bitfinex限制bch_usd最小可交易的bch order size为0.001"""
+                """bitfinex限制bch_krw最小可交易的bch order size为0.001"""
                 logging.info("forward======>hedge_quote_amount is too small! %s" % hedge_quote_amount)
                 return
 
             if hedge_mid_amount < self.min_amount_mid:
-                """bitfinex限制btc_usd最小可交易amount为0.005, liqui限制单次交易btc的amount为0.0001, 所以这里取0.005"""
+                """bitfinex限制btc_krw最小可交易amount为0.005, liqui限制单次交易btc的amount为0.0001, 所以这里取0.005"""
                 logging.info("forward======>hedge_mid_amount is too small! %s" % hedge_mid_amount)
                 return
         else:
             """余额限制base最多能买多少个bch, pair1 最多能卖多少个bch, 要带上手续费"""
             hedge_quote_amount_balance = round(min(self.brokers[self.pair_1].bch_available,
                                                    self.brokers[
-                                                       self.base_pair].usd_available / base_pair_ask_price_real),
+                                                       self.base_pair].krw_available / base_pair_ask_price_real),
                                                8)
-            hedge_mid_amount_balance = round(min(self.brokers[self.base_pair].btc_available,
+            hedge_mid_amount_balance = round(min(self.brokers[self.pair_2].btc_available,
                                                  self.brokers[self.pair_1].bch_available * pair1_bid_price_real), 8)
 
             """取市场和余额共同限制的amount"""
@@ -156,12 +156,12 @@ class T_Bithumb(BasicBot):
                           hedge_quote_amount_market, hedge_mid_amount_market))
 
             if hedge_quote_amount < self.min_amount_market:
-                """bitfinex限制bch_usd最小可交易的bch order size为0.001"""
+                """bitfinex限制bch_krw最小可交易的bch order size为0.001"""
                 logging.info("forward======>hedge_quote_amount is too small! %s" % hedge_quote_amount)
                 return
 
             if hedge_mid_amount < self.min_amount_mid or hedge_mid_amount > hedge_mid_amount_balance:
-                """bitfinex限制btc_usd最小可交易amount为0.005, liqui限制单次交易btc的amount为0.0001, 所以这里取0.005"""
+                """bitfinex限制btc_krw最小可交易amount为0.005, liqui限制单次交易btc的amount为0.0001, 所以这里取0.005"""
                 """btc余额不足也不行"""
                 logging.info("forward======>hedge_mid_amount is too small! %s" % hedge_mid_amount)
                 return
@@ -170,7 +170,7 @@ class T_Bithumb(BasicBot):
                      (hedge_quote_amount, hedge_mid_amount))
 
         """
-        计算的关键点在于bcc和btc的买卖amount除去手续费后是相同的，也就是进行一个循环交易后bcc和btc的总量是不变的, 变的是usd
+        计算的关键点在于bcc和btc的买卖amount除去手续费后是相同的，也就是进行一个循环交易后bcc和btc的总量是不变的, 变的是krw
         profit=去除交易手续费后交易hedge_quote_amount的赢利
         """
         logging.info("forward======>base_pair_ask_price_real: %s,  synthetic_bid_price_real: %s, [%s, %s]" %
@@ -184,7 +184,7 @@ class T_Bithumb(BasicBot):
             "forward======>t_price: %s, t_price_percent: %s, profit: %s" % (t_price, t_price_percent, profit))
         if profit > 0:
             if t_price_percent < self.trigger_percent:
-                logging.warn("forward======>profit percent should >= %s usd" % self.trigger_percent)
+                logging.warn("forward======>profit percent should >= %s krw" % self.trigger_percent)
                 return
             self.count_forward += 1
             logging.info(
@@ -336,14 +336,14 @@ class T_Bithumb(BasicBot):
                 return
 
             if hedge_mid_amount < self.min_amount_mid:
-                """lq限制最小btc的total为0.0001, bfx的bch_usd交易订单限制amount为0.005"""
+                """lq限制最小btc的total为0.0001, bfx的bch_krw交易订单限制amount为0.005"""
                 logging.info("reverse======>hedge_mid_amount is too small! %s" % hedge_mid_amount)
                 return
         else:
             """余额限制base最多能卖多少个bch, pair1 最多能买多少个bch, 要带上手续费"""
             hedge_quote_amount_balance = min(self.brokers[self.base_pair].bch_available,
                                              self.brokers[self.pair_1].btc_available * pair1_ask_price_real)
-            hedge_mid_amount_balance = min(self.brokers[self.base_pair].usd_available * pair2_ask_price_real,
+            hedge_mid_amount_balance = min(self.brokers[self.pair_2].krw_available * pair2_ask_price_real,
                                            self.brokers[self.pair_1].btc_available)
 
             hedge_quote_amount = min(hedge_quote_amount_market, hedge_quote_amount_balance, self.min_trade_amount)
@@ -359,7 +359,7 @@ class T_Bithumb(BasicBot):
                 return
 
             if hedge_mid_amount < self.min_amount_mid or hedge_mid_amount > hedge_mid_amount_balance:
-                """lq限制最小btc的total为0.0001, bfx的bch_usd交易订单限制amount为0.005"""
+                """lq限制最小btc的total为0.0001, bfx的bch_btc交易订单限制amount为0.005"""
                 """并且不能大于余额的限制"""
                 logging.info("reverse======>hedge_mid_amount is too small! %s" % hedge_mid_amount)
                 return
@@ -368,7 +368,7 @@ class T_Bithumb(BasicBot):
                      (hedge_quote_amount, hedge_mid_amount))
 
         """
-        计算的关键点在于bcc和btc的买卖amount除去手续费后是相同的，也就是进行一个循环交易后bcc和btc的总量是不变的, 变的是usd
+        计算的关键点在于bcc和btc的买卖amount除去手续费后是相同的，也就是进行一个循环交易后bcc和btc的总量是不变的, 变的是krw
         profit=去除交易手续费后交易hedge_quote_amount的赢利
         """
         logging.info("reverse======>base_pair_bid_price_real: %s,  synthetic_ask_price_real: %s, [%s, %s]" %
@@ -381,7 +381,7 @@ class T_Bithumb(BasicBot):
             "reverse======>t_price: %s, t_price_percent: %s, profit: %s" % (t_price, t_price_percent, profit))
         if profit > 0:
             if t_price_percent < self.trigger_percent:
-                logging.warn("forward======>profit percent should >= %s usd" % self.trigger_percent)
+                logging.warn("forward======>profit percent should >= %s krw" % self.trigger_percent)
                 return
             self.count_reverse += 1
             logging.info(
@@ -492,3 +492,4 @@ class T_Bithumb(BasicBot):
     def update_balance(self):
         self.brokers[self.base_pair].get_balances()
         self.brokers[self.pair_1].get_balances()
+        self.brokers[self.pair_2].get_balances()
