@@ -12,6 +12,11 @@ from quant.api.bithumb import PrivateClient as BtbClient
 
 
 class Bithumb(Broker):
+    """
+    cancel_all方法未实现，因为在observer里保存订单id和type，更容易实现
+    获取未完成的买单和卖单，由于必须提供order_type所以要分开获取和cancel
+    """
+
     def __init__(self, pair_code, api_key=None, api_secret=None):
         base_currency, market_currency = self.get_available_pairs(pair_code)
 
@@ -112,6 +117,19 @@ class Bithumb(Broker):
 
         return resp
 
+    def order_detail(self, order_id, order_type):
+        return self.client.order_detail(self.pair_code, order_id=order_id, order_type=order_type)
+
+    def get_deal_amount(self, order_id, order_type):
+        res = self.client.order_detail(self.pair_code, order_id=order_id, order_type=order_type)
+
+        deal_amount = 0.0
+        if res and 'data' in res:
+            for item in res['data']:
+                deal_amount = deal_amount + float(item['units_traded'])
+
+        return deal_amount
+
     def _get_order(self, order_id, order_type=None):
         res = self.client.get_order(currency=self.pair_code, order_id=order_id, order_type=order_type)
         if not res or 'data' not in res:
@@ -125,21 +143,15 @@ class Bithumb(Broker):
 
         return self._order_status(res)
 
-    def _cancel_order(self, order_id, currency=None, order_type=None):
-        print('_cancel_order: order_id: %s, currency: %s, order_type: %s' % (order_id, currency, order_type))
-        res = self.client.cancel_order(order_id, currency, order_type)
+    def _cancel_order(self, order_id, order_type=None):
+        logging.debug("bithumb cancel order : %s that type is %s" % (order_id, order_type))
+        res = self.client.cancel_order(order_id, self.pair_code, order_type)
         if not res:
             return False
         if res['status'] == '0000':
             return True
         else:
             return False
-
-    def _cancel_all(self):
-        # first get orders, after设定为一天之类
-        # then cancel
-        # self.client.get_orders()
-        pass
 
     def get_balances(self):
         """Get balance"""
@@ -162,8 +174,6 @@ class Bithumb(Broker):
             self.btc_available = float(res['available_btc'])
             self.btc_balance = float(res['total_btc'])
 
-        print('bch_available: %s, btc_available: %s, krw_available: %s' %
-              (self.bch_available, self.btc_available, self.krw_available))
         return res
 
     def _ticker(self):

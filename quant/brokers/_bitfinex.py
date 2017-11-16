@@ -80,7 +80,7 @@ class Bitfinex(Broker):
         assert str(res['id']) == str(order_id)
         return self._order_status(res)
 
-    def _cancel_order(self, order_id, currency=None, order_type=None):
+    def _cancel_order(self, order_id, order_type=None):
         res = self.client.cancel_order(int(order_id))
         if not res:
             return False
@@ -199,3 +199,10 @@ class Bitfinex(Broker):
         else:
             assert False
         return base_currency, market_currency
+
+    def get_min_stock(self):
+        resp = self.client.symbols_details()
+        if resp:
+            for item in resp:
+                if item['pair'] == self.pair_code:
+                    return float(item['minimum_order_size'])

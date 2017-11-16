@@ -7,7 +7,7 @@ from quant.api.bithumb import PrivateClient
 from quant.brokers._bithumb import Bithumb
 
 """test api client"""
-client = PrivateClient(config.Bithumb_API_KEY, config.Bithumb_SECRET_TOKEN)
+# client = PrivateClient(config.Bithumb_API_KEY, config.Bithumb_SECRET_TOKEN)
 
 # print(client.account())
 # res = client.balances('bch')
@@ -50,7 +50,7 @@ client = PrivateClient(config.Bithumb_API_KEY, config.Bithumb_SECRET_TOKEN)
 """test broker"""
 # broker = Bithumb(pair_code='btc', api_key=config.Bithumb_API_KEY, api_secret=config.Bithumb_SECRET_TOKEN)
 '''test sell order'''
-# price = 7600000
+# price = 8500000
 # amount = 0.001
 # order_id, order = broker.sell_limit(amount=amount, price=price)
 # if order_id:
@@ -62,14 +62,13 @@ client = PrivateClient(config.Bithumb_API_KEY, config.Bithumb_SECRET_TOKEN)
 
 
 '''test cancel order'''
-# order_id = '1510644869040'
+# order_id = '1510819655981'
 # order_type = 'ask'
-# res = broker.cancel_order(order_id=order_id, currency='btc', order_type=order_type)
+# res = broker.cancel_order(order_id=order_id, order_type=order_type)
 # print('broker cancel res: ' + str(res))
 
-
 '''test get order'''
-# order_id = '1510644869040'
+# order_id = '1510819655981'
 # order_type = 'ask'
 # res = broker.get_order(order_id=order_id, order_type=order_type)
 # if res:
@@ -79,3 +78,17 @@ client = PrivateClient(config.Bithumb_API_KEY, config.Bithumb_SECRET_TOKEN)
 
 '''test balance, 注意切换pair_code'''
 # broker.get_balances()
+
+'''test order detail'''
+# order_id = '1510819655981'
+# order_type = 'ask'
+# res = broker.order_detail(order_id=order_id, order_type=order_type)
+# if res:
+#     print('broker order detail success: ' + str(res))
+# else:
+#     print('broker order detail failed')
+
+'''test order detail'''
+# order_id = '1510819181758'
+# order_type = 'ask'
+# print(broker.get_deal_amount(order_id=order_id, order_type=order_type))

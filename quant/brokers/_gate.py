@@ -80,7 +80,7 @@ class Gate(Broker):
         assert str(r_id) == str(order_id)
         return self._order_status(r_order, r_id)
 
-    def _cancel_order(self, order_id, currency=None, order_type=None):
+    def _cancel_order(self, order_id, order_type=None):
         res = self.client.cancel_order(order_id, self.pair_code)
 
         if res and res['result'] is True:

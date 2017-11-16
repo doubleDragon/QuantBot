@@ -61,7 +61,7 @@ class Binance(Broker):
         assert str(res['orderId']) == str(order_id)
         return self._order_status(res['data'])
 
-    def _cancel_order(self, order_id, currency=None, order_type=None):
+    def _cancel_order(self, order_id, order_type=None):
         res = self.client.cancel_order(orderId=int(order_id), symbol=self.pair_code)
         logging.info('cancel_order: %s' % res)
 

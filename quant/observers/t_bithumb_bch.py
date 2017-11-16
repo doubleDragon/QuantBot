@@ -11,11 +11,9 @@ class T_Bithumb_BCH(T_Bithumb):
     python -m quant.cli -mBithumb_BCH_KRW,Bitfinex_BCH_BTC,Bithumb_BTC_KRW -o=T_Bithumb_BCH -f=bithumb_bch -v
 
     目前的限制:
-    bitfinex: bchbtc: 0.02
-    bithumb: btc_krw=0.001, bch_krw=0.01
-
-    所以:
-    btc: 0.001 bch:0.02
+    bithumb:    bch_krw=0.01
+    bitfinex:   bch_btc: 0.02
+    bithumb:    btc_krw=0.001
 
     """
 
@@ -25,13 +23,14 @@ class T_Bithumb_BCH(T_Bithumb):
         pair_2 = "Bithumb_BTC_KRW"
 
         kwargs = {
-            'monitor_only': True,
+            'monitor_only': False,
             'precision': 2,
             'fee_base': 0.0015,
             'fee_pair1': 0.002,
             'fee_pair2': 0.0015,
-            'min_amount_market': 0.02,
-            'min_amount_mid': 0.001,
+            'min_stock_base': 0.01,
+            'min_stock_pair1': 0.02,
+            'min_stock_pair2': 0.001,
             'max_trade_amount': 1,
             'min_trade_amount': 0.02
         }

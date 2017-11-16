@@ -1,3 +1,7 @@
+#!/usr/bin/env python
+# -*- coding: UTF-8 -*-
+
+
 from quant import config
 from ._bitfinex import Bitfinex
 from ._liqui import Liqui
@@ -5,6 +9,7 @@ from ._bittrex import Bittrex
 from ._binance import Binance
 from ._gate import Gate
 from ._kkex import Kkex
+from ._bithumb import Bithumb
 import logging
 
 
@@ -81,6 +86,10 @@ def create_brokers(exchange_names):
             chg = Gate('bcc_btc', config.Gate_API_KEY, config.Gate_SECRET_TOKEN)
         elif name == 'Kkex_BCC_BTC':
             chg = Kkex('BCCBTC', config.KKEX_API_KEY, config.KKEX_SECRET_TOKEN)
+        elif name == 'Bithumb_BCH_KRW':
+            chg = Bithumb('bch', config.Bithumb_API_KEY, config.Bithumb_SECRET_TOKEN)
+        elif name == 'Bithumb_BTC_KRW':
+            chg = Bithumb('btc', config.Bithumb_API_KEY, config.Bithumb_SECRET_TOKEN)
         else:
             logging.warn('Exchange ' + name + ' not supported!')
             assert False

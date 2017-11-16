@@ -68,7 +68,7 @@ class Bittrex(Broker):
         assert str(res['result']['OrderUuid']) == str(order_id)
         return self._order_status(res['result'])
 
-    def _cancel_order(self, order_id, currency=None, order_type=None):
+    def _cancel_order(self, order_id, order_type=None):
         res = self.client.cancel(order_id)
         if res['success'] is True:
             return True

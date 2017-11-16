@@ -12,6 +12,7 @@ HOST = "api.bitfinex.com"
 VERSION = "v1"
 
 PATH_SYMBOLS = "symbols"
+PATH_SYMBOLS_DETAILS = "symbols_details"
 PATH_TICKER = "ticker/%s"
 PATH_TODAY = "today/%s"
 PATH_STATS = "stats/%s"
@@ -56,6 +57,13 @@ class PublicClient(object):
         ['btcusd','ltcusd','ltcbtc']
         """
         return self._get(self.url_for(PATH_SYMBOLS))
+
+    def symbols_details(self):
+        """
+        GET /symbols_details
+        curl https://api.bitfinex.com/v1/symbols_details
+        """
+        return self._get(self.url_for(PATH_SYMBOLS_DETAILS))
 
     def ticker(self, symbol):
         """
