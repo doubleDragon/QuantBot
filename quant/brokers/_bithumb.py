@@ -44,7 +44,7 @@ class Bithumb(Broker):
         res = self.client.buy(currency=self.pair_code, price=price, amount=amount)
         order_id = None
         order = None
-        if res:
+        if res and 'order_id' in res:
             order_id = res['order_id']
             '''却要确认是否成交'''
             if 'data' in res and len(res['data']) > 0:
@@ -67,7 +67,7 @@ class Bithumb(Broker):
         res = self.client.sell(currency=self.pair_code, price=price, amount=amount)
         order_id = None
         order = None
-        if res:
+        if res and 'order_id' in res:
             order_id = res['order_id']
             '''却要确认是否成交'''
             if 'data' in res and len(res['data']) > 0:

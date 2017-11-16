@@ -70,6 +70,8 @@ class T_Bithumb(BasicBot):
         logging.debug("T_Bithumb params: " + str(kwargs))
 
     def is_depths_available(self, depths):
+        if not depths:
+            return False
         res = self.base_pair in depths and self.pair_1 in depths and self.pair_2 in depths
         if not res:
             return False
@@ -264,14 +266,15 @@ class T_Bithumb(BasicBot):
                 logging.info("forward======>%s order %s deal amount %s > %s, continue" %
                              (self.pair_1, order_id_1, deal_amount_1, self.min_stock_1))
 
-                sell_amount_2 = round(deal_amount_1 * pair1_bid_price_real, 8)
+                # bithumb 限制委单小数位最多为4
+                sell_amount_2 = round(deal_amount_1 * pair1_bid_price_real, 4)
                 sell_price_2 = pair2_bid_price
                 if sell_amount_2 < self.min_stock_2:
                     # must not happen, 理论上不该出现这种场景，因为交易之前已经限定了条件
                     logging.error('forward======>pair2下单量小于最小限制, 即%s < %s' % (sell_amount_2, self.min_stock_2))
                     assert False
 
-                buy_amount_base = round(deal_amount_1 * (1 + self.fee_base), 8)
+                buy_amount_base = round(deal_amount_1 * (1 + self.fee_base), 4)
                 buy_price_base = base_pair_ask_price
 
                 done_2 = False
@@ -300,7 +303,7 @@ class T_Bithumb(BasicBot):
                             self.logger_count.info('deal_amount_2: ' + str(self.count_deal_2))
                         logging.info("forward======>%s order %s deal amount %s, origin amount %s" %
                                      (self.pair_2, order_id_2, deal_amount_2, sell_amount_2))
-                        diff_amount_2 = sell_amount_2 - deal_amount_2
+                        diff_amount_2 = round(sell_amount_2 - deal_amount_2, 4)
                         if diff_amount_2 < self.min_stock_2:
                             logging.info("forward======>%s trade complete" % self.pair_2)
                             done_2 = True
@@ -314,7 +317,7 @@ class T_Bithumb(BasicBot):
                         deal_amount_base = self.get_btb_deal_amount(self.base_pair, order_id_base, order_base, 'bid')
                         logging.info("forward======>%s order %s deal amount %s, origin amount %s" %
                                      (self.base_pair, order_id_base, deal_amount_base, buy_amount_base))
-                        diff_amount_base = buy_amount_base - deal_amount_base
+                        diff_amount_base = round(buy_amount_base - deal_amount_base, 4)
                         if diff_amount_base < self.min_stock_base:
                             logging.info("forward======>%s trade complete" % self.base_pair)
                             done_base = True
@@ -462,9 +465,9 @@ class T_Bithumb(BasicBot):
                 logging.warn("reverse======>%s order %s deal amount %s > %s, continue" %
                              (self.pair_1, order_id_1, deal_amount_1, self.min_stock_1))
 
-                # 这个地方的6精度刚好符合0.02, 后续调整?
-                sell_amount_base = round(deal_amount_1 * (1 - self.fee_pair1), 6)
-                buy_amount_2 = round(deal_amount_1 * pair1_ask_price, 8)
+                # bithumb限制amount小数位最多为4
+                sell_amount_base = round(deal_amount_1 * (1 - self.fee_pair1), 4)
+                buy_amount_2 = round(deal_amount_1 * pair1_ask_price, 4)
 
                 sell_price_base = base_pair_bid_price
                 buy_price_2 = pair2_ask_price
@@ -494,7 +497,7 @@ class T_Bithumb(BasicBot):
                         deal_amount_base = self.get_btb_deal_amount(self.base_pair, order_id_base, order_base, 'ask')
                         logging.info("reverse======>%s order %s deal amount %s, origin amount %s" %
                                      (self.base_pair, order_id_base, deal_amount_base, sell_amount_base))
-                        diff_amount_base = sell_amount_base - deal_amount_base
+                        diff_amount_base = round(sell_amount_base - deal_amount_base, 4)
                         if 0.0 < diff_amount_base < self.min_stock_base:
                             self.count_deal_base.append(deal_amount_base)
                             self.logger_count.info('count_deal_base: ' + str(self.count_deal_base))
@@ -511,7 +514,7 @@ class T_Bithumb(BasicBot):
                         deal_amount_2 = self.get_btb_deal_amount(self.pair_2, order_id_2, order_2, 'bid')
                         logging.info("reverse======>%s order %s deal amount %s, origin amount %s" %
                                      (self.pair_2, order_id_2, deal_amount_2, buy_amount_2))
-                        diff_amount_2 = buy_amount_2 - deal_amount_2
+                        diff_amount_2 = round(buy_amount_2 - deal_amount_2, 4)
                         # 这里pair2对应bithumb的btc限制为0.001, 所以取min_stock_2
                         if diff_amount_2 < self.min_stock_2:
                             logging.info("reverse======>%s trade complete" % self.pair_2)
