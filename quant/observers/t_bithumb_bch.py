@@ -8,7 +8,7 @@ from .t_bithumb import T_Bithumb
 class T_Bithumb_BCH(T_Bithumb):
     """
     bch:
-    python -m quant.cli -mBithumb_BCH_KRW,Bitfinex_BCH_BTC,Bithumb_BTC_KRW -o=T_Bithumb_BCH -f=bithumb_bch -v
+    ./venv/bin/python -m quant.cli -mBithumb_BCH_KRW,Bitfinex_BCH_BTC,Bithumb_BTC_KRW -o=T_Bithumb_BCH -f=bithumb_bch -v
 
     目前的限制:
     bithumb:    bch_krw=0.01
