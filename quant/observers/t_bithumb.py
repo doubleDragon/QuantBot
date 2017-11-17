@@ -298,7 +298,7 @@ class T_Bithumb(BasicBot):
                     time.sleep(config.INTERVAL_API)
                     if not done_2 and order_id_2 and order_id_2 >= 0:
                         deal_amount_2 = self.get_btb_deal_amount(self.pair_2, order_id_2, order_2, 'ask')
-                        if 0.0 < deal_amount_2 < self.min_stock_base:
+                        if 0.0 < deal_amount_2 < self.min_stock_2:
                             self.count_deal_2.append(deal_amount_2)
                             self.logger_count.info('deal_amount_2: ' + str(self.count_deal_2))
                         logging.info("forward======>%s order %s deal amount %s, origin amount %s" %
