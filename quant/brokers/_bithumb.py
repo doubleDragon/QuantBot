@@ -178,10 +178,11 @@ class Bithumb(Broker):
 
     def _ticker(self):
         resp = self.client.ticker(self.pair_code)
-        if resp:
+        if resp and 'data' in resp:
+            resp = resp['data']
             return {
-                'bid': float(resp['bid']),
-                'ask': float(resp['ask'])
+                'bid': float(resp['buy_price']),
+                'ask': float(resp['sell_price'])
             }
 
     @classmethod

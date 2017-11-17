@@ -48,7 +48,7 @@ from quant.brokers._bithumb import Bithumb
 
 
 """test broker"""
-# broker = Bithumb(pair_code='btc', api_key=config.Bithumb_API_KEY, api_secret=config.Bithumb_SECRET_TOKEN)
+broker = Bithumb(pair_code='btc', api_key=config.Bithumb_API_KEY, api_secret=config.Bithumb_SECRET_TOKEN)
 '''test buy order'''
 # price = 8200000.000000
 # amount = 0.0029
@@ -103,3 +103,7 @@ from quant.brokers._bithumb import Bithumb
 # order_id = '1510819181758'
 # order_type = 'ask'
 # print(broker.get_deal_amount(order_id=order_id, order_type=order_type))
+
+
+'''test ticker'''
+print(broker.get_ticker())
