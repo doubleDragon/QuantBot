@@ -54,10 +54,6 @@ class T_Bithumb(BasicBot):
         self.count_forward = 0
         self.count_reverse = 0
 
-        self.count_deal_base = []
-        self.count_deal_1 = []
-        self.count_deal_2 = []
-
         self.origin_assets = {}
         self.risk_count = 0
 
@@ -66,7 +62,7 @@ class T_Bithumb(BasicBot):
             self.update_config_if_needed()
             self.update_balance()
 
-        self.logger_count = log.get_logger('log/bithumb_count.log')
+        self.logger_other = log.get_logger('log/bithumb_other.log')
         logging.debug("T_Bithumb params: " + str(kwargs))
 
     def is_depths_available(self, depths):
@@ -124,12 +120,12 @@ class T_Bithumb(BasicBot):
         self.reverse(depths)
 
     def forward(self, depths):
-        logging.info("==============正循环, base买 合成卖==============")
+        logging.debug("==============正循环, base买 合成卖==============")
         base_pair_ask_amount = depths[self.base_pair]['asks'][0]['amount']
         base_pair_ask_price = depths[self.base_pair]['asks'][0]['price']
         base_pair_ask_price_real = base_pair_ask_price * (1 + self.fee_base)
 
-        logging.info("forward======>base_pair: %s ask_price:%s" % (self.base_pair, base_pair_ask_price))
+        logging.debug("forward======>base_pair: %s ask_price:%s" % (self.base_pair, base_pair_ask_price))
 
         """所有的real都是带手续费的价格"""
         pair1_bid_amount = depths[self.pair_1]['bids'][0]['amount']
@@ -145,9 +141,9 @@ class T_Bithumb(BasicBot):
         """价差， diff=卖－买"""
         p_diff = round(synthetic_bid_price - base_pair_ask_price, self.precision)
 
-        logging.info("forward======>%s bid_price: %s,  %s bid_price: %s" %
-                     (self.pair_1, pair1_bid_price, self.pair_2, pair2_bid_price))
-        logging.info("forward======>synthetic_bid_price: %s,   p_diff: %s" % (synthetic_bid_price, p_diff))
+        logging.debug("forward======>%s bid_price: %s,  %s bid_price: %s" %
+                      (self.pair_1, pair1_bid_price, self.pair_2, pair2_bid_price))
+        logging.debug("forward======>synthetic_bid_price: %s,   p_diff: %s" % (synthetic_bid_price, p_diff))
 
         if pair1_bid_price == 0:
             return
@@ -167,12 +163,12 @@ class T_Bithumb(BasicBot):
             hedge_mid_amount = round(hedge_quote_amount * pair1_bid_price, 8)
             if hedge_quote_amount < self.min_amount_market:
                 """bitfinex限制bch_krw最小可交易的bch order size为0.001"""
-                logging.info("forward======>hedge_quote_amount is too small! %s" % hedge_quote_amount)
+                logging.debug("forward======>hedge_quote_amount is too small! %s" % hedge_quote_amount)
                 return
 
             if hedge_mid_amount < self.min_amount_mid:
                 """bitfinex限制btc_krw最小可交易amount为0.005, liqui限制单次交易btc的amount为0.0001, 所以这里取0.005"""
-                logging.info("forward======>hedge_mid_amount is too small! %s" % hedge_mid_amount)
+                logging.debug("forward======>hedge_mid_amount is too small! %s" % hedge_mid_amount)
                 return
         else:
             """余额限制base最多能买多少个bch, pair1 最多能卖多少个bch, 要带上手续费"""
@@ -187,54 +183,54 @@ class T_Bithumb(BasicBot):
             hedge_quote_amount = min(hedge_quote_amount_market, hedge_quote_amount_balance, self.min_trade_amount)
             hedge_mid_amount = hedge_quote_amount * pair1_bid_price
 
-            logging.info("forward======>balance allow quote: %s and mid: %s, market allow quote: %s and btc: %s " %
-                         (hedge_quote_amount_balance, hedge_mid_amount_balance,
-                          hedge_quote_amount_market, hedge_mid_amount_market))
+            logging.debug("forward======>balance allow quote: %s and mid: %s, market allow quote: %s and btc: %s " %
+                          (hedge_quote_amount_balance, hedge_mid_amount_balance,
+                           hedge_quote_amount_market, hedge_mid_amount_market))
 
             if hedge_quote_amount < self.min_amount_market:
                 """bitfinex限制bch_krw最小可交易的bch order size为0.001"""
-                logging.info("forward======>hedge_quote_amount is too small! Because %s < %s" %
-                             (hedge_quote_amount, self.min_amount_market))
+                logging.debug("forward======>hedge_quote_amount is too small! Because %s < %s" %
+                              (hedge_quote_amount, self.min_amount_market))
                 return
 
             if hedge_mid_amount < self.min_amount_mid or hedge_mid_amount > hedge_mid_amount_balance:
                 """bitfinex限制btc_krw最小可交易amount为0.005, liqui限制单次交易btc的amount为0.0001, 所以这里取0.005"""
                 """btc余额不足也不行"""
-                logging.info("forward======>hedge_mid_amount is too small! Because %s < %s or > %s" %
-                             (hedge_mid_amount, self.min_amount_mid, hedge_mid_amount_balance))
+                logging.debug("forward======>hedge_mid_amount is too small! Because %s < %s or > %s" %
+                              (hedge_mid_amount, self.min_amount_mid, hedge_mid_amount_balance))
                 return
 
-        logging.info("forward======>hedge_quote_amount: %s, hedge_mid_amount:%s" %
-                     (hedge_quote_amount, hedge_mid_amount))
+        logging.debug("forward======>hedge_quote_amount: %s, hedge_mid_amount:%s" %
+                      (hedge_quote_amount, hedge_mid_amount))
 
         """
         计算的关键点在于bcc和btc的买卖amount除去手续费后是相同的，也就是进行一个循环交易后bcc和btc的总量是不变的, 变的是krw
         profit=去除交易手续费后交易hedge_quote_amount的赢利
         """
-        logging.info("forward======>base_pair_ask_price_real: %s,  synthetic_bid_price_real: %s, [%s, %s]" %
-                     (base_pair_ask_price_real, synthetic_bid_price_real, pair1_bid_price_real,
-                      pair2_bid_price_real))
+        logging.debug("forward======>base_pair_ask_price_real: %s,  synthetic_bid_price_real: %s, [%s, %s]" %
+                      (base_pair_ask_price_real, synthetic_bid_price_real, pair1_bid_price_real,
+                       pair2_bid_price_real))
         t_price = round(synthetic_bid_price_real - base_pair_ask_price_real, self.precision)
         """差价百分比"""
         t_price_percent = round(t_price / base_pair_ask_price_real * 100, 2)
         profit = round(t_price * hedge_quote_amount, self.precision)
-        logging.info(
+        logging.debug(
             "forward======>t_price: %s, t_price_percent: %s, profit: %s" % (t_price, t_price_percent, profit))
         if profit > 0:
             if t_price_percent < self.trigger_percent:
-                logging.debug("forward======>profit percent should >= %s krw" % self.trigger_percent)
+                logging.debug("forward======>profit percent should >= %s" % self.trigger_percent)
                 return
             self.count_forward += 1
-            self.logger_count.info("count_forward: %s, count_reverse: %s" % (self.count_forward, self.count_reverse))
-            logging.info(
+            self.logger_other.info("count_forward: %s, count_reverse: %s" % (self.count_forward, self.count_reverse))
+            logging.debug(
                 "forward======>find profit!!!: profit:%s,  quote amount: %s and mid amount: %s,  t_price: %s" %
                 (profit, hedge_quote_amount, hedge_mid_amount, t_price))
 
             current_time = time.time()
             if current_time - self.last_trade < 1:
-                logging.warn("forward======>Can't automate this trade, last trade " +
-                             "occured %.2f seconds ago" %
-                             (current_time - self.last_trade))
+                logging.debug("forward======>Can't automate this trade, last trade " +
+                              "occured %.2f seconds ago" %
+                              (current_time - self.last_trade))
                 return
 
             if not self.monitor_only:
@@ -242,31 +238,29 @@ class T_Bithumb(BasicBot):
                 sell_amount_1 = hedge_quote_amount
                 sell_price_1 = pair1_bid_price
 
-                logging.info("forward=====>%s place sell order, price=%s, amount=%s" %
-                             (self.pair_1, sell_price_1, sell_amount_1))
+                logging.debug("forward=====>%s place sell order, price=%s, amount=%s" %
+                              (self.pair_1, sell_price_1, sell_amount_1))
 
                 order_id_1 = self.brokers[self.pair_1].sell_limit(amount=sell_amount_1, price=sell_price_1)
 
                 if not order_id_1 or order_id_1 < 0:
-                    logging.warn("forward======>%s place sell order failed, give up and return" % self.pair_1)
+                    logging.debug("forward======>%s place sell order failed, give up and return" % self.pair_1)
                     return
 
-                time.sleep(config.INTERVAL_API)
+                # time.sleep(config.INTERVAL_API)
                 deal_amount_1 = self.get_deal_amount(market=self.pair_1, order_id=order_id_1)
 
-                if 0.0 < deal_amount_1 < self.min_stock_1:
-                    # 理论上不会出现这种情况
-                    self.count_deal_1.append(deal_amount_1)
-                    self.logger_count.info('count_deal_1: ' + str(self.count_deal_1))
-
+                logging.info("forward======>%s make sell order that id=%s, price= %s, amount=%s, deal_amount=%s" %
+                             (self.pair_1, order_id_1, sell_price_1, sell_amount_1, deal_amount_1))
                 if deal_amount_1 < self.min_stock_1:
-                    logging.warn("forward======>%s order %s deal amount %s < %s, give up and return" %
-                                 (self.pair_1, order_id_1, deal_amount_1, self.min_stock_1))
+                    '''
+                    理论上不会出现0.0<deal_amount_1<self.min_stock_1这种情况, 经过实盘测试确实不会出现这种情况
+                    '''
+                    logging.debug("forward======>%s order %s deal amount %s < %s, give up and return" %
+                                  (self.pair_1, order_id_1, deal_amount_1, self.min_stock_1))
                     return
-                logging.info("forward======>%s order %s deal amount %s > %s, continue" %
-                             (self.pair_1, order_id_1, deal_amount_1, self.min_stock_1))
 
-                # bithumb 限制委单小数位最多为4
+                '''bithumb 限制委单小数位最多为4'''
                 sell_amount_2 = round(deal_amount_1 * pair1_bid_price_real, 4)
                 sell_price_2 = pair2_bid_price
                 if sell_amount_2 < self.min_stock_2:
@@ -286,26 +280,23 @@ class T_Bithumb(BasicBot):
                     order_base = None
 
                     if not done_2:
-                        logging.info("forward=====>%s place sell order, price=%s, amount=%s" %
-                                     (self.pair_2, sell_price_2, sell_amount_2))
+                        logging.debug("forward=====>%s place sell order, price=%s, amount=%s" %
+                                      (self.pair_2, sell_price_2, sell_amount_2))
                         order_id_2, order_2 = self.brokers[self.pair_2].sell_limit(amount=sell_amount_2,
                                                                                    price=sell_price_2)
                     if not done_base:
-                        logging.info("forward=====>%s place buy order, price=%s, amount=%s" %
-                                     (self.base_pair, buy_price_base, buy_amount_base))
+                        logging.debug("forward=====>%s place buy order, price=%s, amount=%s" %
+                                      (self.base_pair, buy_price_base, buy_amount_base))
                         order_id_base, order_base = self.brokers[self.base_pair].buy_limit(amount=buy_amount_base,
                                                                                            price=buy_price_base)
                     time.sleep(config.INTERVAL_API)
                     if not done_2 and order_id_2 and order_id_2 >= 0:
                         deal_amount_2 = self.get_btb_deal_amount(self.pair_2, order_id_2, order_2, 'ask')
-                        if 0.0 < deal_amount_2 < self.min_stock_2:
-                            self.count_deal_2.append(deal_amount_2)
-                            self.logger_count.info('deal_amount_2: ' + str(self.count_deal_2))
-                        logging.info("forward======>%s order %s deal amount %s, origin amount %s" %
-                                     (self.pair_2, order_id_2, deal_amount_2, sell_amount_2))
+                        logging.info("forward======>%s make sell order that id=%s, price=%s, amount=%s, deal_amount=%s"
+                                     % (self.pair_2, order_id_2, sell_price_2, sell_amount_2, deal_amount_2))
                         diff_amount_2 = round(sell_amount_2 - deal_amount_2, 4)
                         if diff_amount_2 < self.min_stock_2:
-                            logging.info("forward======>%s trade complete" % self.pair_2)
+                            logging.debug("forward======>%s trade complete" % self.pair_2)
                             done_2 = True
                         else:
                             # 后续用market_buy搞定, 减少一次ticker的读取
@@ -315,11 +306,11 @@ class T_Bithumb(BasicBot):
 
                     if not done_base and order_id_base and order_id_base >= 0:
                         deal_amount_base = self.get_btb_deal_amount(self.base_pair, order_id_base, order_base, 'bid')
-                        logging.info("forward======>%s order %s deal amount %s, origin amount %s" %
-                                     (self.base_pair, order_id_base, deal_amount_base, buy_amount_base))
+                        logging.info("forward======>%s make buy order that id=%s, price=%s, amount=%s, deal_amount=%s" %
+                                     (self.base_pair, order_id_base, buy_price_base, buy_amount_base, deal_amount_base))
                         diff_amount_base = round(buy_amount_base - deal_amount_base, 4)
                         if diff_amount_base < self.min_stock_base:
-                            logging.info("forward======>%s trade complete" % self.base_pair)
+                            logging.debug("forward======>%s trade complete" % self.base_pair)
                             done_base = True
                         else:
                             # 后续用market_buy搞定, 减少一次ticker的读取
@@ -339,12 +330,12 @@ class T_Bithumb(BasicBot):
     def reverse(self, depths):
         if self.skip and (not self.monitor_only):
             return
-        logging.info("==============逆循环, base卖 合成买==============")
+        logging.debug("==============逆循环, base卖 合成买==============")
         base_pair_bid_amount = depths[self.base_pair]['bids'][0]['amount']
         base_pair_bid_price = depths[self.base_pair]['bids'][0]['price']
         base_pair_bid_price_real = base_pair_bid_price * (1 - self.fee_base)
 
-        logging.info("reverse======>base_pair: %s bid_price:%s" % (self.base_pair, base_pair_bid_price))
+        logging.debug("reverse======>base_pair: %s bid_price:%s" % (self.base_pair, base_pair_bid_price))
 
         pair1_ask_amount = depths[self.pair_1]['asks'][0]['amount']
         pair1_ask_price = depths[self.pair_1]['asks'][0]['price']
@@ -358,9 +349,9 @@ class T_Bithumb(BasicBot):
         synthetic_ask_price_real = round(pair1_ask_price_real * pair2_ask_price_real, self.precision)
         p_diff = round(base_pair_bid_price - synthetic_ask_price, self.precision)
 
-        logging.info("reverse======>%s ask_price: %s,  %s ask_price: %s" %
-                     (self.pair_1, pair1_ask_price, self.pair_2, pair2_ask_price))
-        logging.info("reverse======>synthetic_ask_price: %s,   p_diff: %s" % (synthetic_ask_price, p_diff))
+        logging.debug("reverse======>%s ask_price: %s,  %s ask_price: %s" %
+                      (self.pair_1, pair1_ask_price, self.pair_2, pair2_ask_price))
+        logging.debug("reverse======>synthetic_ask_price: %s,   p_diff: %s" % (synthetic_ask_price, p_diff))
         if pair1_ask_price == 0 or pair2_ask_price == 0:
             return
 
@@ -379,12 +370,12 @@ class T_Bithumb(BasicBot):
             hedge_mid_amount = round(hedge_quote_amount * pair1_ask_price, 8)
             if hedge_quote_amount < self.min_amount_market:
                 """bfx限制bch最小订单数量为0.001"""
-                logging.info("reverse======>hedge_quote_amount is too small! %s" % hedge_quote_amount)
+                logging.debug("reverse======>hedge_quote_amount is too small! %s" % hedge_quote_amount)
                 return
 
             if hedge_mid_amount < self.min_amount_mid:
                 """lq限制最小btc的total为0.0001, bfx的bch_krw交易订单限制amount为0.005"""
-                logging.info("reverse======>hedge_mid_amount is too small! %s" % hedge_mid_amount)
+                logging.debug("reverse======>hedge_mid_amount is too small! %s" % hedge_mid_amount)
                 return
         else:
             """余额限制base最多能卖多少个bch, pair1 最多能买多少个bch, 要带上手续费"""
@@ -396,75 +387,72 @@ class T_Bithumb(BasicBot):
             hedge_quote_amount = min(hedge_quote_amount_market, hedge_quote_amount_balance, self.min_trade_amount)
             hedge_mid_amount = hedge_quote_amount * pair1_ask_price
 
-            logging.info("reverse======>balance allow bch: %s and btc: %s, market allow bch: %s and btc: %s " %
-                         (hedge_quote_amount_balance, hedge_mid_amount_balance,
-                          hedge_quote_amount_market, hedge_mid_amount_market))
+            logging.debug("reverse======>balance allow bch: %s and btc: %s, market allow bch: %s and btc: %s " %
+                          (hedge_quote_amount_balance, hedge_mid_amount_balance,
+                           hedge_quote_amount_market, hedge_mid_amount_market))
 
             if hedge_quote_amount < self.min_amount_market:
                 """bfx限制bch最小订单数量为0.001"""
-                logging.info("reverse======>hedge_quote_amount is too small! %s" % hedge_quote_amount)
+                logging.debug("reverse======>hedge_quote_amount is too small! %s" % hedge_quote_amount)
                 return
 
             if hedge_mid_amount < self.min_amount_mid or hedge_mid_amount > hedge_mid_amount_balance:
                 """lq限制最小btc的total为0.0001, bfx的bch_btc交易订单限制amount为0.005"""
                 """并且不能大于余额的限制"""
-                logging.info("reverse======>hedge_mid_amount is too small! %s" % hedge_mid_amount)
+                logging.debug("reverse======>hedge_mid_amount is too small! %s" % hedge_mid_amount)
                 return
 
-        logging.info("reverse======>hedge_quote_amount: %s, hedge_mid_amount:%s" %
-                     (hedge_quote_amount, hedge_mid_amount))
+        logging.debug("reverse======>hedge_quote_amount: %s, hedge_mid_amount:%s" %
+                      (hedge_quote_amount, hedge_mid_amount))
 
         """
         计算的关键点在于bcc和btc的买卖amount除去手续费后是相同的，也就是进行一个循环交易后bcc和btc的总量是不变的, 变的是krw
         profit=去除交易手续费后交易hedge_quote_amount的赢利
         """
-        logging.info("reverse======>base_pair_bid_price_real: %s,  synthetic_ask_price_real: %s, [%s, %s]" %
-                     (base_pair_bid_price_real, synthetic_ask_price_real, pair1_ask_price_real,
-                      pair2_ask_price_real))
+        logging.debug("reverse======>base_pair_bid_price_real: %s,  synthetic_ask_price_real: %s, [%s, %s]" %
+                      (base_pair_bid_price_real, synthetic_ask_price_real, pair1_ask_price_real,
+                       pair2_ask_price_real))
         t_price = round(base_pair_bid_price_real - synthetic_ask_price_real, self.precision)
         t_price_percent = round(t_price / synthetic_ask_price_real * 100, 2)
         profit = round(t_price * hedge_quote_amount, self.precision)
-        logging.info(
+        logging.debug(
             "reverse======>t_price: %s, t_price_percent: %s, profit: %s" % (t_price, t_price_percent, profit))
         if profit > 0:
             if t_price_percent < self.trigger_percent:
-                logging.warn("forward======>profit percent should >= %s krw" % self.trigger_percent)
+                logging.debug("forward======>profit percent should >= %s krw" % self.trigger_percent)
                 return
             self.count_reverse += 1
-            self.logger_count.info("count_forward: %s, count_reverse: %s" % (self.count_forward, self.count_reverse))
-            logging.info(
+            self.logger_other.info("count_forward: %s, count_reverse: %s" % (self.count_forward, self.count_reverse))
+            logging.debug(
                 "reverse======>find profit!!!: profit:%s,  quote amount: %s and mid amount: %s, t_price: %s" %
                 (profit, hedge_quote_amount, hedge_mid_amount, t_price))
 
             current_time = time.time()
             if current_time - self.last_trade < 1:
-                logging.warn("reverse======>Can't automate this trade, last trade " +
-                             "occured %.2f seconds ago" %
-                             (current_time - self.last_trade))
+                logging.debug("reverse======>Can't automate this trade, last trade " +
+                              "occured %.2f seconds ago" %
+                              (current_time - self.last_trade))
                 return
             if not self.monitor_only:
                 # bch_btc buy first, bch_krw btc_krw second, bch_btc起连接作用，所以先交易
                 buy_amount_1 = round(hedge_quote_amount * (1 + self.fee_pair1), 8)
                 buy_price_1 = pair1_ask_price
-                logging.info("reverse=====>%s place buy order, price=%s, amount=%s" %
-                             (self.pair_1, buy_price_1, buy_amount_1))
+                logging.debug("reverse=====>%s place buy order, price=%s, amount=%s" %
+                              (self.pair_1, buy_price_1, buy_amount_1))
                 order_id_1 = self.brokers[self.pair_1].buy_limit(amount=buy_amount_1, price=buy_price_1)
 
                 if not order_id_1 or order_id_1 < 0:
-                    logging.warn("reverse======>%s place buy order failed, give up and return" % self.pair_1)
+                    logging.debug("reverse======>%s place buy order failed, give up and return" % self.pair_1)
                     return
 
-                time.sleep(config.INTERVAL_API)
+                # time.sleep(config.INTERVAL_API)
                 deal_amount_1 = self.get_deal_amount(market=self.pair_1, order_id=order_id_1)
-
+                logging.info("reverse======>%s make buy order that id=%s, price=%s, amount=%s, deal_amount=%s" %
+                             (self.pair_1, order_id_1, buy_price_1, buy_amount_1, deal_amount_1))
                 if deal_amount_1 < self.min_stock_1:
-                    logging.warn("reverse======>%s order %s deal amount %s < %s, give up and return" %
-                                 (self.pair_1, order_id_1, deal_amount_1, self.min_stock_1))
+                    logging.debug("reverse======>%s order %s deal amount %s < %s, give up and return" %
+                                  (self.pair_1, order_id_1, deal_amount_1, self.min_stock_1))
                     return
-
-                logging.warn("reverse======>%s order %s deal amount %s > %s, continue" %
-                             (self.pair_1, order_id_1, deal_amount_1, self.min_stock_1))
-
                 # bithumb限制amount小数位最多为4
                 sell_amount_base = round(deal_amount_1 * (1 - self.fee_pair1), 4)
                 buy_amount_2 = round(deal_amount_1 * pair1_ask_price, 4)
@@ -481,28 +469,26 @@ class T_Bithumb(BasicBot):
                     order_2 = None
 
                     if not done_base:
-                        logging.info("reverse=====>%s place sell order, price=%s, amount=%s" %
-                                     (self.base_pair, sell_amount_base, sell_amount_base))
+                        logging.debug("reverse=====>%s place sell order, price=%s, amount=%s" %
+                                      (self.base_pair, sell_amount_base, sell_amount_base))
                         order_id_base, order_base = self.brokers[self.base_pair].sell_limit(
                             amount=sell_amount_base, price=sell_price_base)
 
                     if not done_2:
-                        logging.info("reverse=====>%s place buy order, price=%s, amount=%s" %
-                                     (self.pair_2, buy_price_2, buy_amount_2))
+                        logging.debug("reverse=====>%s place buy order, price=%s, amount=%s" %
+                                      (self.pair_2, buy_price_2, buy_amount_2))
                         order_id_2, order_2 = self.brokers[self.pair_2].buy_limit(
                             amount=buy_amount_2, price=buy_price_2)
 
                     time.sleep(config.INTERVAL_API)
                     if not done_base and order_id_base and order_id_base >= 0:
                         deal_amount_base = self.get_btb_deal_amount(self.base_pair, order_id_base, order_base, 'ask')
-                        logging.info("reverse======>%s order %s deal amount %s, origin amount %s" %
-                                     (self.base_pair, order_id_base, deal_amount_base, sell_amount_base))
+                        logging.info(
+                            "reverse======>%s make sell order that id=%s, price=%s, amount=%s, deal_amount=%s" %
+                            (self.base_pair, order_id_base, sell_price_base, sell_amount_base, deal_amount_base))
                         diff_amount_base = round(sell_amount_base - deal_amount_base, 4)
-                        if 0.0 < diff_amount_base < self.min_stock_base:
-                            self.count_deal_base.append(deal_amount_base)
-                            self.logger_count.info('count_deal_base: ' + str(self.count_deal_base))
                         if diff_amount_base < self.min_stock_base:
-                            logging.info("reverse======>%s trade complete" % self.base_pair)
+                            logging.debug("reverse======>%s trade complete" % self.base_pair)
                             done_base = True
                         else:
                             # 后续调整为market_sell, 减少ticker调用?
@@ -512,12 +498,11 @@ class T_Bithumb(BasicBot):
 
                     if not done_2 and order_id_2 and order_id_2 >= 0:
                         deal_amount_2 = self.get_btb_deal_amount(self.pair_2, order_id_2, order_2, 'bid')
-                        logging.info("reverse======>%s order %s deal amount %s, origin amount %s" %
-                                     (self.pair_2, order_id_2, deal_amount_2, buy_amount_2))
+                        logging.info("reverse======>%s make buy order that id=%s, price=%s, amount=%s, deal_amount=%s" %
+                                     (self.pair_2, order_id_2, buy_price_2, buy_amount_2, deal_amount_2))
                         diff_amount_2 = round(buy_amount_2 - deal_amount_2, 4)
-                        # 这里pair2对应bithumb的btc限制为0.001, 所以取min_stock_2
                         if diff_amount_2 < self.min_stock_2:
-                            logging.info("reverse======>%s trade complete" % self.pair_2)
+                            logging.debug("reverse======>%s trade complete" % self.pair_2)
                             done_2 = True
                         else:
                             ticker2 = self.get_latest_ticker(self.pair_2)
@@ -585,7 +570,7 @@ class T_Bithumb(BasicBot):
 
         btc_total = btc_1 + btc_2
         bch_total = bch_base + bch_1
-        krw_total = krw_base + krw_2
+        krw_total = min(krw_base, krw_2)
 
         if not self.origin_assets:
             self.origin_assets[self.base_pair] = {
@@ -633,10 +618,10 @@ class T_Bithumb(BasicBot):
     def risk_protect(self, current_assets):
         btc_diff = self.origin_assets['btc_total'] - current_assets['btc_total']
         bch_diff = self.origin_assets['bch_total'] - current_assets['bch_total']
-        if btc_diff >= self.min_amount_market or bch_diff >= self.min_amount_mid:
+        if bch_diff >= self.min_amount_market or btc_diff >= self.min_amount_mid:
             self.risk_count += 1
             if self.risk_count > 10:
-                logging.warn("Stop quant bot, because risk protect")
+                logging.error("Stop quant bot, because risk protect")
                 assert False
         else:
             self.risk_count = 0

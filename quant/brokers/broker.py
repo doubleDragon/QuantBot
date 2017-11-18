@@ -58,7 +58,7 @@ class Broker(object):
             order_id = self.buy_limit(amount, price, client_id)
             if order_id:
                 break
-            time.sleep(config.INTERVAL_API)
+            time.sleep(config.INTERVAL_RETRY)
         return order_id
 
     def buy_limit(self, amount, price, client_id=None):
@@ -83,7 +83,7 @@ class Broker(object):
             order_id = self.sell_limit(amount, price, client_id)
             if order_id:
                 break
-            time.sleep(config.INTERVAL_API)
+            time.sleep(config.INTERVAL_RETRY)
         return order_id
 
     def sell_limit(self, amount, price, client_id=None):
@@ -189,7 +189,7 @@ class Broker(object):
             res = self.get_ticker()
             if res:
                 break
-            time.sleep(config.INTERVAL_API)
+            time.sleep(config.INTERVAL_RETRY)
         return res
 
     def get_ticker(self):

@@ -126,13 +126,13 @@ class BasicBot(Observer):
         while True:
             order_status = self.brokers[market].get_order(order_id)
             if not order_status:
-                time.sleep(config.INTERVAL_API)
+                time.sleep(config.INTERVAL_RETRY)
                 continue
             break
 
         if order_status['status'] == constant.ORDER_STATE_PENDING:
             self.brokers[market].cancel_order(order_id)
-            time.sleep(config.INTERVAL_RETRY)
+            time.sleep(config.INTERVAL_API)
             return self.get_deal_amount(market, order_id)
         else:
             return order_status['deal_amount']
