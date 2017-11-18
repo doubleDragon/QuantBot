@@ -56,6 +56,7 @@ class T_Bithumb(BasicBot):
 
         self.origin_assets = {}
         self.risk_count = 0
+        self.logging_balance = True
 
         if not self.monitor_only:
             self.brokers = broker_factory.create_brokers([self.base_pair, self.pair_1, self.pair_2])
@@ -319,6 +320,7 @@ class T_Bithumb(BasicBot):
                             buy_amount_base = diff_amount_base
 
                     if done_2 and done_base:
+                        self.logging_balance = True
                         logging.info("forward======>trade all complete")
                         break
                     time.sleep(config.INTERVAL_API)
@@ -510,6 +512,7 @@ class T_Bithumb(BasicBot):
                             buy_amount_2 = diff_amount_2
 
                     if done_base and done_2:
+                        self.logging_balance = True
                         logging.info("reverse======>trade all complete")
                         break
                     time.sleep(config.INTERVAL_API)
@@ -609,8 +612,10 @@ class T_Bithumb(BasicBot):
             'krw_total': krw_total
         }
 
-        logging.info('origin assets: ' + str(self.origin_assets))
-        logging.info('current assets: ' + str(current_assets))
+        if self.logging_balance:
+            logging.info('origin assets: ' + str(self.origin_assets))
+            logging.info('current assets: ' + str(current_assets))
+            self.logging_balance = False
 
         self.risk_protect(current_assets)
         return True
