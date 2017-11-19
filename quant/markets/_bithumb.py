@@ -18,7 +18,8 @@ class Bithumb(Market):
         raw_depth = self.client.depth(self.pair_code)
         if raw_depth and 'data' in raw_depth:
             raw_depth = raw_depth['data']
-            self.depth = self.format_depth(raw_depth)
+            if raw_depth:
+                self.depth = self.format_depth(raw_depth)
 
     @classmethod
     def sort_and_format(cls, l, reverse=False):
