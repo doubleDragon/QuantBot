@@ -627,7 +627,7 @@ class T_Bithumb(BasicBot):
         bch_diff = self.origin_assets['bch_total'] - current_assets['bch_total']
         if bch_diff >= self.min_amount_market or btc_diff >= self.min_amount_mid:
             self.risk_count += 1
-            if self.risk_count > 10:
+            if self.risk_count > 25:
                 logging.error("Stop quant bot, because risk protect")
                 assert False
         else:
