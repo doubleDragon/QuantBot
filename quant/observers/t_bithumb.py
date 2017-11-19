@@ -72,27 +72,15 @@ class T_Bithumb(BasicBot):
         res = self.base_pair in depths and self.pair_1 in depths and self.pair_2 in depths
         if not res:
             return False
-        if not depths[self.base_pair] or not depths[self.pair_1] or not depths[self.pair_2]:
-            return False
-        # base empty
-        res = 'asks' in depths[self.base_pair] and 'bids' in depths[self.base_pair]
-        if not res:
-            return False
-        if len(depths[self.base_pair]['asks']) <= 0 or len(depths[self.base_pair]['bids']) <= 0:
+        pair1_bid_price = depths[self.pair_1]['bids'][0]['price']
+        pair1_ask_price = depths[self.pair_1]['asks'][0]['price']
+        if pair1_ask_price <= 0 or pair1_bid_price <= 0:
             return False
 
-        res = 'asks' in depths[self.pair_1] and 'bids' in depths[self.pair_1]
-        if not res:
+        pair2_bid_price = depths[self.pair_2]['bids'][0]['price']
+        pair2_ask_price = depths[self.pair_2]['asks'][0]['price']
+        if pair2_ask_price <= 0 or pair2_bid_price <= 0:
             return False
-        if len(depths[self.pair_1]['asks']) <= 0 or len(depths[self.pair_1]['bids']) <= 0:
-            return False
-
-        res = 'asks' in depths[self.pair_2] and 'bids' in depths[self.pair_2]
-        if not res:
-            return False
-        if len(depths[self.pair_2]['asks']) <= 0 or len(depths[self.pair_2]['bids']) <= 0:
-            return False
-
         return True
 
     def terminate(self):
