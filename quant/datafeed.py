@@ -111,7 +111,12 @@ class DataFeed(object):
             self.tick()
 
     def update_balance(self):
-        pass
+        for observer in self.observers:
+            observer.update_balance()
+
+    def update_other(self):
+        for observer in self.observers:
+            observer.update_other()
 
     def terminate(self):
         for observer in self.observers:
@@ -137,6 +142,7 @@ class DataFeed(object):
         while True:
             self.update_balance()
 
+            self.update_other()
             self.depths = self.update_depths()
 
             try:

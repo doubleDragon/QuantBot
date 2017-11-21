@@ -122,6 +122,9 @@ class BasicBot(Observer):
         for broker in self.brokers:
             self.brokers[broker].get_balances()
 
+    def update_other(self):
+        pass
+
     def get_deal_amount(self, market, order_id):
         while True:
             order_status = self.brokers[market].get_order(order_id)

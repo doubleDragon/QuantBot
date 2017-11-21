@@ -60,7 +60,7 @@ class T_Bithumb(BasicBot):
 
         if not self.monitor_only:
             self.brokers = broker_factory.create_brokers([self.base_pair, self.pair_1, self.pair_2])
-            self.update_config_if_needed()
+            self.update_min_stock()
             self.update_balance()
 
         self.logger_other = log.get_logger('log/bithumb_other.log')
@@ -87,7 +87,7 @@ class T_Bithumb(BasicBot):
         super(T_Bithumb, self).terminate()
         self.brokers[self.pair_1].cancel_all()
 
-    def update_config_if_needed(self):
+    def update_min_stock(self):
         # 更新bfx的最小交易量, 1个小时更新一次
         now = time.time()
         diff = now - self.last_update_min_stock
@@ -96,14 +96,14 @@ class T_Bithumb(BasicBot):
             if min_stock:
                 self.min_stock_1 = min_stock
                 self.min_amount_market = max(self.min_stock_base, self.min_stock_1)
-                logging.info('update %s min stock: %s' % (self.pair_1, min_stock))
+                logging.debug('update %s min stock: %s' % (self.pair_1, min_stock))
             self.last_update_min_stock = now
 
-    def tick(self, depths):
+    def update_other(self):
         if not self.monitor_only:
-            self.update_config_if_needed()
-            if not self.update_balance():
-                return
+            self.update_min_stock()
+
+    def tick(self, depths):
         if not self.is_depths_available(depths):
             return
         self.skip = False
@@ -542,15 +542,15 @@ class T_Bithumb(BasicBot):
                 return self.brokers[market].get_deal_amount(order_id=order_id, order_type=order_type)
 
     def update_balance(self):
-        res_base = self.brokers[self.base_pair].get_balances()
-        res_1 = self.brokers[self.pair_1].get_balances()
-        res_2 = self.brokers[self.pair_2].get_balances()
-        if not res_base:
-            return False
-        if not res_1:
-            return False
-        if not res_2:
-            return False
+        if self.monitor_only:
+            return
+
+        res_base = self.brokers[self.base_pair].get_balances_c()
+        res_1 = self.brokers[self.pair_1].get_balances_c()
+        res_2 = self.brokers[self.pair_2].get_balances_c()
+        if not res_base or not res_1 or not res_2:
+            logging.error("balance must be success, but failed")
+            assert False
 
         bch_base = self.brokers[self.base_pair].bch_available
         krw_base = self.brokers[self.base_pair].krw_available
@@ -608,7 +608,6 @@ class T_Bithumb(BasicBot):
             self.logging_balance = False
 
         self.risk_protect(current_assets)
-        return True
 
     def risk_protect(self, current_assets):
         btc_diff = self.origin_assets['btc_total'] - current_assets['btc_total']

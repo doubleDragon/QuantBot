@@ -168,6 +168,14 @@ class Broker(object):
             logging.error('%s %s except: %s' % (self.name, get_current_function_name(), e))
             return None
 
+    def get_balances_c(self):
+        while True:
+            res = self.get_balances()
+            if res:
+                break
+            time.sleep(config.INTERVAL_RETRY)
+        return res
+
     def get_balances(self):
         try:
             res = self._get_balances()

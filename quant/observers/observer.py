@@ -10,6 +10,12 @@ class Observer(object):
     def terminate(self):
         self.is_terminated = True
 
+    def update_balance(self):
+        pass
+
+    def update_other(self):
+        pass
+
     def tick(self, depths):
         pass
 
