@@ -158,7 +158,13 @@ class PrivateClient(PublicClient):
         # print(self.contents)
 
         curl_handle.close()
-        return json.loads(self.contents)
+        if self.contents:
+            try:
+                return json.loads(self.contents)
+            except ValueError:
+                return None
+        else:
+            return None
 
     def balances(self, currency):
         """
