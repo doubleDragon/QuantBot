@@ -158,7 +158,7 @@ class Bithumb(Broker):
         res = self.client.balances(self.pair_code)
 
         logging.debug("bithumb get_balances response: %s" % res)
-        if not res and 'data' in res:
+        if not res or ('data' not in res):
             return
         res = res['data']
 
