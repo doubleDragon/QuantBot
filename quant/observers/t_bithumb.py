@@ -235,7 +235,7 @@ class T_Bithumb(BasicBot):
                 order_id_1 = self.brokers[self.pair_1].sell_limit(amount=sell_amount_1, price=sell_price_1)
 
                 if not order_id_1 or order_id_1 < 0:
-                    logging.debug("forward======>%s place sell order failed, give up and return" % self.pair_1)
+                    logging.info("forward======>%s place sell order failed, give up and return" % self.pair_1)
                     return
 
                 # time.sleep(config.INTERVAL_API)
@@ -244,7 +244,7 @@ class T_Bithumb(BasicBot):
                     '''
                     理论上不会出现0.0<deal_amount_1<self.min_stock_1这种情况, 经过实盘测试确实不会出现这种情况
                     '''
-                    logging.debug("forward======>%s order %s deal amount %s < %s, give up and return" %
+                    logging.error("forward======>%s order %s deal amount %s < %s, give up and return" %
                                   (self.pair_1, order_id_1, deal_amount_1, self.min_stock_1))
                     return
                 else:
@@ -281,7 +281,7 @@ class T_Bithumb(BasicBot):
                         order_2, order_2_error = self.brokers[self.pair_2].sell_limit(amount=sell_amount_2,
                                                                                       price=sell_price_2)
                         if order_2_error:
-                            logging.info("forward======>%s place sell order failed: %s" % (self.pair_2, order_2_error))
+                            logging.error("forward======>%s place sell order failed: %s" % (self.pair_2, order_2_error))
                         else:
                             if order_2 and 'order_id' in order_2:
                                 order_id_2 = order_2['order_id']
@@ -293,7 +293,7 @@ class T_Bithumb(BasicBot):
                         order_base, order_base_error = self.brokers[self.base_pair].buy_limit(amount=buy_amount_base,
                                                                                               price=buy_price_base)
                         if order_base_error:
-                            logging.info("forward======>%s place buy order failed: %s" % (self.base_pair,
+                            logging.error("forward======>%s place buy order failed: %s" % (self.base_pair,
                                                                                           order_base_error))
                         else:
                             if order_base and 'order_id' in order_base:
@@ -309,7 +309,7 @@ class T_Bithumb(BasicBot):
                                       diff_amount=%s" % (self.pair_2, order_id_2, sell_price_2, sell_amount_2,
                                                          deal_amount_2, diff_amount_2))
                         if diff_amount_2 < self.min_stock_2:
-                            logging.debug("forward======>%s trade complete" % self.pair_2)
+                            logging.info("forward======>%s trade complete" % self.pair_2)
                             done_2 = True
                         else:
                             # 后续用market_buy搞定, 减少一次ticker的读取
@@ -457,13 +457,13 @@ class T_Bithumb(BasicBot):
                 order_id_1 = self.brokers[self.pair_1].buy_limit(amount=buy_amount_1, price=buy_price_1)
 
                 if not order_id_1 or order_id_1 < 0:
-                    logging.info("reverse======>%s place buy order failed, give up and return" % self.pair_1)
+                    logging.error("reverse======>%s place buy order failed, give up and return" % self.pair_1)
                     return
 
                 # time.sleep(config.INTERVAL_API)
                 deal_amount_1, deal_avg_price_1 = self.get_deal_amount(market=self.pair_1, order_id=order_id_1)
                 if deal_amount_1 < self.min_stock_1:
-                    logging.info("reverse======>%s order %s deal amount %s < %s, give up and return" %
+                    logging.error("reverse======>%s order %s deal amount %s < %s, give up and return" %
                                  (self.pair_1, order_id_1, deal_amount_1, self.min_stock_1))
                     return
                 else:
@@ -489,12 +489,12 @@ class T_Bithumb(BasicBot):
                     order_2 = None
 
                     if not done_base:
-                        logging.debug("reverse=====>%s place sell order, price=%s, amount=%s" %
-                                      (self.base_pair, sell_amount_base, sell_amount_base))
+                        logging.info("reverse=====>%s place sell order, price=%s, amount=%s" %
+                                     (self.base_pair, sell_amount_base, sell_amount_base))
                         order_base, order_base_error = self.brokers[self.base_pair].sell_limit(
                             amount=sell_amount_base, price=sell_price_base)
                         if order_base_error:
-                            logging.info("reverse======>%s place sell order failed: %s" % (self.base_pair,
+                            logging.error("reverse======>%s place sell order failed: %s" % (self.base_pair,
                                                                                            order_base_error))
                         else:
                             if order_base and 'order_id' in order_base:
@@ -504,13 +504,13 @@ class T_Bithumb(BasicBot):
                                               self.base_pair)
 
                     if not done_2:
-                        logging.debug("reverse=====>%s place buy order, price=%s, amount=%s" %
-                                      (self.pair_2, buy_price_2, buy_amount_2))
+                        logging.info("reverse=====>%s place buy order, price=%s, amount=%s" %
+                                     (self.pair_2, buy_price_2, buy_amount_2))
                         order_2, order_2_error = self.brokers[self.pair_2].buy_limit(
                             amount=buy_amount_2, price=buy_price_2)
 
                         if order_2_error:
-                            logging.info("reverse======>%s place buy order failed: %s" % (self.pair_2, order_2_error))
+                            logging.error("reverse======>%s place buy order failed: %s" % (self.pair_2, order_2_error))
                         else:
                             if order_2 and 'order_id' in order_2:
                                 order_id_2 = order_2['order_id']
