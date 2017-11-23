@@ -294,7 +294,7 @@ class T_Bithumb(BasicBot):
                                                                                               price=buy_price_base)
                         if order_base_error:
                             logging.error("forward======>%s place buy order failed: %s" % (self.base_pair,
-                                                                                          order_base_error))
+                                                                                           order_base_error))
                         else:
                             if order_base and 'order_id' in order_base:
                                 order_id_base = order_base['order_id']
@@ -302,7 +302,7 @@ class T_Bithumb(BasicBot):
                                 logging.error("forward======>%s place buy order failed: notwork invalid" %
                                               self.base_pair)
                     time.sleep(config.INTERVAL_API)
-                    if not done_2 and order_id_2 and order_id_2 >= 0:
+                    if not done_2 and order_2 and order_id_2 and order_id_2 >= 0:
                         deal_amount_2 = self.get_btb_deal_amount(self.pair_2, order_id_2, order_2, 'ask')
                         diff_amount_2 = round(sell_amount_2 - deal_amount_2, 4)
                         logging.info("forward======>%s sell order that id=%s, price=%s, amount=%s, deal_amount=%s\
@@ -317,7 +317,7 @@ class T_Bithumb(BasicBot):
                             sell_price_2 = ticker2['bid']
                             sell_amount_2 = diff_amount_2
 
-                    if not done_base and order_id_base and order_id_base >= 0:
+                    if not done_base and order_base and order_id_base and order_id_base >= 0:
                         deal_amount_base = self.get_btb_deal_amount(self.base_pair, order_id_base, order_base, 'bid')
                         diff_amount_base = round(buy_amount_base - deal_amount_base, 4)
                         logging.info("forward======>%s buy order that id=%s, price=%s, amount=%s, deal_amount=%s\
@@ -464,7 +464,7 @@ class T_Bithumb(BasicBot):
                 deal_amount_1, deal_avg_price_1 = self.get_deal_amount(market=self.pair_1, order_id=order_id_1)
                 if deal_amount_1 < self.min_stock_1:
                     logging.error("reverse======>%s order %s deal amount %s < %s, give up and return" %
-                                 (self.pair_1, order_id_1, deal_amount_1, self.min_stock_1))
+                                  (self.pair_1, order_id_1, deal_amount_1, self.min_stock_1))
                     return
                 else:
                     logging.info("reverse======>%s make buy order that id=%s, price=%s, amount=%s, deal_amount=%s" %
@@ -495,7 +495,7 @@ class T_Bithumb(BasicBot):
                             amount=sell_amount_base, price=sell_price_base)
                         if order_base_error:
                             logging.error("reverse======>%s place sell order failed: %s" % (self.base_pair,
-                                                                                           order_base_error))
+                                                                                            order_base_error))
                         else:
                             if order_base and 'order_id' in order_base:
                                 order_id_base = order_base['order_id']
@@ -518,7 +518,7 @@ class T_Bithumb(BasicBot):
                                 logging.error("forward======>%s place buy order failed: notwork invalid" % self.pair_2)
 
                     time.sleep(config.INTERVAL_API)
-                    if not done_base and order_id_base and order_id_base >= 0:
+                    if not done_base and order_base and order_id_base and order_id_base >= 0:
                         deal_amount_base = self.get_btb_deal_amount(self.base_pair, order_id_base, order_base, 'ask')
                         diff_amount_base = round(sell_amount_base - deal_amount_base, 4)
                         logging.info("reverse======>%s make sell order that id=%s, price=%s, amount=%s, \
@@ -534,7 +534,7 @@ class T_Bithumb(BasicBot):
                             sell_price_base = ticker_base['bid']
                             sell_amount_base = diff_amount_base
 
-                    if not done_2 and order_id_2 and order_id_2 >= 0:
+                    if not done_2 and order_2 and order_id_2 and order_id_2 >= 0:
                         deal_amount_2 = self.get_btb_deal_amount(self.pair_2, order_id_2, order_2, 'bid')
                         diff_amount_2 = round(buy_amount_2 - deal_amount_2, 4)
                         logging.info("reverse======>%s make buy order that id=%s, price=%s, amount=%s, deal_amount=%s\
