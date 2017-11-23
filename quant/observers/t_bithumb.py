@@ -229,8 +229,8 @@ class T_Bithumb(BasicBot):
                 sell_amount_1 = hedge_quote_amount
                 sell_price_1 = pair1_bid_price
 
-                logging.debug("forward=====>%s place sell order, price=%s, amount=%s" %
-                              (self.pair_1, sell_price_1, sell_amount_1))
+                logging.info("forward=====>%s place sell order, price=%s, amount=%s" %
+                             (self.pair_1, sell_price_1, sell_amount_1))
 
                 order_id_1 = self.brokers[self.pair_1].sell_limit(amount=sell_amount_1, price=sell_price_1)
 
@@ -239,10 +239,7 @@ class T_Bithumb(BasicBot):
                     return
 
                 # time.sleep(config.INTERVAL_API)
-                deal_amount_1 = self.get_deal_amount(market=self.pair_1, order_id=order_id_1)
-
-                logging.info("forward======>%s make sell order that id=%s, price= %s, amount=%s, deal_amount=%s" %
-                             (self.pair_1, order_id_1, sell_price_1, sell_amount_1, deal_amount_1))
+                deal_amount_1, deal_avg_price_1 = self.get_deal_amount(market=self.pair_1, order_id=order_id_1)
                 if deal_amount_1 < self.min_stock_1:
                     '''
                     理论上不会出现0.0<deal_amount_1<self.min_stock_1这种情况, 经过实盘测试确实不会出现这种情况
@@ -250,9 +247,17 @@ class T_Bithumb(BasicBot):
                     logging.debug("forward======>%s order %s deal amount %s < %s, give up and return" %
                                   (self.pair_1, order_id_1, deal_amount_1, self.min_stock_1))
                     return
+                else:
+                    logging.info("forward======>%s make sell order that id=%s, price= %s, amount=%s, deal_amount=%s" %
+                                 (self.pair_1, order_id_1, sell_price_1, sell_amount_1, deal_amount_1))
+
+                if not deal_avg_price_1:
+                    logging.error("forward======>%s order %s avg price must not be empty" % (self.pair_1, order_id_1))
+                    assert False
 
                 '''bithumb 限制委单小数位最多为4'''
-                sell_amount_2 = round(deal_amount_1 * pair1_bid_price_real, 4)
+                # 这个地方注意要用平均成交价来计算pair2的amount
+                sell_amount_2 = round(deal_amount_1 * deal_avg_price_1, 4)
                 sell_price_2 = pair2_bid_price
                 if sell_amount_2 < self.min_stock_2:
                     # must not happen, 理论上不该出现这种场景，因为交易之前已经限定了条件
@@ -271,21 +276,38 @@ class T_Bithumb(BasicBot):
                     order_base = None
 
                     if not done_2:
-                        logging.debug("forward=====>%s place sell order, price=%s, amount=%s" %
-                                      (self.pair_2, sell_price_2, sell_amount_2))
-                        order_id_2, order_2 = self.brokers[self.pair_2].sell_limit(amount=sell_amount_2,
-                                                                                   price=sell_price_2)
+                        logging.info("forward=====>%s place sell order, price=%s, amount=%s" %
+                                     (self.pair_2, sell_price_2, sell_amount_2))
+                        order_2, order_2_error = self.brokers[self.pair_2].sell_limit(amount=sell_amount_2,
+                                                                                      price=sell_price_2)
+                        if order_2_error:
+                            logging.info("forward======>%s place sell order failed: %s" % (self.pair_2, order_2_error))
+                        else:
+                            if order_2 and 'order_id' in order_2:
+                                order_id_2 = order_2['order_id']
+                            else:
+                                logging.error("forward======>%s place sell order failed: notwork invalid" % self.pair_2)
                     if not done_base:
-                        logging.debug("forward=====>%s place buy order, price=%s, amount=%s" %
-                                      (self.base_pair, buy_price_base, buy_amount_base))
-                        order_id_base, order_base = self.brokers[self.base_pair].buy_limit(amount=buy_amount_base,
-                                                                                           price=buy_price_base)
+                        logging.info("forward=====>%s place buy order, price=%s, amount=%s" %
+                                     (self.base_pair, buy_price_base, buy_amount_base))
+                        order_base, order_base_error = self.brokers[self.base_pair].buy_limit(amount=buy_amount_base,
+                                                                                              price=buy_price_base)
+                        if order_base_error:
+                            logging.info("forward======>%s place buy order failed: %s" % (self.base_pair,
+                                                                                          order_base_error))
+                        else:
+                            if order_base and 'order_id' in order_base:
+                                order_id_base = order_base['order_id']
+                            else:
+                                logging.error("forward======>%s place buy order failed: notwork invalid" %
+                                              self.base_pair)
                     time.sleep(config.INTERVAL_API)
                     if not done_2 and order_id_2 and order_id_2 >= 0:
                         deal_amount_2 = self.get_btb_deal_amount(self.pair_2, order_id_2, order_2, 'ask')
-                        logging.info("forward======>%s make sell order that id=%s, price=%s, amount=%s, deal_amount=%s"
-                                     % (self.pair_2, order_id_2, sell_price_2, sell_amount_2, deal_amount_2))
                         diff_amount_2 = round(sell_amount_2 - deal_amount_2, 4)
+                        logging.info("forward======>%s sell order that id=%s, price=%s, amount=%s, deal_amount=%s\
+                                      diff_amount=%s" % (self.pair_2, order_id_2, sell_price_2, sell_amount_2,
+                                                         deal_amount_2, diff_amount_2))
                         if diff_amount_2 < self.min_stock_2:
                             logging.debug("forward======>%s trade complete" % self.pair_2)
                             done_2 = True
@@ -297,11 +319,12 @@ class T_Bithumb(BasicBot):
 
                     if not done_base and order_id_base and order_id_base >= 0:
                         deal_amount_base = self.get_btb_deal_amount(self.base_pair, order_id_base, order_base, 'bid')
-                        logging.info("forward======>%s make buy order that id=%s, price=%s, amount=%s, deal_amount=%s" %
-                                     (self.base_pair, order_id_base, buy_price_base, buy_amount_base, deal_amount_base))
                         diff_amount_base = round(buy_amount_base - deal_amount_base, 4)
+                        logging.info("forward======>%s buy order that id=%s, price=%s, amount=%s, deal_amount=%s\
+                                      diff_amount=%s" % (self.base_pair, order_id_base, buy_price_base, buy_amount_base,
+                                                         deal_amount_base, diff_amount_base))
                         if diff_amount_base < self.min_stock_base:
-                            logging.debug("forward======>%s trade complete" % self.base_pair)
+                            logging.info("forward======>%s trade complete" % self.base_pair)
                             done_base = True
                         else:
                             # 后续用market_buy搞定, 减少一次ticker的读取
@@ -311,7 +334,7 @@ class T_Bithumb(BasicBot):
 
                     if done_2 and done_base:
                         self.logging_balance = True
-                        logging.info("forward======>trade all complete")
+                        logging.info("forward======>trade all complete, at count %s" % self.count_forward)
                         break
                     time.sleep(config.INTERVAL_API)
 
@@ -429,25 +452,30 @@ class T_Bithumb(BasicBot):
                 # bch_btc buy first, bch_krw btc_krw second, bch_btc起连接作用，所以先交易
                 buy_amount_1 = round(hedge_quote_amount * (1 + self.fee_pair1), 8)
                 buy_price_1 = pair1_ask_price
-                logging.debug("reverse=====>%s place buy order, price=%s, amount=%s" %
-                              (self.pair_1, buy_price_1, buy_amount_1))
+                logging.info("reverse=====>%s place buy order, price=%s, amount=%s" %
+                             (self.pair_1, buy_price_1, buy_amount_1))
                 order_id_1 = self.brokers[self.pair_1].buy_limit(amount=buy_amount_1, price=buy_price_1)
 
                 if not order_id_1 or order_id_1 < 0:
-                    logging.debug("reverse======>%s place buy order failed, give up and return" % self.pair_1)
+                    logging.info("reverse======>%s place buy order failed, give up and return" % self.pair_1)
                     return
 
                 # time.sleep(config.INTERVAL_API)
-                deal_amount_1 = self.get_deal_amount(market=self.pair_1, order_id=order_id_1)
-                logging.info("reverse======>%s make buy order that id=%s, price=%s, amount=%s, deal_amount=%s" %
-                             (self.pair_1, order_id_1, buy_price_1, buy_amount_1, deal_amount_1))
+                deal_amount_1, deal_avg_price_1 = self.get_deal_amount(market=self.pair_1, order_id=order_id_1)
                 if deal_amount_1 < self.min_stock_1:
-                    logging.debug("reverse======>%s order %s deal amount %s < %s, give up and return" %
-                                  (self.pair_1, order_id_1, deal_amount_1, self.min_stock_1))
+                    logging.info("reverse======>%s order %s deal amount %s < %s, give up and return" %
+                                 (self.pair_1, order_id_1, deal_amount_1, self.min_stock_1))
                     return
-                # bithumb限制amount小数位最多为4
+                else:
+                    logging.info("reverse======>%s make buy order that id=%s, price=%s, amount=%s, deal_amount=%s" %
+                                 (self.pair_1, order_id_1, buy_price_1, buy_amount_1, deal_amount_1))
+                if not deal_avg_price_1:
+                    logging.error("reverse======>%s order %s avg price must not be empty" % (self.pair_1, order_id_1))
+                    assert False
+                '''bithumb限制amount小数位最多为4'''
                 sell_amount_base = round(deal_amount_1 * (1 - self.fee_pair1), 4)
-                buy_amount_2 = round(deal_amount_1 * pair1_ask_price, 4)
+                # 这个地方用平均成交价来计算pair2的amount
+                buy_amount_2 = round(deal_amount_1 * deal_avg_price_1, 4)
 
                 sell_price_base = base_pair_bid_price
                 buy_price_2 = pair2_ask_price
@@ -463,24 +491,42 @@ class T_Bithumb(BasicBot):
                     if not done_base:
                         logging.debug("reverse=====>%s place sell order, price=%s, amount=%s" %
                                       (self.base_pair, sell_amount_base, sell_amount_base))
-                        order_id_base, order_base = self.brokers[self.base_pair].sell_limit(
+                        order_base, order_base_error = self.brokers[self.base_pair].sell_limit(
                             amount=sell_amount_base, price=sell_price_base)
+                        if order_base_error:
+                            logging.info("reverse======>%s place sell order failed: %s" % (self.base_pair,
+                                                                                           order_base_error))
+                        else:
+                            if order_base and 'order_id' in order_base:
+                                order_id_base = order_base['order_id']
+                            else:
+                                logging.error("reverse======>%s place sell order failed: notwork invalid" %
+                                              self.base_pair)
 
                     if not done_2:
                         logging.debug("reverse=====>%s place buy order, price=%s, amount=%s" %
                                       (self.pair_2, buy_price_2, buy_amount_2))
-                        order_id_2, order_2 = self.brokers[self.pair_2].buy_limit(
+                        order_2, order_2_error = self.brokers[self.pair_2].buy_limit(
                             amount=buy_amount_2, price=buy_price_2)
+
+                        if order_2_error:
+                            logging.info("reverse======>%s place buy order failed: %s" % (self.pair_2, order_2_error))
+                        else:
+                            if order_2 and 'order_id' in order_2:
+                                order_id_2 = order_2['order_id']
+                            else:
+                                logging.error("forward======>%s place buy order failed: notwork invalid" % self.pair_2)
 
                     time.sleep(config.INTERVAL_API)
                     if not done_base and order_id_base and order_id_base >= 0:
                         deal_amount_base = self.get_btb_deal_amount(self.base_pair, order_id_base, order_base, 'ask')
-                        logging.info(
-                            "reverse======>%s make sell order that id=%s, price=%s, amount=%s, deal_amount=%s" %
-                            (self.base_pair, order_id_base, sell_price_base, sell_amount_base, deal_amount_base))
                         diff_amount_base = round(sell_amount_base - deal_amount_base, 4)
+                        logging.info("reverse======>%s make sell order that id=%s, price=%s, amount=%s, \
+                                      deal_amount=%s, diff_amount=%s " %
+                                     (self.base_pair, order_id_base, sell_price_base, sell_amount_base,
+                                      deal_amount_base, diff_amount_base))
                         if diff_amount_base < self.min_stock_base:
-                            logging.debug("reverse======>%s trade complete" % self.base_pair)
+                            logging.info("reverse======>%s trade complete" % self.base_pair)
                             done_base = True
                         else:
                             # 后续调整为market_sell, 减少ticker调用?
@@ -490,11 +536,12 @@ class T_Bithumb(BasicBot):
 
                     if not done_2 and order_id_2 and order_id_2 >= 0:
                         deal_amount_2 = self.get_btb_deal_amount(self.pair_2, order_id_2, order_2, 'bid')
-                        logging.info("reverse======>%s make buy order that id=%s, price=%s, amount=%s, deal_amount=%s" %
-                                     (self.pair_2, order_id_2, buy_price_2, buy_amount_2, deal_amount_2))
                         diff_amount_2 = round(buy_amount_2 - deal_amount_2, 4)
+                        logging.info("reverse======>%s make buy order that id=%s, price=%s, amount=%s, deal_amount=%s\
+                                      ,diff_amount=%s" % (self.pair_2, order_id_2, buy_price_2, buy_amount_2,
+                                                          deal_amount_2, diff_amount_2))
                         if diff_amount_2 < self.min_stock_2:
-                            logging.debug("reverse======>%s trade complete" % self.pair_2)
+                            logging.info("reverse======>%s trade complete" % self.pair_2)
                             done_2 = True
                         else:
                             ticker2 = self.get_latest_ticker(self.pair_2)
@@ -503,7 +550,7 @@ class T_Bithumb(BasicBot):
 
                     if done_base and done_2:
                         self.logging_balance = True
-                        logging.info("reverse======>trade all complete")
+                        logging.info("reverse======>trade all complete at count %s" % self.count_reverse)
                         break
                     time.sleep(config.INTERVAL_API)
 
@@ -516,30 +563,56 @@ class T_Bithumb(BasicBot):
             return order['deal_amount']
         else:
             # 未完成的订单才能查询到
-            resp = self.brokers[market].get_order(order_id=order_id, order_type=order_type)
-            if not resp:
-                # 增加一次容错，排除网络原因, 本次如果还失败当作已成交处理
-                time.sleep(config.INTERVAL_RETRY)
-                resp = self.brokers[market].get_order(order_id=order_id, order_type=order_type)
+            resp, error_msg = self.brokers[market].get_order(order_id=order_id, order_type=order_type)
+            if error_msg:
+                logging.info("%s get order %s failed: %s" % (market, order_id, error_msg))
+            else:
+                if not resp:
+                    # 增加一次容错，排除网络原因, 本次如果还失败当作已成交处理
+                    time.sleep(config.INTERVAL_RETRY)
+                    resp, error_msg = self.brokers[market].get_order(order_id=order_id, order_type=order_type)
+                    if error_msg:
+                        logging.info("%s get order %s failed again: %s" % (market, order_id, error_msg))
 
             if resp:
-                cancel_res = self.brokers[market].cancel_order(order_id=order_id, order_type=order_type)
-                if not cancel_res:
-                    # 增加一次容错, 如果本次还失败则当作成交处理
-                    time.sleep(config.INTERVAL_RETRY)
-                    cancel_res = self.brokers[market].cancel_order(order_id=order_id, order_type=order_type)
+                cancel_res, error_msg = self.brokers[market].cancel_order(order_id=order_id, order_type=order_type)
+                if error_msg:
+                    logging.info("%s cancel %s order %s failed: %s" % (market, order_type, order_id, error_msg))
+                else:
+                    if not cancel_res:
+                        # 增加一次容错, 如果本次还失败则当作成交处理
+                        time.sleep(config.INTERVAL_RETRY)
+                        cancel_res = self.brokers[market].cancel_order(order_id=order_id, order_type=order_type)
 
                 if cancel_res:
-                    # 大部分是这种场景
+                    # 大部分是这种场景, cancel未完成的部分
+                    logging.info("%s cancel %s order %s success" % (market, order_type, order_id))
                     return resp['deal_amount']
                 else:
                     # get_order成功，但是两次cancel失败了，当作已成功处理
                     time.sleep(config.INTERVAL_RETRY)
-                    return self.brokers[market].get_deal_amount(order_id=order_id, order_type=order_type)
+                    logging.info("%s cancel %s order %s failed, maybe has filled" % (market, order_type, order_id))
+                    return self.get_filled_deal_amount_c(market, order_id, order_type)
             else:
                 # get_order两次失败，当作已成交处理
                 time.sleep(config.INTERVAL_RETRY)
-                return self.brokers[market].get_deal_amount(order_id=order_id, order_type=order_type)
+                logging.info("%s get %s order %s failed, maybe has filled" % (market, order_type, order_id))
+                return self.get_filled_deal_amount_c(market, order_id, order_type)
+
+    def get_filled_deal_amount_c(self, market, order_id, order_type):
+        """
+        已成交订单的deal_amount, get_order查询不到
+        这里的逻辑是只有error和order都为None，即网络错误才进行重试
+        """
+        while True:
+            deal_amount, error_msg = self.brokers[market].get_deal_amount(order_id=order_id, order_type=order_type)
+            if not error_msg and not deal_amount:
+                continue
+            else:
+                if error_msg:
+                    logging.info("%s get order %s filled deal amount failed: %s" % (market, order_id, error_msg))
+                break
+        return deal_amount
 
     def update_balance(self):
         if self.monitor_only:

@@ -42,47 +42,75 @@ class Bithumb(Broker):
 
         """
         res = self.client.buy(currency=self.pair_code, price=price, amount=amount)
-        order_id = None
-        order = None
-        if res and 'order_id' in res:
-            order_id = res['order_id']
-            '''却要确认是否成交'''
-            if 'data' in res and len(res['data']) > 0:
-                deal_amount = 0.0
-                origin_amount = float(amount)
-                for item in res['data']:
-                    deal_amount = float(item['units']) + deal_amount
-                order = {
-                    'order_id': order_id,
-                    'amount': origin_amount,
-                    'price': float(price),
-                    'deal_amount': deal_amount,
-                    'avg_price': float(price),
-                    'status': constant.ORDER_STATE_CLOSED
-                }
-        return order_id, order
+        order = {}
+        error_message = ''
+        if res:
+            if 'message' in res:
+                error_message = res['message']
+                return order, error_message
 
-    def _sell_limit(self, amount, price):
-        """Create a sell limit order"""
-        res = self.client.sell(currency=self.pair_code, price=price, amount=amount)
-        order_id = None
-        order = None
-        if res and 'order_id' in res:
-            order_id = res['order_id']
+            if 'order_id' not in res:
+                error_message = 'unknown error, order success but not exist order id'
+                return order, error_message
+            order['order_id'] = res['order_id']
             '''却要确认是否成交'''
             if 'data' in res and len(res['data']) > 0:
                 deal_amount = 0.0
+                price_total = 0.0
+                r_len = 0
                 for item in res['data']:
                     deal_amount = float(item['units']) + deal_amount
+                    price_total = float(item['price']) + price_total
+                    r_len += 1
+
+                avg_price = float(price_total / r_len)
+
                 order = {
-                    'order_id': order_id,
                     'amount': float(amount),
                     'price': float(price),
                     'deal_amount': deal_amount,
-                    'avg_price': float(price),
+                    'avg_price': avg_price,
                     'status': constant.ORDER_STATE_CLOSED
                 }
-        return order_id, order
+        return order, error_message
+
+    def _sell_limit(self, amount, price):
+        """
+        Create a sell limit order,
+        if order and error all is empty, is network failed
+        """
+        res = self.client.sell(currency=self.pair_code, price=price, amount=amount)
+        order = {}
+        error_message = ''
+        if res:
+            if 'message' in res:
+                error_message = res['message']
+                return order, error_message
+
+            if 'order_id' not in res:
+                error_message = 'unknown error, order success but not exist order id'
+                return order, error_message
+            order['order_id'] = res['order_id']
+            '''却要确认是否成交'''
+            if 'data' in res and len(res['data']) > 0:
+                deal_amount = 0.0
+                price_total = 0.0
+                r_len = 0
+                for item in res['data']:
+                    deal_amount = float(item['units']) + deal_amount
+                    price_total = float(item['price']) + price_total
+                    r_len += 1
+
+                avg_price = float(price_total / r_len)
+
+                order = {
+                    'amount': float(amount),
+                    'price': float(price),
+                    'deal_amount': deal_amount,
+                    'avg_price': avg_price,
+                    'status': constant.ORDER_STATE_CLOSED
+                }
+        return order, error_message
 
     @classmethod
     def _order_status(cls, res):
@@ -112,7 +140,6 @@ class Bithumb(Broker):
                 resp['status'] = constant.ORDER_STATE_CLOSED
             else:
                 resp['status'] = constant.ORDER_STATE_UNKNOWN
-                print('bithumb _order_status res: ' + str(res))
                 assert False
 
         return resp
@@ -121,37 +148,62 @@ class Bithumb(Broker):
         return self.client.order_detail(self.pair_code, order_id=order_id, order_type=order_type)
 
     def get_deal_amount(self, order_id, order_type):
+        """
+        bithumb success order
+        """
         res = self.client.order_detail(self.pair_code, order_id=order_id, order_type=order_type)
 
-        deal_amount = 0.0
-        if res and 'data' in res:
+        if res:
+            if 'message' in res:
+                return None, res['message']
+            if 'data' not in res:
+                return None, 'unknown error, order_detail success but not exist data'
+            if len(res['data']) <= 0:
+                return None, 'unknown error, order_detail success but data len is 0'
+
+            deal_amount = 0.0
             for item in res['data']:
                 deal_amount = deal_amount + float(item['units_traded'])
 
-        return deal_amount
+            return deal_amount, None
+        else:
+            return None, None
 
     def _get_order(self, order_id, order_type=None):
         res = self.client.get_order(currency=self.pair_code, order_id=order_id, order_type=order_type)
-        if not res or 'data' not in res:
-            return None
-        res = res['data']
-        if len(res) <= 0:
-            return None
-        res = res[0]
-        logging.debug('get_order id: %s, res: %s' % (order_id, res))
-        assert str(res['order_id']) == str(order_id)
+        error_message = ''
+        if res:
+            if 'message' in res:
+                error_message = res['message']
+                return None, error_message
+            if 'data' not in res:
+                error_message = 'unknown error, get order success but data is empty'
+                return None, error_message
+            res = res['data']
+            if len(res) <= 0:
+                error_message = 'unknown error, get order success but data len is 0'
+                return None, error_message
+            res = res[0]
+            assert str(res['order_id']) == str(order_id)
 
-        return self._order_status(res)
+            return self._order_status(res), error_message
+        else:
+            return None, error_message
 
     def _cancel_order(self, order_id, order_type=None):
         logging.debug("bithumb cancel order : %s that type is %s" % (order_id, order_type))
         res = self.client.cancel_order(order_id, self.pair_code, order_type)
-        if not res:
-            return False
-        if res['status'] == '0000':
-            return True
+        error_msg = ''
+        if res:
+            if 'message' in res:
+                error_msg = res['message']
+                return False, error_msg
+            if res['status'] != '0000':
+                error_msg = 'unknown error, has no message but status code is not 0000'
+                return False, error_msg
+            return True, error_msg
         else:
-            return False
+            return False, error_msg
 
     def get_balances(self):
         """Get balance"""

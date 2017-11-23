@@ -126,6 +126,9 @@ class BasicBot(Observer):
         pass
 
     def get_deal_amount(self, market, order_id):
+        """
+        平均成交价还是要有的
+        """
         while True:
             order_status = self.brokers[market].get_order(order_id)
             if not order_status:
@@ -138,7 +141,7 @@ class BasicBot(Observer):
             time.sleep(config.INTERVAL_API)
             return self.get_deal_amount(market, order_id)
         else:
-            return order_status['deal_amount']
+            return order_status['deal_amount'], order_status['avg_price']
 
     def get_latest_ticker(self, market):
         return self.brokers[market].get_ticker_c()

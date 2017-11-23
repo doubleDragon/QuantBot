@@ -66,8 +66,8 @@ class Broker(object):
             logging.error('risk alert: amount %s > risk amount:%s' % (amount, config.RISK_PROTECT_MAX_VOLUMN))
             raise
 
-        logging.info("BUY LIMIT %f %s at %f %s @%s" % (amount, self.market_currency,
-                                                       price, self.base_currency, self.brief_name))
+        logging.debug("BUY LIMIT %f %s at %f %s @%s" % (amount, self.market_currency,
+                                                        price, self.base_currency, self.brief_name))
 
         try:
             if client_id:
@@ -91,8 +91,8 @@ class Broker(object):
             logging.error('risk alert: amount %s > risk amount:%s' % (amount, config.RISK_PROTECT_MAX_VOLUMN))
             raise
 
-        logging.info("SELL LIMIT %f %s at %f %s @%s" % (amount, self.market_currency,
-                                                        price, self.base_currency, self.brief_name))
+        logging.debug("SELL LIMIT %f %s at %f %s @%s" % (amount, self.market_currency,
+                                                         price, self.base_currency, self.brief_name))
 
         try:
             if client_id:

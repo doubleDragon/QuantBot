@@ -450,3 +450,12 @@ class PrivateClient(PublicClient):
         }
         signed_payload = self._sign_payload(payload)
         return self._post(self.URL + "/history", headers=signed_payload)
+
+    def orders_history(self, limit=10):
+        payload = {
+            "request": "/v1/orders/hist",
+            "nonce": self._nonce,
+            "limit": limit
+        }
+        signed_payload = self._sign_payload(payload)
+        return self._post(self.URL + "/orders/hist", headers=signed_payload)
