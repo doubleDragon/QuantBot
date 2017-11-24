@@ -72,6 +72,21 @@ class T_Bithumb(BasicBot):
         res = self.base_pair in depths and self.pair_1 in depths and self.pair_2 in depths
         if not res:
             return False
+
+        if not depths[self.base_pair]['bids'] or not depths[self.base_pair]['asks']:
+            return False
+
+        if not depths[self.pair_1]['bids'] or not depths[self.pair_1]['asks']:
+            return False
+
+        if not depths[self.pair_2]['bids'] or not depths[self.pair_2]['asks']:
+            return False
+
+        base_bid_price = depths[self.base_pair]['bids'][0]['price']
+        base_ask_price = depths[self.base_pair]['asks'][0]['price']
+        if base_ask_price <= 0 or base_bid_price <= 0:
+            return False
+
         pair1_bid_price = depths[self.pair_1]['bids'][0]['price']
         pair1_ask_price = depths[self.pair_1]['asks'][0]['price']
         if pair1_ask_price <= 0 or pair1_bid_price <= 0:
