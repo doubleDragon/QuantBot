@@ -460,7 +460,7 @@ class T_Bithumb(BasicBot):
                     logging.error("reverse======>%s place buy order failed, give up and return" % self.pair_1)
                     return
 
-                # time.sleep(config.INTERVAL_API)
+                time.sleep(config.INTERVAL_API)
                 deal_amount_1, deal_avg_price_1 = self.get_deal_amount(market=self.pair_1, order_id=order_id_1)
                 if deal_amount_1 < self.min_stock_1:
                     logging.error("reverse======>%s order %s deal amount %s < %s, give up and return" %
@@ -517,7 +517,7 @@ class T_Bithumb(BasicBot):
                             else:
                                 logging.error("forward======>%s place buy order failed: notwork invalid" % self.pair_2)
 
-                    time.sleep(config.INTERVAL_API)
+                    # time.sleep(config.INTERVAL_API)
                     if not done_base and order_base and order_id_base and order_id_base >= 0:
                         deal_amount_base = self.get_btb_deal_amount(self.base_pair, order_id_base, order_base, 'ask')
                         diff_amount_base = round(sell_amount_base - deal_amount_base, 4)
@@ -559,7 +559,7 @@ class T_Bithumb(BasicBot):
             self.last_trade = time.time()
 
     def get_btb_deal_amount(self, market, order_id, order, order_type):
-        if order:
+        if order and 'deal_amount' in order:
             return order['deal_amount']
         else:
             # 未完成的订单才能查询到
@@ -582,7 +582,7 @@ class T_Bithumb(BasicBot):
                     if not cancel_res:
                         # 增加一次容错, 如果本次还失败则当作成交处理
                         time.sleep(config.INTERVAL_RETRY)
-                        cancel_res = self.brokers[market].cancel_order(order_id=order_id, order_type=order_type)
+                        cancel_res, error_msg = self.brokers[market].cancel_order(order_id=order_id, order_type=order_type)
 
                 if cancel_res:
                     # 大部分是这种场景, cancel未完成的部分

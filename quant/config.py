@@ -30,7 +30,7 @@ observers = ["Logger"]
 # 重试时间间隔
 INTERVAL_MARKET = 1
 INTERVAL_API = 0.3
-INTERVAL_RETRY = 0.5
+INTERVAL_RETRY = 0.3
 
 # market_expiration_time = 120  # in seconds: 2 minutes
 market_expiration_time = 2  # in seconds: 2 minutes

@@ -65,13 +65,13 @@ class Bithumb(Broker):
 
                 avg_price = float(price_total / r_len)
 
-                order = {
+                order.update({
                     'amount': float(amount),
                     'price': float(price),
                     'deal_amount': deal_amount,
                     'avg_price': avg_price,
                     'status': constant.ORDER_STATE_CLOSED
-                }
+                })
         return order, error_message
 
     def _sell_limit(self, amount, price):
@@ -103,13 +103,13 @@ class Bithumb(Broker):
 
                 avg_price = float(price_total / r_len)
 
-                order = {
+                order.update({
                     'amount': float(amount),
                     'price': float(price),
                     'deal_amount': deal_amount,
                     'avg_price': avg_price,
                     'status': constant.ORDER_STATE_CLOSED
-                }
+                })
         return order, error_message
 
     @classmethod
@@ -171,7 +171,7 @@ class Bithumb(Broker):
 
     def _get_order(self, order_id, order_type=None):
         res = self.client.get_order(currency=self.pair_code, order_id=order_id, order_type=order_type)
-        error_message = ''
+        error_message = None
         if res:
             if 'message' in res:
                 error_message = res['message']
