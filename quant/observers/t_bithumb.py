@@ -46,7 +46,7 @@ class T_Bithumb(BasicBot):
         self.min_trade_amount = kwargs['min_trade_amount']
 
         # 赢利触发点，差价，百分比更靠谱?
-        self.trigger_percent = 1.0
+        self.trigger_percent = 0.7
         self.last_trade = 0
         self.skip = False
 
