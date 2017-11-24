@@ -29,6 +29,74 @@ class Bithumb(Broker):
         self.krw_available = 0.0
         self.krw_balance = 0.0
 
+    @classmethod
+    def _handle_market_place(cls, res, amount):
+        order = {}
+        error_message = ''
+        if res:
+            if 'message' in res:
+                error_message = res['message']
+                return order, error_message
+
+            if 'order_id' not in res:
+                error_message = 'unknown error, order success but not exist order id'
+                return order, error_message
+            order['order_id'] = res['order_id']
+            '''却要确认是否成交'''
+            if 'data' in res and len(res['data']) > 0:
+                deal_amount = 0.0
+                price_total = 0.0
+                r_len = 0
+                for item in res['data']:
+                    deal_amount = float(item['units']) + deal_amount
+                    price_total = float(item['price']) + price_total
+                    r_len += 1
+
+                avg_price = float(price_total / r_len)
+
+                order.update({
+                    'amount': float(amount),
+                    'price': avg_price,
+                    'deal_amount': deal_amount,
+                    'avg_price': avg_price,
+                    'status': constant.ORDER_STATE_CLOSED
+                })
+        return order, error_message
+
+    @classmethod
+    def _handle_limit_place(cls, res, amount, price):
+        order = {}
+        error_message = ''
+        if res:
+            if 'message' in res:
+                error_message = res['message']
+                return order, error_message
+
+            if 'order_id' not in res:
+                error_message = 'unknown error, order success but not exist order id'
+                return order, error_message
+            order['order_id'] = res['order_id']
+            '''却要确认是否成交'''
+            if 'data' in res and len(res['data']) > 0:
+                deal_amount = 0.0
+                price_total = 0.0
+                r_len = 0
+                for item in res['data']:
+                    deal_amount = float(item['units']) + deal_amount
+                    price_total = float(item['price']) + price_total
+                    r_len += 1
+
+                avg_price = float(price_total / r_len)
+
+                order.update({
+                    'amount': float(amount),
+                    'price': float(price),
+                    'deal_amount': deal_amount,
+                    'avg_price': avg_price,
+                    'status': constant.ORDER_STATE_CLOSED
+                })
+        return order, error_message
+
     def _buy_limit(self, amount, price):
         """
         Create a buy limit order, 需要返回的不只是order id, 还要成交的订单信息
@@ -41,76 +109,24 @@ class Bithumb(Broker):
         {"status":"0000","order_id":"1510630163876","data":[{"cont_id":"10725417","units":"0.001","price":"7593000","total":7593,"fee":11}]}
 
         """
-        res = self.client.buy(currency=self.pair_code, price=price, amount=amount)
-        order = {}
-        error_message = ''
-        if res:
-            if 'message' in res:
-                error_message = res['message']
-                return order, error_message
-
-            if 'order_id' not in res:
-                error_message = 'unknown error, order success but not exist order id'
-                return order, error_message
-            order['order_id'] = res['order_id']
-            '''却要确认是否成交'''
-            if 'data' in res and len(res['data']) > 0:
-                deal_amount = 0.0
-                price_total = 0.0
-                r_len = 0
-                for item in res['data']:
-                    deal_amount = float(item['units']) + deal_amount
-                    price_total = float(item['price']) + price_total
-                    r_len += 1
-
-                avg_price = float(price_total / r_len)
-
-                order.update({
-                    'amount': float(amount),
-                    'price': float(price),
-                    'deal_amount': deal_amount,
-                    'avg_price': avg_price,
-                    'status': constant.ORDER_STATE_CLOSED
-                })
-        return order, error_message
+        res = self.client.buy_limit(currency=self.pair_code, price=price, amount=amount)
+        return self._handle_limit_place(res=res, amount=amount, price=price)
 
     def _sell_limit(self, amount, price):
         """
         Create a sell limit order,
         if order and error all is empty, is network failed
         """
-        res = self.client.sell(currency=self.pair_code, price=price, amount=amount)
-        order = {}
-        error_message = ''
-        if res:
-            if 'message' in res:
-                error_message = res['message']
-                return order, error_message
+        res = self.client.sell_limit(currency=self.pair_code, price=price, amount=amount)
+        return self._handle_limit_place(res=res, amount=amount, price=price)
 
-            if 'order_id' not in res:
-                error_message = 'unknown error, order success but not exist order id'
-                return order, error_message
-            order['order_id'] = res['order_id']
-            '''却要确认是否成交'''
-            if 'data' in res and len(res['data']) > 0:
-                deal_amount = 0.0
-                price_total = 0.0
-                r_len = 0
-                for item in res['data']:
-                    deal_amount = float(item['units']) + deal_amount
-                    price_total = float(item['price']) + price_total
-                    r_len += 1
+    def buy_market(self, amount):
+        res = self.client.buy_market(currency=self.pair_code, amount=amount)
+        return self._handle_market_place(res=res, amount=amount)
 
-                avg_price = float(price_total / r_len)
-
-                order.update({
-                    'amount': float(amount),
-                    'price': float(price),
-                    'deal_amount': deal_amount,
-                    'avg_price': avg_price,
-                    'status': constant.ORDER_STATE_CLOSED
-                })
-        return order, error_message
+    def sell_market(self, amount):
+        res = self.client.sell_market(currency=self.pair_code, amount=amount)
+        return self._handle_market_place(res=res, amount=amount)
 
     @classmethod
     def _order_status(cls, res):

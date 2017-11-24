@@ -194,11 +194,27 @@ class PrivateClient(PublicClient):
         }
         return self._api_call(endpoint, params)
 
-    def buy(self, currency, price, amount):
+    def buy_limit(self, currency, price, amount):
         return self.place_order(currency, price, amount, 'bid')
 
-    def sell(self, currency, price, amount):
+    def sell_limit(self, currency, price, amount):
         return self.place_order(currency, price, amount, 'ask')
+
+    def buy_market(self, currency, amount):
+        endpoint = '/trade/market_buy'
+        params = {
+            'currency': currency,
+            'units': float(amount),
+        }
+        return self._api_call(endpoint, params)
+
+    def sell_market(self, currency, amount):
+        endpoint = '/trade/market_sell'
+        params = {
+            'currency': currency,
+            'units': float(amount),
+        }
+        return self._api_call(endpoint, params)
 
     def order_detail(self, currency, order_id, order_type):
         endpoint = '/info/order_detail'
