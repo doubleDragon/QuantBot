@@ -168,16 +168,15 @@ class Bithumb(Broker):
         bithumb success order
         """
         res = self.client.order_detail(self.pair_code, order_id=order_id, order_type=order_type)
-
+        deal_amount = 0.0
         if res:
             if 'message' in res:
-                return None, res['message']
+                return deal_amount, res['message']
             if 'data' not in res:
-                return None, 'unknown error, order_detail success but not exist data'
+                return deal_amount, 'unknown error, order_detail success but not exist data'
             if len(res['data']) <= 0:
-                return None, 'unknown error, order_detail success but data len is 0'
+                return deal_amount, 'unknown error, order_detail success but data len is 0'
 
-            deal_amount = 0.0
             for item in res['data']:
                 deal_amount = deal_amount + float(item['units_traded'])
 

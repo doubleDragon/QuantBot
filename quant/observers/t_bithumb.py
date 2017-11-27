@@ -10,6 +10,8 @@ from quant.brokers import broker_factory
 from .basicbot import BasicBot
 from quant.common import log
 
+MESSAGE_TRY_AGAIN = 'Please try again'
+
 
 class T_Bithumb(BasicBot):
     """
@@ -578,39 +580,54 @@ class T_Bithumb(BasicBot):
             return order['deal_amount']
         else:
             # 未完成的订单才能查询到
-            resp, error_msg = self.brokers[market].get_order(order_id=order_id, order_type=order_type)
-            if error_msg:
-                logging.info("%s get order %s failed: %s" % (market, order_id, error_msg))
-            else:
-                if not resp:
-                    # 增加一次容错，排除网络原因, 本次如果还失败当作已成交处理
+            while True:
+                resp, error_msg = self.brokers[market].get_order(order_id=order_id, order_type=order_type)
+                # 两种情况需要continue
+                # 1,resp 和error_msg都为空表示网络问题无response
+                # 2,error_msg如果是try again, 如果是非try again表示该订单已成交所以查询不到
+
+                # resp 可能为空，因为订单可能成交了,所以会有2个种情况break
+                # 1, resp不为空 error为空，订单未成交且查询成功
+                # 2, resp为空，error不为空且不是Please try again, 则订单已成交
+                if not resp and not error_msg:
                     time.sleep(config.INTERVAL_RETRY)
-                    resp, error_msg = self.brokers[market].get_order(order_id=order_id, order_type=order_type)
-                    if error_msg:
-                        logging.info("%s get order %s failed again: %s" % (market, order_id, error_msg))
-
-            if resp:
-                cancel_res, error_msg = self.brokers[market].cancel_order(order_id=order_id, order_type=order_type)
+                    continue
                 if error_msg:
-                    logging.info("%s cancel %s order %s failed: %s" % (market, order_type, order_id, error_msg))
-                else:
-                    if not cancel_res:
-                        # 增加一次容错, 如果本次还失败则当作成交处理
+                    if self.is_needed_try_again(error_msg):
                         time.sleep(config.INTERVAL_RETRY)
-                        cancel_res, error_msg = self.brokers[market].cancel_order(order_id=order_id, order_type=order_type)
+                        continue
+                    else:
+                        logging.info("%s get order %s failed: %s" % (market, order_id, error_msg))
+                break
+            if resp:
+                while True:
+                    cancel_done, error_cancel = self.brokers[market].cancel_order(order_id=order_id,
+                                                                                  order_type=order_type)
+                    if not cancel_done and not error_cancel:
+                        # network invalid, try again
+                        time.sleep(config.INTERVAL_RETRY)
+                        continue
+                    if error_cancel:
+                        if self.is_needed_try_again(error_cancel):
+                            time.sleep(config.INTERVAL_RETRY)
+                            continue
+                        else:
+                            logging.info("%s cancel %s order %s failed: %s" % (market, order_type, order_id,
+                                                                               error_cancel))
+                    break
 
-                if cancel_res:
+                if cancel_done:
                     # 大部分是这种场景, cancel未完成的部分
                     logging.info("%s cancel %s order %s success" % (market, order_type, order_id))
                     return resp['deal_amount']
                 else:
                     # get_order成功，但是两次cancel失败了，当作已成功处理
-                    time.sleep(config.INTERVAL_RETRY)
+                    # time.sleep(config.INTERVAL_RETRY)
                     logging.info("%s cancel %s order %s failed, maybe has filled" % (market, order_type, order_id))
                     return self.get_filled_deal_amount_c(market, order_id, order_type)
             else:
                 # get_order两次失败，当作已成交处理
-                time.sleep(config.INTERVAL_RETRY)
+                # time.sleep(config.INTERVAL_RETRY)
                 logging.info("%s get %s order %s failed, maybe has filled" % (market, order_type, order_id))
                 return self.get_filled_deal_amount_c(market, order_id, order_type)
 
@@ -621,13 +638,29 @@ class T_Bithumb(BasicBot):
         """
         while True:
             deal_amount, error_msg = self.brokers[market].get_deal_amount(order_id=order_id, order_type=order_type)
-            if not error_msg and not deal_amount:
+            if not error_msg and deal_amount is None:
+                # 这个地方不要用not deal_amount判断，因为要确定是网络原因
+                time.sleep(config.INTERVAL_RETRY)
                 continue
             else:
                 if error_msg:
-                    logging.info("%s get order %s filled deal amount failed: %s" % (market, order_id, error_msg))
+                    if self.is_needed_try_again(error_msg):
+                        # bithumb 提示 Please try again
+                        time.sleep(config.INTERVAL_RETRY)
+                        continue
+                    else:
+                        logging.info("%s get order %s filled deal amount failed: %s" % (market, order_id, error_msg))
                 break
         return deal_amount
+
+    @classmethod
+    def is_needed_try_again(cls, error_msg):
+        if error_msg:
+            res = error_msg.find(MESSAGE_TRY_AGAIN)
+            # -1表示找不到Please try again, 就不用重试接口直接 return false
+            return res != -1
+
+        return False
 
     def update_balance(self):
         if self.monitor_only:
@@ -698,12 +731,13 @@ class T_Bithumb(BasicBot):
         self.risk_protect(current_assets)
 
     def risk_protect(self, current_assets):
-        btc_diff = self.origin_assets['btc_total'] - current_assets['btc_total']
-        bch_diff = self.origin_assets['bch_total'] - current_assets['bch_total']
+        btc_diff = abs(self.origin_assets['btc_total'] - current_assets['btc_total'])
+        bch_diff = abs(self.origin_assets['bch_total'] - current_assets['bch_total'])
         if bch_diff >= self.min_amount_market or btc_diff >= self.min_amount_mid:
             self.risk_count += 1
-            if self.risk_count > 25:
-                logging.error("Stop quant bot, because risk protect")
-                assert False
+            logging.info('risk======>risk_count: %s' % self.risk_count)
+            # if self.risk_count > 25:
+            #     logging.error("Stop quant bot, because risk protect")
+            #     assert False
         else:
             self.risk_count = 0
