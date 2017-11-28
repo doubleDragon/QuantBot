@@ -85,7 +85,7 @@ def create_brokers(exchange_names):
         elif name == 'Gate_BCC_BTC':
             chg = Gate('bcc_btc', config.Gate_API_KEY, config.Gate_SECRET_TOKEN)
         elif name == 'Kkex_BCH_BTC':
-            chg = Kkex('BCCBTC', config.KKEX_API_KEY, config.KKEX_SECRET_TOKEN)
+            chg = Kkex('BCHBTC', config.KKEX_API_KEY, config.KKEX_SECRET_TOKEN)
         elif name == 'Bithumb_BCH_KRW':
             chg = Bithumb('bch', config.Bithumb_API_KEY, config.Bithumb_SECRET_TOKEN)
         elif name == 'Bithumb_BTC_KRW':
