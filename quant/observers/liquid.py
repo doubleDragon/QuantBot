@@ -15,7 +15,7 @@ from .basicbot import BasicBot
 class Liquid(BasicBot):
 
     """
-    python -m quant.cli -mKkex_BCC_BTC,Bitfinex_BCH_BTC -oLiquid -f=liquid -v
+    ./venv/bin/python -m quant.cli -mKkex_BCC_BTC,Bitfinex_BCH_BTC -oLiquid -f=liquid -v
     """
     def __init__(self):
         super(Liquid, self).__init__()
