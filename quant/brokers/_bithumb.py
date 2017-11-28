@@ -32,15 +32,23 @@ class Bithumb(Broker):
     @classmethod
     def _handle_market_place(cls, res, amount):
         order = {}
-        error_message = ''
+        error_obj = {}
         if res:
+            if 'status' not in res:
+                error_obj['code'] = 'unknown'
+                error_obj['message'] = 'status code must exist'
+                return order, error_obj
+
+            error_obj['code'] = res['status']
+
             if 'message' in res:
-                error_message = res['message']
-                return order, error_message
+                error_obj['message'] = res['message']
+                return order, error_obj
 
             if 'order_id' not in res:
-                error_message = 'unknown error, order success but not exist order id'
-                return order, error_message
+                error_obj['message'] = 'order success but not exist order id'
+                return order, error_obj
+
             order['order_id'] = res['order_id']
             '''却要确认是否成交'''
             if 'data' in res and len(res['data']) > 0:
@@ -61,20 +69,27 @@ class Bithumb(Broker):
                     'avg_price': avg_price,
                     'status': constant.ORDER_STATE_CLOSED
                 })
-        return order, error_message
+        return order, error_obj
 
     @classmethod
     def _handle_limit_place(cls, res, amount, price):
         order = {}
-        error_message = ''
+        error_obj = {}
         if res:
+            if 'status' not in res:
+                error_obj['code'] = 'unknown'
+                error_obj['message'] = 'status code must exist'
+                return order, error_obj
+
+            error_obj['code'] = res['status']
             if 'message' in res:
-                error_message = res['message']
-                return order, error_message
+                error_obj['message'] = res['message']
+                return order, error_obj
 
             if 'order_id' not in res:
-                error_message = 'unknown error, order success but not exist order id'
-                return order, error_message
+                error_obj['message'] = 'order success but not exist order id'
+                return order, error_obj
+
             order['order_id'] = res['order_id']
             '''却要确认是否成交'''
             if 'data' in res and len(res['data']) > 0:
@@ -95,7 +110,7 @@ class Bithumb(Broker):
                     'avg_price': avg_price,
                     'status': constant.ORDER_STATE_CLOSED
                 })
-        return order, error_message
+        return order, error_obj
 
     def _buy_limit(self, amount, price):
         """
@@ -169,56 +184,81 @@ class Bithumb(Broker):
         """
         res = self.client.order_detail(self.pair_code, order_id=order_id, order_type=order_type)
         deal_amount = 0.0
+        error_obj = {}
         if res:
+            if 'status' not in res:
+                error_obj['code'] = 'unknown'
+                error_obj['message'] = 'status code must exist'
+                return deal_amount, error_obj
+
+            error_obj['code'] = res['status']
+
             if 'message' in res:
-                return deal_amount, res['message']
+                error_obj['message'] = res['message']
+                return deal_amount, error_obj
             if 'data' not in res:
-                return deal_amount, 'unknown error, order_detail success but not exist data'
+                error_obj['message'] = 'order_detail success but not exist data'
+                return deal_amount, error_obj
             if len(res['data']) <= 0:
-                return deal_amount, 'unknown error, order_detail success but data len is 0'
+                error_obj['message'] = 'order_detail success but data len is 0'
+                return deal_amount, error_obj
 
             for item in res['data']:
                 deal_amount = deal_amount + float(item['units_traded'])
 
-            return deal_amount, None
+            return deal_amount, error_obj
         else:
-            return None, None
+            return None, error_obj
 
     def _get_order(self, order_id, order_type=None):
         res = self.client.get_order(currency=self.pair_code, order_id=order_id, order_type=order_type)
-        error_message = None
+        error_obj = {}
         if res:
+            if 'status' not in res:
+                error_obj['code'] = 'unknown'
+                error_obj['message'] = 'status code must exist'
+                return None, error_obj
+
+            error_obj['code'] = res['status']
+
             if 'message' in res:
-                error_message = res['message']
-                return None, error_message
+                error_obj['message'] = res['message']
+                return None, error_obj
             if 'data' not in res:
-                error_message = 'unknown error, get order success but data is empty'
-                return None, error_message
+                error_obj['message'] = 'get order success but data is empty'
+                return None, error_obj
             res = res['data']
             if len(res) <= 0:
-                error_message = 'unknown error, get order success but data len is 0'
-                return None, error_message
+                error_obj['message'] = 'get order success but data len is 0'
+                return None, error_obj
             res = res[0]
             assert str(res['order_id']) == str(order_id)
 
-            return self._order_status(res), error_message
+            return self._order_status(res), error_obj
         else:
-            return None, error_message
+            return None, error_obj
 
     def _cancel_order(self, order_id, order_type=None):
-        logging.debug("bithumb cancel order : %s that type is %s" % (order_id, order_type))
         res = self.client.cancel_order(order_id, self.pair_code, order_type)
-        error_msg = ''
+        # error_msg = ''
+        error_obj = {}
         if res:
+            if 'status' not in res:
+                error_obj['code'] = 'unknown'
+                error_obj['message'] = 'status code must exist'
+                return False, error_obj
+
+            error_obj['code'] = res['status']
+
             if 'message' in res:
-                error_msg = res['message']
-                return False, error_msg
+                error_obj['message'] = res['message']
+                return False, error_obj
             if res['status'] != '0000':
-                error_msg = 'unknown error, has no message but status code is not 0000'
-                return False, error_msg
-            return True, error_msg
+                error_obj['message'] = 'status code is not 0000'
+                return False, error_obj
+            return True, error_obj
         else:
-            return False, error_msg
+            return False, error_obj
 
     def get_balances(self):
         """Get balance"""

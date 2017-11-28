@@ -297,27 +297,29 @@ class T_Bithumb(BasicBot):
                                      (self.pair_2, sell_price_2, sell_amount_2))
                         order_2, order_2_error = self.brokers[self.pair_2].sell_limit(amount=sell_amount_2,
                                                                                       price=sell_price_2)
-                        if order_2_error:
+                        if self.has_error(order_2, order_2_error):
                             logging.error("forward======>%s place sell order failed: %s" % (self.pair_2, order_2_error))
                         else:
-                            if order_2 and 'order_id' in order_2:
-                                order_id_2 = order_2['order_id']
-                            else:
-                                logging.error("forward======>%s place sell order failed: notwork invalid" % self.pair_2)
+                            order_id_2 = order_2['order_id']
+                            if not order_id_2:
+                                logging.error("forward======>%s order_id_2 is None shouldn't happen" % self.pair_2)
+                                assert False
+
                     if not done_base:
                         logging.info("forward=====>%s place buy order, price=%s, amount=%s" %
                                      (self.base_pair, buy_price_base, buy_amount_base))
                         order_base, order_base_error = self.brokers[self.base_pair].buy_limit(amount=buy_amount_base,
                                                                                               price=buy_price_base)
-                        if order_base_error:
+                        if self.has_error(order_base, order_base_error):
                             logging.error("forward======>%s place buy order failed: %s" % (self.base_pair,
                                                                                            order_base_error))
                         else:
-                            if order_base and 'order_id' in order_base:
-                                order_id_base = order_base['order_id']
-                            else:
-                                logging.error("forward======>%s place buy order failed: notwork invalid" %
+                            order_id_base = order_base['order_id']
+                            if not order_id_base:
+                                logging.error("forward======>%s order_id_base is None shouldn't happen" %
                                               self.base_pair)
+                                assert False
+
                     time.sleep(config.INTERVAL_API)
                     if not done_2 and order_2 and order_id_2 and order_id_2 >= 0:
                         deal_amount_2 = self.get_btb_deal_amount(self.pair_2, order_id_2, order_2, 'ask')
@@ -510,15 +512,15 @@ class T_Bithumb(BasicBot):
                                      (self.base_pair, sell_amount_base, sell_amount_base))
                         order_base, order_base_error = self.brokers[self.base_pair].sell_limit(
                             amount=sell_amount_base, price=sell_price_base)
-                        if order_base_error:
+                        if self.has_error(order_base, order_base_error):
                             logging.error("reverse======>%s place sell order failed: %s" % (self.base_pair,
                                                                                             order_base_error))
                         else:
-                            if order_base and 'order_id' in order_base:
-                                order_id_base = order_base['order_id']
-                            else:
-                                logging.error("reverse======>%s place sell order failed: notwork invalid" %
-                                              self.base_pair)
+                            order_id_base = order_base['order_id']
+                            if not order_id_base:
+                                logging.error("reverse======>%s order_id_base is None shouldn't happen"
+                                              % self.base_pair)
+                                assert False
 
                     if not done_2:
                         logging.info("reverse=====>%s place buy order, price=%s, amount=%s" %
@@ -526,15 +528,16 @@ class T_Bithumb(BasicBot):
                         order_2, order_2_error = self.brokers[self.pair_2].buy_limit(
                             amount=buy_amount_2, price=buy_price_2)
 
-                        if order_2_error:
+                        if self.has_error(order_2, order_2_error):
                             logging.error("reverse======>%s place buy order failed: %s" % (self.pair_2, order_2_error))
                         else:
-                            if order_2 and 'order_id' in order_2:
-                                order_id_2 = order_2['order_id']
-                            else:
-                                logging.error("forward======>%s place buy order failed: notwork invalid" % self.pair_2)
+                            order_id_2 = order_2['order_id']
+                            if not order_id_2:
+                                logging.error("reverse======>%s order_id_2 is None shouldn't happen"
+                                              % self.pair_2)
+                                assert False
 
-                    # time.sleep(config.INTERVAL_API)
+                    time.sleep(config.INTERVAL_API)
                     if not done_base and order_base and order_id_base and order_id_base >= 0:
                         deal_amount_base = self.get_btb_deal_amount(self.base_pair, order_id_base, order_base, 'ask')
                         diff_amount_base = round(sell_amount_base - deal_amount_base, 4)
@@ -581,7 +584,7 @@ class T_Bithumb(BasicBot):
         else:
             # 未完成的订单才能查询到
             while True:
-                resp, error_msg = self.brokers[market].get_order(order_id=order_id, order_type=order_type)
+                resp, resp_error = self.brokers[market].get_order(order_id=order_id, order_type=order_type)
                 # 两种情况需要continue
                 # 1,resp 和error_msg都为空表示网络问题无response
                 # 2,error_msg如果是try again, 如果是非try again表示该订单已成交所以查询不到
@@ -589,15 +592,15 @@ class T_Bithumb(BasicBot):
                 # resp 可能为空，因为订单可能成交了,所以会有2个种情况break
                 # 1, resp不为空 error为空，订单未成交且查询成功
                 # 2, resp为空，error不为空且不是Please try again, 则订单已成交
-                if not resp and not error_msg:
+                if not resp and not resp_error:
                     time.sleep(config.INTERVAL_RETRY)
                     continue
-                if error_msg:
-                    if self.is_needed_try_again(error_msg):
+                if resp_error and 'message' in resp_error:
+                    if self.is_needed_try_again(resp_error['message']):
                         time.sleep(config.INTERVAL_RETRY)
                         continue
                     else:
-                        logging.info("%s get order %s failed: %s" % (market, order_id, error_msg))
+                        logging.info("%s get order %s failed: %s" % (market, order_id, resp_error))
                 break
             if resp:
                 while True:
@@ -607,8 +610,8 @@ class T_Bithumb(BasicBot):
                         # network invalid, try again
                         time.sleep(config.INTERVAL_RETRY)
                         continue
-                    if error_cancel:
-                        if self.is_needed_try_again(error_cancel):
+                    if error_cancel and 'message' in error_cancel:
+                        if self.is_needed_try_again(error_cancel['message']):
                             time.sleep(config.INTERVAL_RETRY)
                             continue
                         else:
@@ -637,19 +640,19 @@ class T_Bithumb(BasicBot):
         这里的逻辑是只有error和order都为None，即网络错误才进行重试
         """
         while True:
-            deal_amount, error_msg = self.brokers[market].get_deal_amount(order_id=order_id, order_type=order_type)
-            if not error_msg and deal_amount is None:
+            deal_amount, error_obj = self.brokers[market].get_deal_amount(order_id=order_id, order_type=order_type)
+            if not error_obj and deal_amount is None:
                 # 这个地方不要用not deal_amount判断，因为要确定是网络原因
                 time.sleep(config.INTERVAL_RETRY)
                 continue
             else:
-                if error_msg:
-                    if self.is_needed_try_again(error_msg):
+                if error_obj and 'message' in error_obj:
+                    if self.is_needed_try_again(error_obj['message']):
                         # bithumb 提示 Please try again
                         time.sleep(config.INTERVAL_RETRY)
                         continue
                     else:
-                        logging.info("%s get order %s filled deal amount failed: %s" % (market, order_id, error_msg))
+                        logging.info("%s get order %s filled deal amount failed: %s" % (market, order_id, error_obj))
                 break
         return deal_amount
 
@@ -661,6 +664,20 @@ class T_Bithumb(BasicBot):
             return res != -1
 
         return False
+
+    @classmethod
+    def has_error(cls, resp, error_obj):
+        # 无错的情况如下:
+        # 1, resp error_obj都不为空
+        # 2, error_obj code为'0000'
+
+        if resp and error_obj:
+            if 'message' in error_obj:
+                return True
+            if 'code' in error_obj:
+                return error_obj['status'] != '0000'
+
+        return True
 
     def update_balance(self):
         if self.monitor_only:
