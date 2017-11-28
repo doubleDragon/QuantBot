@@ -15,11 +15,11 @@ from .basicbot import BasicBot
 class Liquid(BasicBot):
 
     """
-    ./venv/bin/python -m quant.cli -mKkex_BCC_BTC,Bitfinex_BCH_BTC -oLiquid -f=liquid -v
+    ./venv/bin/python -m quant.cli -mKkex_BCH_BTC,Bitfinex_BCH_BTC -oLiquid -f=liquid -v
     """
     def __init__(self):
         super(Liquid, self).__init__()
-        self.mm_market = 'Kkex_BCC_BTC'
+        self.mm_market = 'Kkex_BCH_BTC'
         self.refer_markets = ['Bitfinex_BCH_BTC']
         self.hedge_market = 'Bitfinex_BCH_BTC'
 

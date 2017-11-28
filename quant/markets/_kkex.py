@@ -14,9 +14,9 @@ class Kkex(Market):
 
     @classmethod
     def get_available_pairs(cls, pair_code):
-        if pair_code == 'BCCBTC':
+        if pair_code == 'BCHBTC':
             base_currency = 'BTC'
-            market_currency = 'BCC'
+            market_currency = 'BCH'
         else:
             assert False
         return base_currency, market_currency
