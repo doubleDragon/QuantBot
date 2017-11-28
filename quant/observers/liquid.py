@@ -28,10 +28,9 @@ class Liquid(BasicBot):
 
         self.slappage = 0.005
 
-        self.brokers = broker_factory.create_brokers([self.mm_market])
-        self.hedge_broker = broker_factory.create_bfx_sub_broker(self.hedge_market)
-        self.brokers[self.hedge_market] = self.hedge_broker
+        self.brokers = broker_factory.create_brokers([self.mm_market, self.hedge_market])
         self.mm_broker = self.brokers[self.mm_market]
+        self.hedge_broker = self.brokers[self.hedge_market]
 
         self.hedge_bid_price = 0.0
         self.hedge_ask_price = 0.0
