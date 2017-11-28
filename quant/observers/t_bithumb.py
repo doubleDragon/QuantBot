@@ -675,7 +675,7 @@ class T_Bithumb(BasicBot):
             if 'message' in error_obj:
                 return True
             if 'code' in error_obj:
-                return error_obj['status'] != '0000'
+                return error_obj['code'] != '0000'
 
         return True
 
