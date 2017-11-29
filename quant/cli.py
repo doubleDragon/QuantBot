@@ -155,7 +155,7 @@ class CLI(object):
                 print(market)
                 total_btc += market.btc_balance
                 total_bch += market.bch_balance
-                snapshot.snapshot_balance(market.name[7:], market.btc_balance, market.bch_balance)
+                snapshot.snapshot_balance(market.name, market.btc_balance, market.bch_balance)
 
             snapshot.snapshot_balance('ALL', total_btc, total_bch)
 

@@ -30,11 +30,11 @@ class Snapshot(object):
 
         localtime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         timestamp = time.time()
-        body = ("%s") % localtime + ',' + ("%d") % timestamp + ',' + ("%.4f") % total_btc + ',' + (
-                                                                                                  "%.2f") % total_bch + '\n'
+
+        body = "%s, %s, %.4f, %.2f\n" % (localtime, timestamp, total_btc, total_bch)
 
         self._snapshot(filename, header, body)
 
-        if market == "ALL":
-            body = ("localtime=%s, total_btc=%0.4f, total_bch=%0.4f") % (localtime, total_btc, total_bch)
-            # send_email('xrypto balance snapshot', body)
+        # if market == "ALL":
+        #     body = ("localtime=%s, total_btc=%0.4f, total_bch=%0.4f") % (localtime, total_btc, total_bch)
+        #     send_email('xrypto balance snapshot', body)
