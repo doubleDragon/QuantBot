@@ -37,8 +37,8 @@ class Liquid(BasicBot):
 
         self.LIQUID_MIN_DIFF = 0.01
         self.LIQUID_MAX_DIFF = 0.05
-        # bfx bch min trade amount = 0.04
-        self.LIQUID_HEDGE_MIN_AMOUNT = 0.04
+        # bfx bch min trade amount = 0.02
+        self.LIQUID_HEDGE_MIN_AMOUNT = 0.02
         self.LIQUID_MAX_BCH_AMOUNT = 1
         self.LIQUID_MIN_BCH_AMOUNT = 0.1
         self.LIQUID_BUY_ORDER_PAIRS = 5
@@ -207,7 +207,7 @@ class Liquid(BasicBot):
         while True:
             # sell_limit_c confirm sell_limit success, order_id must exist
             order_id = self.brokers[self.hedge_market].buy_limit_c(amount=buy_amount, price=buy_price)
-            deal_amount = self.get_deal_amount(self.hedge_market, order_id)
+            deal_amount, avg_price = self.get_deal_amount(self.hedge_market, order_id)
             diff_amount = round(buy_amount - deal_amount, 8)
             if diff_amount < self.LIQUID_HEDGE_MIN_AMOUNT:
                 break
