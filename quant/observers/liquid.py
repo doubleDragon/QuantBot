@@ -192,7 +192,7 @@ class Liquid(BasicBot):
         while True:
             # sell_limit_c confirm sell_limit success, order_id must exist
             order_id = self.brokers[self.hedge_market].sell_limit_c(amount=sell_amount, price=sell_price)
-            deal_amount = self.get_deal_amount(self.hedge_market, order_id)
+            deal_amount, avg_price = self.get_deal_amount(self.hedge_market, order_id)
             diff_amount = round(sell_amount - deal_amount, 8)
             if diff_amount < self.LIQUID_HEDGE_MIN_AMOUNT:
                 break
