@@ -95,7 +95,7 @@ class Bitfinex(Broker):
     def _cancel_all(self):
         return self.client.cancel_all_orders()
 
-    def get_balances(self):
+    def _get_balances(self):
         """Get balance"""
         res = self.client.balances()
 

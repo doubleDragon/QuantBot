@@ -58,6 +58,9 @@ class BasicBot(Observer):
 
         return None
 
+    def clear_orders(self):
+        self.orders = []
+
     def remove_order(self, order_id):
         self.orders = [x for x in self.orders if not x['order_id'] == order_id]
 

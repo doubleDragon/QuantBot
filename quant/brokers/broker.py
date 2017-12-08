@@ -64,7 +64,7 @@ class Broker(object):
     def buy_limit(self, amount, price, client_id=None):
         if amount > config.RISK_PROTECT_MAX_VOLUMN:
             logging.error('risk alert: amount %s > risk amount:%s' % (amount, config.RISK_PROTECT_MAX_VOLUMN))
-            raise
+            raise Exception
 
         logging.debug("BUY LIMIT %f %s at %f %s @%s" % (amount, self.market_currency,
                                                         price, self.base_currency, self.brief_name))
@@ -89,7 +89,7 @@ class Broker(object):
     def sell_limit(self, amount, price, client_id=None):
         if amount > config.RISK_PROTECT_MAX_VOLUMN:
             logging.error('risk alert: amount %s > risk amount:%s' % (amount, config.RISK_PROTECT_MAX_VOLUMN))
-            raise
+            raise Exception
 
         logging.debug("SELL LIMIT %f %s at %f %s @%s" % (amount, self.market_currency,
                                                          price, self.base_currency, self.brief_name))
@@ -106,7 +106,7 @@ class Broker(object):
     def buy_maker(self, amount, price):
         if amount > config.RISK_PROTECT_MAX_VOLUMN:
             logging.error('risk alert: amount %s > risk amount:%s' % (amount, config.RISK_PROTECT_MAX_VOLUMN))
-            raise
+            raise Exception
 
         logging.info("BUY MAKER %f %s at %f %s @%s" % (amount, self.market_currency,
                                                        price, self.base_currency, self.brief_name))
@@ -120,7 +120,7 @@ class Broker(object):
     def sell_maker(self, amount, price):
         if amount > config.RISK_PROTECT_MAX_VOLUMN:
             logging.error('risk alert: amount %s > risk amount:%s' % (amount, config.RISK_PROTECT_MAX_VOLUMN))
-            raise
+            raise Exception
 
         logging.info("SELL MAKER %f %s at %f %s @%s" % (amount, self.market_currency,
                                                         price, self.base_currency, self.brief_name))
@@ -248,4 +248,4 @@ class Broker(object):
         raise NotImplementedError("%s.ticker(self)" % self.name)
 
     def test(self):
-        raise
+        raise Exception
