@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: UTF-8 -*-
+
 from .market import Market
 from quant.api.bitfinex import PublicClient as Client
 import market_util
@@ -10,10 +13,14 @@ class Bitfinex(Market):
         self.client = Client()
 
     def update_depth(self):
-        depth_raw = self.client.depth(self.pair_code)
-
-        if depth_raw:
-            self.depth = self.format_depth(depth_raw)
+        try:
+            depth_raw = self.client.depth(self.pair_code)
+            if depth_raw:
+                self.depth = self.format_depth(depth_raw)
+            else:
+                raise ValueError('response is None')
+        except Exception as e:
+            raise e
 
     @classmethod
     def format_depth(cls, depth):

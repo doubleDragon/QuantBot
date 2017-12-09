@@ -149,10 +149,9 @@ class PublicClient(object):
         try:
             resp = requests.get(url, timeout=TIMEOUT)
         except requests.exceptions.RequestException as e:
-            print("bitfinex get %s failed: " % url + str(e))
+            raise e
         else:
-            if resp.status_code == requests.codes.ok:
-                return resp.json()
+            return resp.json()
 
     @classmethod
     def _build_parameters(cls, parameters):
@@ -200,10 +199,12 @@ class PrivateClient(PublicClient):
         try:
             resp = requests.post(url, headers=headers, verify=True)
         except requests.exceptions.RequestException as e:
-            print('Bitfinex post' + url + ' failed: ' + str(e))
+            raise e
         else:
-            if resp.status_code == requests.codes.ok:
-                return resp.json()
+            # if resp.status_code == requests.codes.ok:
+            #     return resp.json()
+            # 如果判断status_code就拿不到错误信息, 直接return
+            return resp.json()
 
     def place_order(self, amount, price, side, ord_type, symbol='btcusd', exchange='bitfinex'):
         """
@@ -221,8 +222,8 @@ class PrivateClient(PublicClient):
             "request": "/v1/order/new",
             "nonce": self._nonce,
             "symbol": symbol,
-            "amount": amount,
-            "price": price,
+            "amount": str(amount),
+            "price": str(price),
             "exchange": exchange,
             "side": side,
             "type": ord_type
@@ -261,7 +262,7 @@ class PrivateClient(PublicClient):
         payload = {
             "request": "/v1/order/cancel",
             "nonce": self._nonce,
-            "order_id": order_id
+            "order_id": int(order_id)
         }
 
         signed_payload = self._sign_payload(payload)
@@ -289,7 +290,7 @@ class PrivateClient(PublicClient):
         payload = {
             "request": "/v1/order/status",
             "nonce": self._nonce,
-            "order_id": order_id
+            "order_id": int(order_id)
         }
 
         signed_payload = self._sign_payload(payload)

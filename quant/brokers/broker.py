@@ -54,10 +54,14 @@ class Broker(object):
                                                  }))
 
     def buy_limit_c(self, amount, price, client_id=None):
+        error_count = 0
         while True:
             order_id = self.buy_limit(amount, price, client_id)
             if order_id:
                 break
+            error_count += 1
+            if error_count >= 10:
+                raise Exception('sell_limit_c risk protect, failed rather than 10 time')
             time.sleep(config.INTERVAL_RETRY)
         return order_id
 
@@ -79,10 +83,14 @@ class Broker(object):
             return None
 
     def sell_limit_c(self, amount, price, client_id=None):
+        error_count = 0
         while True:
             order_id = self.sell_limit(amount, price, client_id)
             if order_id:
                 break
+            error_count += 1
+            if error_count >= 10:
+                raise Exception('sell_limit_c risk protect, failed rather than 10 time')
             time.sleep(config.INTERVAL_RETRY)
         return order_id
 

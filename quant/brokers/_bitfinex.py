@@ -37,7 +37,16 @@ class Bitfinex(Broker):
             'buy',
             'exchange limit',
             symbol=self.pair_code)
-        return res['order_id']
+        if res:
+            if 'order_id' in res:
+                return res['order_id']
+            else:
+                error_msg = 'unknown error, order_id not exists'
+                if 'message' in res:
+                    error_msg = res['message']
+                raise ValueError(error_msg)
+        else:
+            raise ValueError('response is None')
 
     def _sell_limit(self, amount, price):
         """Create a sell limit order"""
@@ -47,7 +56,16 @@ class Bitfinex(Broker):
             'sell',
             'exchange limit',
             symbol=self.pair_code)
-        return res['order_id']
+        if res:
+            if 'order_id' in res:
+                return res['order_id']
+            else:
+                error_msg = 'unknown error, order_id not exists'
+                if 'message' in res:
+                    error_msg = res['message']
+                raise ValueError(error_msg)
+        else:
+            raise ValueError('response is None')
 
     @classmethod
     def _order_status(cls, res):
@@ -74,7 +92,9 @@ class Bitfinex(Broker):
     def _get_order(self, order_id, order_type=None):
         res = self.client.get_order(int(order_id))
         if not res:
-            return None
+            raise ValueError('response is None')
+        if 'message' in res:
+            raise ValueError(res['message'])
         logging.debug('get_order id: %s, res: %s' % (order_id, res))
 
         assert str(res['id']) == str(order_id)
@@ -83,7 +103,10 @@ class Bitfinex(Broker):
     def _cancel_order(self, order_id, order_type=None):
         res = self.client.cancel_order(int(order_id))
         if not res:
-            return False
+            raise ValueError('response is None')
+        if 'message' in res:
+            raise ValueError(res['message'])
+
         assert str(res['id']) == str(order_id)
 
         resp = self._order_status(res)
@@ -101,7 +124,7 @@ class Bitfinex(Broker):
 
         logging.debug("bitfinex get_balances response: %s" % res)
         if not res:
-            return
+            raise ValueError('response is None')
 
         for entry in res:
             if entry['type'] != 'exchange':
