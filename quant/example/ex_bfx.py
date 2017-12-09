@@ -17,11 +17,11 @@ client = PrivateClient(key=config.Bitfinex_API_KEY, secret=config.Bitfinex_SECRE
 # print(client.balances())
 
 '''test buy'''
-symbol = 'bchbtc'
-amount = '0.5'
-price = '0.092'
-resp = client.buy(symbol=symbol, amount=amount, price=price)
-print(resp)
+# symbol = 'bchbtc'
+# amount = '0.5'
+# price = '0.092'
+# resp = client.buy(symbol=symbol, amount=amount, price=price)
+# print(resp)
 
 '''test sell'''
 # symbol = 'datbtc'
