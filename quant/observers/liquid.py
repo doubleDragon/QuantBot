@@ -198,7 +198,16 @@ class Liquid(BasicBot):
 
     def hedge_order_sell(self, amount, price):
         """confirm hedge order all executed"""
-        sell_amount = amount
+        can_sell_max = self.hedge_broker.bch_available
+        if can_sell_max < amount:
+            # post email
+            if can_sell_max < self.LIQUID_HEDGE_MIN_AMOUNT:
+                logging.error('liquid======>hedge sell order failed, because can_sell_max: %s < %s' %
+                              (can_sell_max, self.LIQUID_HEDGE_MIN_AMOUNT))
+                assert False
+            sell_amount = can_sell_max
+        else:
+            sell_amount = amount
         sell_price = price
         while True:
             # sell_limit_c confirm sell_limit success, order_id must exist
@@ -213,9 +222,19 @@ class Liquid(BasicBot):
 
     def hedge_order_buy(self, amount, price):
         """confirm hedge order all executed"""
-        buy_amount = amount
         buy_price = price
+        buy_amount_target = amount
         while True:
+            can_buy_max = self.hedge_broker.btc_available / buy_price
+            if can_buy_max < buy_amount_target:
+                if can_buy_max < self.LIQUID_HEDGE_MIN_AMOUNT:
+                    logging.error('liquid======>hedge buy order failed, because can_buy_max: %s < %s' %
+                                  (can_buy_max, self.LIQUID_HEDGE_MIN_AMOUNT))
+                    assert False
+                buy_amount = can_buy_max
+            else:
+                buy_amount = buy_amount_target
+
             # sell_limit_c confirm sell_limit success, order_id must exist
             order_id = self.brokers[self.hedge_market].buy_limit_c(amount=buy_amount, price=buy_price)
             deal_amount, avg_price = self.get_deal_amount(self.hedge_market, order_id)
@@ -223,7 +242,7 @@ class Liquid(BasicBot):
             if diff_amount < self.LIQUID_HEDGE_MIN_AMOUNT:
                 break
             ticker = self.get_latest_ticker(self.hedge_market)
-            buy_amount = diff_amount
+            buy_amount_target = diff_amount
             buy_price = ticker['ask']
 
     def place_orders(self, refer_bid_price, refer_ask_price, mm_bid_price, mm_ask_price):

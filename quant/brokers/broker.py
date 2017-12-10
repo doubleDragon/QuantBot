@@ -61,7 +61,7 @@ class Broker(object):
                 break
             error_count += 1
             if error_count >= 10:
-                raise Exception('sell_limit_c risk protect, failed rather than 10 time')
+                raise Exception('buy_limit_c risk protect, failed rather than 10 time')
             time.sleep(config.INTERVAL_RETRY)
         return order_id
 
