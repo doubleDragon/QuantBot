@@ -46,7 +46,7 @@ class Liquid(BasicBot):
         self.LIQUID_BUY_ORDER_PAIRS = 5
         self.LIQUID_SELL_ORDER_PAIRS = 5
         # self.LIQUID_INIT_DIFF = 0.015  # 1%
-        self.LIQUID_INIT_DIFF = 0.01  # 1%
+        self.LIQUID_INIT_DIFF = 0.015  # 1%
 
         self.cancel_all_orders(self.mm_market)
         self.cancel_all_orders(self.hedge_market)
@@ -225,7 +225,7 @@ class Liquid(BasicBot):
             deal_amount, avg_price = self.get_deal_amount(self.hedge_market, order_id)
             hedge_total_amount += deal_amount
             logging.info("liquid======>hedge sell %s, order_id=%s, amount=%s, price=%s, deal_amount=%s" %
-                         (hedge_index, order_id, sell_amount, sell_price, deal_amount))
+                         (hedge_index, order_id, sell_amount, avg_price, deal_amount))
 
             diff_amount = round(sell_amount - deal_amount, 8)
             if diff_amount < self.LIQUID_HEDGE_MIN_AMOUNT:
@@ -259,7 +259,7 @@ class Liquid(BasicBot):
             deal_amount, avg_price = self.get_deal_amount(self.hedge_market, order_id)
             hedge_total_amount += deal_amount
             logging.info("liquid======>hedge buy %s, order_id=%s, amount=%s, price=%s, deal_amount=%s" %
-                         (hedge_index, order_id, buy_amount, buy_price, deal_amount))
+                         (hedge_index, order_id, buy_amount, avg_price, deal_amount))
 
             diff_amount = round(buy_amount - deal_amount, 8)
             if diff_amount < self.LIQUID_HEDGE_MIN_AMOUNT:
