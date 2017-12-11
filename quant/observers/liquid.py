@@ -183,13 +183,18 @@ class Liquid(BasicBot):
 
         logging.info("liquid======>local order #%s new deal: %s", order_id, remote_order)
         hedge_side = 'sell' if order['type'] == 'buy' else 'buy'
-        logging.info('liquid======>hedge [%s] to %s: %s %s %s', client_id, self.hedge_market, hedge_side, amount, price)
 
         if hedge_side == 'sell':
+            hedge_price = self.hedge_bid_price * (1 - self.slappage)
+            logging.info('liquid======>hedge [%s] to %s: %s %s %s', client_id, self.hedge_market, hedge_side, amount,
+                         hedge_price)
             self.hedge_order_sell(amount=amount, price=self.hedge_bid_price * (1 - self.slappage))
         else:
+            hedge_price = self.hedge_ask_price * (1 + self.slappage)
+            logging.info('liquid======>hedge [%s] to %s: %s %s %s', client_id, self.hedge_market, hedge_side, amount,
+                         hedge_price)
             self.hedge_order_buy(amount=amount * (1 + self.fee_hedge_market),
-                                 price=self.hedge_ask_price * (1 + self.slappage))
+                                 price=hedge_price)
         # update the deal_amount of local order
         self.remove_order(order_id)
         order['deal_amount'] = deal_amount
@@ -198,6 +203,9 @@ class Liquid(BasicBot):
 
     def hedge_order_sell(self, amount, price):
         """confirm hedge order all executed"""
+        hedge_index = 0
+        hedge_total_amount = 0
+
         can_sell_max = self.hedge_broker.bch_available
         if can_sell_max < amount:
             # post email
@@ -213,17 +221,26 @@ class Liquid(BasicBot):
             # sell_limit_c confirm sell_limit success, order_id must exist
             order_id = self.brokers[self.hedge_market].sell_limit_c(amount=sell_amount, price=sell_price)
             deal_amount, avg_price = self.get_deal_amount(self.hedge_market, order_id)
+            hedge_total_amount += deal_amount
+            logging.info("liquid======>hedge sell %s, order_id=%s, amount=%s, price=%s, deal_amount=%s" %
+                         (hedge_index, order_id, sell_amount, sell_price, deal_amount))
+
             diff_amount = round(sell_amount - deal_amount, 8)
             if diff_amount < self.LIQUID_HEDGE_MIN_AMOUNT:
+                logging.error('liquid======>hedge sell order success, total=%s, left=%s' %
+                              (hedge_total_amount, diff_amount))
                 break
             ticker = self.get_latest_ticker(self.hedge_market)
             sell_amount = diff_amount
             sell_price = ticker['bid']
+            hedge_index += 1
 
     def hedge_order_buy(self, amount, price):
         """confirm hedge order all executed"""
         buy_price = price
         buy_amount_target = amount
+        hedge_index = 0
+        hedge_total_amount = 0
         while True:
             can_buy_max = self.hedge_broker.btc_available / buy_price
             if can_buy_max < buy_amount_target:
@@ -238,12 +255,19 @@ class Liquid(BasicBot):
             # sell_limit_c confirm sell_limit success, order_id must exist
             order_id = self.brokers[self.hedge_market].buy_limit_c(amount=buy_amount, price=buy_price)
             deal_amount, avg_price = self.get_deal_amount(self.hedge_market, order_id)
+            hedge_total_amount += deal_amount
+            logging.info("liquid======>hedge buy %s, order_id=%s, amount=%s, price=%s, deal_amount=%s" %
+                         (hedge_index, order_id, buy_amount, buy_price, deal_amount))
+
             diff_amount = round(buy_amount - deal_amount, 8)
             if diff_amount < self.LIQUID_HEDGE_MIN_AMOUNT:
+                logging.error('liquid======>hedge buy order success, total=%s, left=%s' %
+                              (hedge_total_amount, diff_amount))
                 break
             ticker = self.get_latest_ticker(self.hedge_market)
             buy_amount_target = diff_amount
             buy_price = ticker['ask']
+            hedge_index += 1
 
     def place_orders(self, refer_bid_price, refer_ask_price, mm_bid_price, mm_ask_price):
         max_bch_trade_amount = self.LIQUID_MAX_BCH_AMOUNT
