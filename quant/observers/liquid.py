@@ -56,6 +56,8 @@ class Liquid(BasicBot):
 
         self.tick_count = 0
 
+        self.cancel_all_orders(self.mm_market)
+
         logging.info('Liquid Setup complete')
 
     def terminate(self):
