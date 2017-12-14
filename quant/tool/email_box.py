@@ -14,21 +14,22 @@ mail_subject = 'logging'
 
 
 def send_mail(content):
-    me = "QuantBot" + "<" + mail_user + ">"
-    msg = MIMEText(_text=content, _subtype='plain', _charset='utf-8')
-    msg['Subject'] = mail_subject
-    msg['From'] = me
-    msg['To'] = ";".join(mail_to)
-    try:
-        server = smtplib.SMTP()
-        server.connect(mail_host)
-        server.login(mail_user, mail_pass)
-        server.sendmail(me, mail_to, msg.as_string())
-        server.close()
-        return True
-    except Exception as e:
-        print (e)
-        return False
+    pass
+    # me = "QuantBot" + "<" + mail_user + ">"
+    # msg = MIMEText(_text=content, _subtype='plain', _charset='utf-8')
+    # msg['Subject'] = mail_subject
+    # msg['From'] = me
+    # msg['To'] = ";".join(mail_to)
+    # try:
+    #     server = smtplib.SMTP()
+    #     server.connect(mail_host)
+    #     server.login(mail_user, mail_pass)
+    #     server.sendmail(me, mail_to, msg.as_string())
+    #     server.close()
+    #     return True
+    # except Exception as e:
+    #     print (e)
+    #     return False
 
 
 if __name__ == '__main__':
