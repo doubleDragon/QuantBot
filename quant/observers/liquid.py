@@ -191,7 +191,7 @@ class Liquid(BasicBot):
             hedge_price = self.hedge_bid_price * (1 - self.slappage)
             logging.info('liquid======>hedge [%s] to %s: %s %s %s', client_id, self.hedge_market, hedge_side, amount,
                          hedge_price)
-            self.hedge_order_sell(amount=amount, price=self.hedge_bid_price * (1 - self.slappage))
+            self.hedge_order_sell(amount=amount, price=hedge_price)
         else:
             hedge_price = self.hedge_ask_price * (1 + self.slappage)
             logging.info('liquid======>hedge [%s] to %s: %s %s %s', client_id, self.hedge_market, hedge_side, amount,

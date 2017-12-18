@@ -151,6 +151,7 @@ class DataFeed(object):
             except Exception as ex:
                 logging.warn("exception depths:%s" % ex)
                 traceback.print_exc()
+                self.terminate()
                 return
 
             if is_sigint_up:
