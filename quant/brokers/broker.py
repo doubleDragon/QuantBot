@@ -184,7 +184,8 @@ class Broker(object):
                 break
             error_count += 1
             if error_count >= 10:
-                raise Exception('get_balances_c risk protect, failed rather than 10 time')
+                # raise Exception('get_balances_c risk protect, failed rather than 10 time')
+                logging.info('%s %s fail more than 10 time' % (self.name, get_current_function_name()))
             time.sleep(config.INTERVAL_RETRY)
         return res
 
