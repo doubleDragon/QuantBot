@@ -129,6 +129,9 @@ class Bitfinex(Broker):
         if 'message' in res:
             raise ValueError(res['message'])
 
+        if 'error' in res:
+            raise ValueError(res['error'])
+
         for entry in res:
             if entry['type'] != 'exchange':
                 continue

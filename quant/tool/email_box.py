@@ -14,7 +14,6 @@ mail_subject = 'logging'
 
 
 def send_mail(content):
-    # pass
     me = "QuantBot" + "<" + mail_user + ">"
     msg = MIMEText(_text=content, _subtype='plain', _charset='utf-8')
     msg['Subject'] = mail_subject

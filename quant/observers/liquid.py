@@ -215,9 +215,8 @@ class Liquid(BasicBot):
             if can_sell_max < self.LIQUID_HEDGE_MIN_AMOUNT:
                 logging.error('liquid======>hedge sell order failed, because can_sell_max: %s < %s' %
                               (can_sell_max, self.LIQUID_HEDGE_MIN_AMOUNT))
-                email_box.send_mail('hedge sell order failed, because can_sell_max: %s < %s' %
-                                    (can_sell_max, self.LIQUID_HEDGE_MIN_AMOUNT))
-                assert False
+                raise Exception('hedge sell order failed, because can_sell_max: %s < %s' %
+                                (can_sell_max, self.LIQUID_HEDGE_MIN_AMOUNT))
             sell_amount = can_sell_max
         else:
             sell_amount = amount
@@ -228,8 +227,8 @@ class Liquid(BasicBot):
                 order_id = self.brokers[self.hedge_market].sell_limit_c(amount=sell_amount, price=sell_price)
             except Exception as e:
                 logging.error('liquid======>hedge sell order failed when sell_limit_c, error=%s' % e)
-                email_box.send_mail('hedge sell order failed when sell_limit_c, error=%s' % e)
-                assert False
+                raise Exception('hedge sell order failed when sell_limit_c, error=%s' % e)
+
             deal_amount, avg_price = self.get_deal_amount(self.hedge_market, order_id)
             hedge_total_amount += deal_amount
             logging.info("liquid======>hedge sell %s, order_id=%s, amount=%s, price=%s, deal_amount=%s" %
@@ -237,8 +236,8 @@ class Liquid(BasicBot):
 
             diff_amount = round(sell_amount - deal_amount, 8)
             if diff_amount < self.LIQUID_HEDGE_MIN_AMOUNT:
-                logging.error('liquid======>hedge sell order success, target=%s, total=%s, left=%s' %
-                              (amount, hedge_total_amount, diff_amount))
+                logging.info('liquid======>hedge sell order success, target=%s, total=%s, left=%s' %
+                             (amount, hedge_total_amount, diff_amount))
                 email_box.send_mail('hedge sell order success, target=%s, total=%s, left=%s' %
                                     (amount, hedge_total_amount, diff_amount))
                 break
@@ -259,9 +258,8 @@ class Liquid(BasicBot):
                 if can_buy_max < self.LIQUID_HEDGE_MIN_AMOUNT:
                     logging.error('liquid======>hedge buy order failed, because can_buy_max: %s < %s' %
                                   (can_buy_max, self.LIQUID_HEDGE_MIN_AMOUNT))
-                    email_box.send_mail('hedge buy order failed, because can_buy_max: %s < %s' %
-                                        (can_buy_max, self.LIQUID_HEDGE_MIN_AMOUNT))
-                    assert False
+                    raise Exception('hedge buy order failed, because can_buy_max: %s < %s' %
+                                    (can_buy_max, self.LIQUID_HEDGE_MIN_AMOUNT))
                 buy_amount = can_buy_max
             else:
                 buy_amount = buy_amount_target
@@ -271,8 +269,8 @@ class Liquid(BasicBot):
                 order_id = self.brokers[self.hedge_market].buy_limit_c(amount=buy_amount, price=buy_price)
             except Exception as e:
                 logging.error('liquid======>hedge buy order failed when buy_limit_c, error=%s' % e)
-                email_box.send_mail('hedge buy order failed when buy_limit_c, error=%s' % e)
-                assert False
+                raise Exception('hedge buy order failed when buy_limit_c, error=%s' % e)
+
             deal_amount, avg_price = self.get_deal_amount(self.hedge_market, order_id)
             hedge_total_amount += deal_amount
             logging.info("liquid======>hedge buy %s, order_id=%s, amount=%s, price=%s, deal_amount=%s" %
@@ -280,8 +278,8 @@ class Liquid(BasicBot):
 
             diff_amount = round(buy_amount - deal_amount, 8)
             if diff_amount < self.LIQUID_HEDGE_MIN_AMOUNT:
-                logging.error('liquid======>hedge buy order success, target=%s, total=%s, left=%s' %
-                              (amount, hedge_total_amount, diff_amount))
+                logging.info('liquid======>hedge buy order success, target=%s, total=%s, left=%s' %
+                             (amount, hedge_total_amount, diff_amount))
                 email_box.send_mail('hedge buy order success, target=%s, total=%s, left=%s' %
                                     (amount, hedge_total_amount, diff_amount))
                 break

@@ -177,10 +177,14 @@ class Broker(object):
             return None
 
     def get_balances_c(self):
+        error_count = 0
         while True:
             res = self.get_balances()
             if res:
                 break
+            error_count += 1
+            if error_count >= 10:
+                raise Exception('get_balances_c risk protect, failed rather than 10 time')
             time.sleep(config.INTERVAL_RETRY)
         return res
 

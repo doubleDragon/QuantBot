@@ -10,6 +10,8 @@ import traceback
 import sys
 import signal
 
+from quant.tool import email_box
+
 from markets.market_factory import create_markets
 
 is_sigint_up = False
@@ -149,8 +151,9 @@ class DataFeed(object):
 
                 self.tick()
             except Exception as ex:
-                logging.warn("exception depths:%s" % ex)
+                logging.warn("datafeed exception:%s" % ex)
                 traceback.print_exc()
+                email_box.send_mail("datafeed exception:%s" % ex)
                 self.terminate()
                 return
 
