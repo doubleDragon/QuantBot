@@ -3,5 +3,5 @@
 
 from .email_box import send_mail
 
-send_mail('test content')
+send_mail('test content ssl success')
 

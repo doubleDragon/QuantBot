@@ -11,6 +11,7 @@ mail_user = "aiai373824745_wy@163.com"
 '''163邮箱smtp生成的密码'''
 mail_pass = config.EMAIL_PASSWORD_163
 mail_subject = 'logging'
+mail_port = 465
 
 
 def send_mail(content):
@@ -20,8 +21,9 @@ def send_mail(content):
     msg['From'] = me
     msg['To'] = ";".join(mail_to)
     try:
-        server = smtplib.SMTP()
-        server.connect(mail_host)
+        server = smtplib.SMTP_SSL(mail_host, 465)
+        # server.starttls()
+        # server.connect(mail_host, mail_port)
         server.login(mail_user, mail_pass)
         server.sendmail(me, mail_to, msg.as_string())
         server.close()
