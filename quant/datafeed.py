@@ -153,8 +153,8 @@ class DataFeed(object):
             except Exception as ex:
                 logging.warn("datafeed exception:%s" % ex)
                 traceback.print_exc()
-                email_box.send_mail("datafeed exception:%s" % ex)
                 self.terminate()
+                email_box.send_mail("datafeed exception:%s" % ex)
                 return
 
             if is_sigint_up:
