@@ -142,12 +142,11 @@ class DataFeed(object):
         signal.signal(signal.SIGTERM, sigint_handler)
 
         while True:
-            self.update_balance()
-
-            self.update_other()
-            self.depths = self.update_depths()
-
             try:
+                self.update_balance()
+                time.sleep(1)
+                self.update_other()
+                self.depths = self.update_depths()
 
                 self.tick()
             except Exception as ex:
