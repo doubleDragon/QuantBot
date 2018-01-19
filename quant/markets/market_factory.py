@@ -109,6 +109,10 @@ def create_markets(exchange_names):
             ex = Binance('IOTAETH')
         elif name == "%s_IOTA_BTC" % constant.EX_BINANCE:
             ex = Binance('IOTABTC')
+        elif name == "%s_ZRX_BTC" % constant.EX_BINANCE:
+            ex = Binance('ZRXBTC')
+        elif name == "%s_ZRX_ETH" % constant.EX_BINANCE:
+            ex = Binance('ZRXETH')
         elif name == "%s_ETH_BTC" % constant.EX_GATE:
             ex = Gate('eth_btc')
         elif name == "%s_BCC_BTC" % constant.EX_GATE:

@@ -82,6 +82,10 @@ def create_brokers(exchange_names):
             chg = Binance('IOTAETH', config.Binance_API_KEY, config.Binance_SECRET_TOKEN)
         elif name == 'Binance_IOTA_BTC':
             chg = Binance('IOTABTC', config.Binance_API_KEY, config.Binance_SECRET_TOKEN)
+        elif name == 'Binance_ZRX_ETH':
+            chg = Binance('ZRXETH', config.Binance_API_KEY, config.Binance_SECRET_TOKEN)
+        elif name == 'Binance_ZRX_BTC':
+            chg = Binance('ZRXBTC', config.Binance_API_KEY, config.Binance_SECRET_TOKEN)
         elif name == 'Gate_BCC_BTC':
             chg = Gate('bcc_btc', config.Gate_API_KEY, config.Gate_SECRET_TOKEN)
         elif name == 'Kkex_BCH_BTC':

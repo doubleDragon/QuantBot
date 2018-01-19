@@ -61,6 +61,12 @@ class Binance(Market):
         elif pair_code == 'IOTABTC':
             base_currency = 'BTC'
             market_currency = 'IOTA'
+        elif pair_code == 'ZRXBTC':
+            base_currency = 'BTC'
+            market_currency = 'ZRX'
+        elif pair_code == 'ZRXETH':
+            base_currency = 'ETH'
+            market_currency = 'ZRX'
         else:
             assert False
         return base_currency, market_currency

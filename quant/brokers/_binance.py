@@ -92,7 +92,7 @@ class Binance(Broker):
         return res
 
     def _ticker(self):
-        pass
+        return self.client.get_ticker(symbol=self.pair_code)
 
     @classmethod
     def get_available_pairs(cls, pair_code):
@@ -139,6 +139,12 @@ class Binance(Broker):
         elif pair_code == 'IOTABTC':
             base_currency = 'BTC'
             market_currency = 'IOTA'
+        elif pair_code == 'ZRXBTC':
+            base_currency = 'BTC'
+            market_currency = 'ZRX'
+        elif pair_code == 'ZRXETH':
+            base_currency = 'ETH'
+            market_currency = 'ZRX'
         else:
             assert False
         return base_currency, market_currency
