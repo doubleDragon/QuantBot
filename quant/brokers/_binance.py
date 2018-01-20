@@ -2,6 +2,7 @@
 # Copyright (C) 2017, Philsong <songbohr@gmail.com>
 import logging
 from quant import config
+from quant.common import constant
 from .broker import Broker
 from quant.api.binance import Client
 from quant.api.binance_enums import *
@@ -47,9 +48,11 @@ class Binance(Broker):
         }
 
         if res['status'] == ORDER_STATUS_NEW or res['status'] == ORDER_STATUS_PARTIALLY_FILLED:
-            resp['status'] = 'OPEN'
+            resp['status'] = constant.ORDER_STATE_PENDING
+        elif res['status'] == ORDER_STATUS_CANCELED:
+            resp['status'] = constant.ORDER_STATE_CANCELED
         else:
-            resp['status'] = 'CLOSE'
+            resp['status'] = constant.ORDER_STATE_CLOSED
 
         return resp
 
@@ -59,10 +62,11 @@ class Binance(Broker):
 
         assert str(res['symbol']) == str(self.pair_code)
         assert str(res['orderId']) == str(order_id)
-        return self._order_status(res['data'])
+        return self._order_status(res)
 
     def _cancel_order(self, order_id, order_type=None):
         res = self.client.cancel_order(orderId=int(order_id), symbol=self.pair_code)
+        print('binance cancel order res: %s' % res)
         logging.info('cancel_order: %s' % res)
 
         assert str(res['orderId']) == str(order_id)

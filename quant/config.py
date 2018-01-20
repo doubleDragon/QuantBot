@@ -169,8 +169,8 @@ Liqui_SECRET_TOKEN = config('LIQUI_API_SECRET')
 Gate_API_KEY = config('GATE_API_KEY')
 Gate_SECRET_TOKEN = config('GATE_API_SECRET')
 
-Binance_API_KEY = ''
-Binance_SECRET_TOKEN = ''
+Binance_API_KEY = config('BINANCE_API_KEY')
+Binance_SECRET_TOKEN = config('BINANCE_API_SECRET')
 
 Bithumb_API_KEY = config('BITHUMB_API_KEY')
 Bithumb_SECRET_TOKEN = config('BITHUMB_API_SECRET')
