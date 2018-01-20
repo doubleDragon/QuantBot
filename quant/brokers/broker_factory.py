@@ -48,6 +48,10 @@ def create_brokers(exchange_names):
             chg = Bitfinex('iotbtc', config.Bitfinex_API_KEY, config.Bitfinex_SECRET_TOKEN)
         elif name == 'Bitfinex_IOT_USD':
             chg = Bitfinex('iotusd', config.Bitfinex_API_KEY, config.Bitfinex_SECRET_TOKEN)
+        elif name == 'Bitfinex_ZRX_ETH':
+            chg = Bitfinex('zrxeth', config.Bitfinex_API_KEY, config.Bitfinex_SECRET_TOKEN)
+        elif name == 'Bitfinex_ZRX_BTC':
+            chg = Bitfinex('zrxbtc', config.Bitfinex_API_KEY, config.Bitfinex_SECRET_TOKEN)
         elif name == 'Liqui_BCC_BTC':
             chg = Liqui('bcc_btc', config.Liqui_API_KEY, config.Liqui_SECRET_TOKEN)
         elif name == 'Liqui_BCC_ETH':

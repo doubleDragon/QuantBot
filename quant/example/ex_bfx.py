@@ -4,10 +4,11 @@ import time
 
 from quant import config
 from quant.api.bitfinex import PrivateClient
+from quant.brokers.broker_factory import create_brokers
 
 '''test client'''
 # client = PrivateClient(key=config.Bitfinex_SUB_API_KEY, secret=config.Bitfinex_SUB_SECRET_TOKEN)
-client = PrivateClient(key=config.Bitfinex_API_KEY, secret=config.Bitfinex_SECRET_TOKEN)
+# client = PrivateClient(key=config.Bitfinex_API_KEY, secret=config.Bitfinex_SECRET_TOKEN)
 
 '''test ticker'''
 # print(client.ticker('eosbtc'))
@@ -52,3 +53,35 @@ client = PrivateClient(key=config.Bitfinex_API_KEY, secret=config.Bitfinex_SECRE
 #     print('orders history : ' + str(resp))
 # else:
 #     print('orders history failed')
+
+
+'''test broker'''
+pair_code = 'Bitfinex_ZRX_ETH'
+brokers = create_brokers([pair_code])
+broker = brokers[pair_code]
+
+'''test sell order'''
+# price = 0.0019
+# amount = 6
+# order = broker.sell_limit(price=price, amount=amount)
+# if order:
+#     print('sell order: %s' % str(order))
+# else:
+#     print('sell order failed')
+
+
+'''test get order 7361152886'''
+order_id = 7361152886
+order = broker.get_order(order_id=order_id)
+if order:
+    print('get order: %s' % str(order))
+else:
+    print('get order failed')
+
+'''test cancel order 7361152886'''
+# order_id = 7361152886
+# res = broker.cancel_order(order_id=order_id)
+# if res:
+#     print('cancel order: %s' % res)
+# else:
+#     print('cancel order failed')

@@ -87,6 +87,12 @@ class Bitfinex(Market):
         elif pair_code == 'iotbtc':
             base_currency = 'BTC'
             market_currency = 'IOT'
+        elif pair_code == 'zrxeth':
+            base_currency = 'ETH'
+            market_currency = 'ZRX'
+        elif pair_code == 'zrxbtc':
+            base_currency = 'BTC'
+            market_currency = 'ZRX'
         else:
             assert False
         return base_currency, market_currency
