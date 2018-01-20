@@ -100,6 +100,26 @@ class Bitfinex(Broker):
         assert str(res['id']) == str(order_id)
         return self._order_status(res)
 
+    def _get_active_orders(self):
+        res = self.client.active_orders()
+        # if not res:
+        #     raise ValueError('response is None')
+        # empty is normal condition
+        if res is None:
+            raise ValueError('response is None')
+
+        # if len(res) == 0:
+        #     raise ValueError('response is empty')
+
+        if 'message' in res:
+            raise ValueError(res['message'])
+        logging.debug('_get_active_orders res: %s' % res)
+
+        orders = []
+        for item in res:
+            orders.append(self._order_status(item))
+        return orders
+
     def _cancel_order(self, order_id, order_type=None):
         res = self.client.cancel_order(int(order_id))
         if not res:

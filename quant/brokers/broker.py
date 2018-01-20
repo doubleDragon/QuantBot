@@ -169,6 +169,13 @@ class Broker(object):
             logging.error('%s %s except: %s' % (self.name, get_current_function_name(), e))
             return None
 
+    def get_active_orders(self):
+        try:
+            return self._get_active_orders()
+        except Exception as e:
+            logging.error('%s %s except: %s' % (self.name, get_current_function_name(), e))
+            return None
+
     def get_orders_history(self):
         try:
             return self._get_orders_history()
@@ -241,6 +248,9 @@ class Broker(object):
 
     def _get_orders(self, order_ids):
         raise NotImplementedError("%s.get_orders(self, order_ids)" % self.name)
+
+    def _get_active_orders(self):
+        raise NotImplementedError("%s._get_active_orders(self)" % self.name)
 
     def _get_orders_history(self):
         raise NotImplementedError("%s._get_orders_history(self)" % self.name)

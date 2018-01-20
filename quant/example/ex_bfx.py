@@ -71,12 +71,12 @@ broker = brokers[pair_code]
 
 
 '''test get order 7361152886'''
-order_id = 7361152886
-order = broker.get_order(order_id=order_id)
-if order:
-    print('get order: %s' % str(order))
-else:
-    print('get order failed')
+# order_id = 7361152886
+# order = broker.get_order(order_id=order_id)
+# if order:
+#     print('get order: %s' % str(order))
+# else:
+#     print('get order failed')
 
 '''test cancel order 7361152886'''
 # order_id = 7361152886
@@ -85,3 +85,11 @@ else:
 #     print('cancel order: %s' % res)
 # else:
 #     print('cancel order failed')
+
+
+'''test active orders'''
+# orders = broker.get_active_orders()
+# if orders is not None:
+#     print('get active order: %s' % orders)
+# else:
+#     print('get active order failed')
