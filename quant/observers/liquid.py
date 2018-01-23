@@ -50,7 +50,7 @@ class Liquid(BasicBot):
         self.LIQUID_INIT_DIFF = 0.015  # 1%
 
         self.cancel_all_orders(self.mm_market)
-        self.cancel_all_orders(self.hedge_market)
+        self.cancel_orders(self.hedge_market)
 
         self.fee_hedge_market = 0.002
         self.fee_mm_market = 0.002
@@ -64,7 +64,7 @@ class Liquid(BasicBot):
     def terminate(self):
         super(Liquid, self).terminate()
         self.cancel_all_orders(self.mm_market)
-        self.cancel_all_orders(self.hedge_market)
+        self.cancel_orders(self.hedge_market)
 
         logging.info('Liquid terminate complete')
 
@@ -351,6 +351,10 @@ class Liquid(BasicBot):
     def update_balance(self):
         self.mm_broker.get_balances_c()
         self.hedge_broker.get_balances_c()
+
+    def cancel_orders(self, market):
+        # just for bfx
+        self.brokers[market].cancel_orders()
 
     def cancel_all_orders(self, market):
         self.brokers[market].cancel_all()

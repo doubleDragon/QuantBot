@@ -74,7 +74,8 @@ class Bitfinex(Broker):
             'amount': float(res['original_amount']),
             'price': float(res['price']),
             'deal_amount': float(res['executed_amount']),
-            'avg_price': float(res['avg_execution_price'])
+            'avg_price': float(res['avg_execution_price']),
+            'symbol': res['symbol']
         }
 
         is_cancelled = res['is_cancelled']
@@ -138,6 +139,24 @@ class Bitfinex(Broker):
     def _cancel_all(self):
         return self.client.cancel_all_orders()
 
+    def _cancel_orders(self):
+        try:
+            orders = self._get_active_orders()
+            if len(orders) == 0:
+                print('_cancel_orders no active orders')
+                return
+            for order in orders:
+                if order['symbol'] != self.pair_code:
+                    continue
+                try:
+                    self._cancel_order(order_id=order['order_id'])
+                    print('_cancel_orders cancel %s success' % order['order_id'])
+                    logging.info('_cancel_orders cancel %s success' % order['order_id'])
+                except Exception as e:
+                    raise Exception('_cancel_orders %s failed : %s' % (order['order_id'], e))
+        except Exception as e:
+            raise Exception('_cancel_orders failed when get active orders, error: %s' % e)
+
     def _get_balances(self):
         """Get balance"""
         res = self.client.balances()
@@ -184,6 +203,14 @@ class Bitfinex(Broker):
             elif currency == 'bt2':
                 self.bt2_available = float(entry['available'])
                 self.bt2_balance = float(entry['amount'])
+
+            elif currency == 'eth':
+                self.eth_available = float(entry['available'])
+                self.eth_balance = float(entry['amount'])
+
+            elif currency == 'zrx':
+                self.zrx_available = float(entry['available'])
+                self.zrx_balance = float(entry['amount'])
         return res
 
     def _ticker(self):

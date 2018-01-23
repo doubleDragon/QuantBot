@@ -144,8 +144,9 @@ class DataFeed(object):
         while True:
             try:
                 self.update_balance()
-                time.sleep(1)
                 self.update_other()
+                time.sleep(config.INTERVAL_API)
+
                 self.depths = self.update_depths()
 
                 self.tick()

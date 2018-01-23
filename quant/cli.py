@@ -22,6 +22,7 @@ from quant.observers.t_bfx_btc import Arbitrage as ArbitrageBfxBtc
 from quant.brokers import broker_factory
 from quant.snapshot import Snapshot
 
+
 class CLI(object):
     def __init__(self):
         super(CLI, self).__init__()
@@ -150,14 +151,19 @@ class CLI(object):
         while True:
             total_btc = 0.
             total_bch = 0.
+            total_eth = 0.
+            total_zrx = 0.
             for market in brokers.values():
                 market.get_balances()
                 print(market)
                 total_btc += market.btc_balance
                 total_bch += market.bch_balance
-                snapshot.snapshot_balance(market.name, market.btc_balance, market.bch_balance)
+                total_eth += market.eth_balance
+                total_zrx += market.zrx_balance
+                snapshot.snapshot_balance(market.name, market.btc_balance, market.bch_balance, market.eth_balance,
+                                          market.zrx_balance)
 
-            snapshot.snapshot_balance('ALL', total_btc, total_bch)
+            snapshot.snapshot_balance('ALL', total_btc, total_bch, total_eth, total_zrx)
 
             time.sleep(60 * 10)
 

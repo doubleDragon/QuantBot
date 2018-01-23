@@ -40,6 +40,12 @@ class Broker(object):
         self.usd_balance = 0.
         self.usd_available = 0.
 
+        self.eth_balance = 0.
+        self.eth_available = 0.
+
+        self.zrx_balance = 0.
+        self.zrx_available = 0.
+
     def __str__(self):
         return "%s: %s" % (self.brief_name, str({"cny_balance": self.cny_balance,
                                                  "cny_available": self.cny_available,
@@ -204,6 +210,15 @@ class Broker(object):
             return None
         return res
 
+    # cancel orders by symbol
+    def cancel_orders(self):
+        try:
+            res = self._cancel_orders()
+        except Exception as e:
+            logging.error('%s %s except: %s' % (self.name, get_current_function_name(), e))
+            return None
+        return res
+
     def cancel_all(self):
         try:
             res = self._cancel_all()
@@ -254,6 +269,10 @@ class Broker(object):
 
     def _get_orders_history(self):
         raise NotImplementedError("%s._get_orders_history(self)" % self.name)
+
+    def _cancel_orders(self):
+        # cancel orders base on symbol
+        raise NotImplementedError("%s._cancel_orders(self)" % self.name)
 
     def _cancel_all(self):
         raise NotImplementedError("%s.cancel_all(self)" % self.name)

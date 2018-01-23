@@ -93,3 +93,6 @@ broker = brokers[pair_code]
 #     print('get active order: %s' % orders)
 # else:
 #     print('get active order failed')
+
+'''test cancel orders base on symbol  7463958203'''
+res = broker.cancel_orders()

@@ -82,16 +82,21 @@ class Binance(Broker):
         for entry in balances:
             currency = entry['asset'].upper()
             if currency not in (
-                    'BTC', 'BCH', 'USD'):
+                    'BTC', 'BCH', 'USD', 'ETH', 'ZRX'):
                 continue
 
             if currency == 'BCH':
                 self.bch_available = float(entry['free'])
-                self.bch_balance = float(entry['amount']) + float(entry['locked'])
-
+                self.bch_balance = float(entry['free']) + float(entry['locked'])
             elif currency == 'BTC':
                 self.btc_available = float(entry['free'])
-                self.btc_balance = float(entry['amount']) + float(entry['locked'])
+                self.btc_balance = float(entry['free']) + float(entry['locked'])
+            elif currency == 'ETH':
+                self.eth_available = float(entry['free'])
+                self.eth_balance = float(entry['free']) + float(entry['locked'])
+            elif currency == 'ZRX':
+                self.zrx_available = float(entry['free'])
+                self.zrx_balance = float(entry['free']) + float(entry['locked'])
 
         return res
 

@@ -24,14 +24,14 @@ class Snapshot(object):
         fp.write(body)
         fp.close()
 
-    def snapshot_balance(self, market, total_btc, total_bch):
+    def snapshot_balance(self, market, total_btc, total_bch, total_eth, total_zrx):
         filename = 'snapshot_%s_balance.csv' % market
-        header = "localtime, timestamp, total_btc, total_bch\n"
+        header = "localtime, timestamp, total_btc, total_bch, total_eth, total_zrx\n"
 
         localtime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         timestamp = time.time()
 
-        body = "%s, %s, %.4f, %.2f\n" % (localtime, timestamp, total_btc, total_bch)
+        body = "%s, %s, %.4f, %.2f, %.2f, %.2f\n" % (localtime, timestamp, total_btc, total_bch, total_eth, total_zrx)
 
         self._snapshot(filename, header, body)
 
