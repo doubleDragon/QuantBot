@@ -164,4 +164,4 @@ class DataFeed(object):
                 break
             sys.stdout.write(".\n\n")
             sys.stdout.flush()
-            time.sleep(config.refresh_rate)
+            time.sleep(config.INTERVAL_MARKET)

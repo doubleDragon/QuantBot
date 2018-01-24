@@ -143,14 +143,12 @@ class Bitfinex(Broker):
         try:
             orders = self._get_active_orders()
             if len(orders) == 0:
-                print('_cancel_orders no active orders')
                 return
             for order in orders:
                 if order['symbol'] != self.pair_code:
                     continue
                 try:
                     self._cancel_order(order_id=order['order_id'])
-                    print('_cancel_orders cancel %s success' % order['order_id'])
                     logging.info('_cancel_orders cancel %s success' % order['order_id'])
                 except Exception as e:
                     raise Exception('_cancel_orders %s failed : %s' % (order['order_id'], e))
@@ -177,7 +175,7 @@ class Bitfinex(Broker):
 
             currency = entry['currency']
             if currency not in (
-                    'btc', 'bch', 'usd', 'bt1', 'bt2', 'zec'):
+                    'btc', 'bch', 'eth', 'zrx', 'usd', 'bt1', 'bt2', 'zec'):
                 continue
 
             if currency == 'bch':

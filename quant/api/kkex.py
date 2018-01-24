@@ -138,7 +138,7 @@ class PrivateClient(PublicClient):
         }
         return self._post('/api/v1/orders_info', params)
 
-    def get_orders_history(self, symbol, status=0, page=1, pagesize=10):
+    def _get_orders_history(self, symbol, status=0, page=1, pagesize=10):
         params = {
             'symbol': symbol,
             'status': status,

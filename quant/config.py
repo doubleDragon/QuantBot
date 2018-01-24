@@ -28,14 +28,12 @@ markets = [
 observers = ["Logger"]
 
 # 重试时间间隔
-INTERVAL_MARKET = 1
-INTERVAL_API = 0.5
-INTERVAL_RETRY = 0.5
+INTERVAL_MARKET = 2.5
+INTERVAL_API = 1
+INTERVAL_RETRY = 1
 
 # market_expiration_time = 120  # in seconds: 2 minutes
 market_expiration_time = 2  # in seconds: 2 minutes
-
-refresh_rate = 1
 
 trade_wait = 10
 
