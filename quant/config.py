@@ -27,10 +27,10 @@ markets = [
 # ["Logger", "TraderBot", "TraderBotSim", "HistoryDumper", "Emailer", "SpecializedTraderBot"]
 observers = ["Logger"]
 
-# 重试时间间隔
-INTERVAL_MARKET = 2.5
-INTERVAL_API = 1
-INTERVAL_RETRY = 1
+# 重试时间间隔, bfx调优为3秒(主要是balance接口会超频)
+INTERVAL_MARKET = 3.5
+INTERVAL_API = 0.8
+INTERVAL_RETRY = 0.8
 
 # market_expiration_time = 120  # in seconds: 2 minutes
 market_expiration_time = 2  # in seconds: 2 minutes

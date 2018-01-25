@@ -260,7 +260,7 @@ class Bithumb(Broker):
         else:
             return False, error_obj
 
-    def get_balances(self):
+    def _get_balances(self):
         """Get balance"""
         res = self.client.balances(self.pair_code)
 
