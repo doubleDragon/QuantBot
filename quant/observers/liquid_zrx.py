@@ -43,6 +43,7 @@ class Liquid_ZRX(BasicBot):
 
         self.LIQUID_HEDGE_MIN_AMOUNT = 6
         self.LIQUID_MAX_ZRX_AMOUNT = 600
+        self.LIQUID_MIN_ZRX_AMOUNT = 100
         self.LIQUID_BUY_ORDER_PAIRS = 5
         self.LIQUID_SELL_ORDER_PAIRS = 5
         self.LIQUID_INIT_DIFF = 0.015  # 1%
@@ -310,6 +311,7 @@ class Liquid_ZRX(BasicBot):
 
     def place_orders(self, refer_bid_price, refer_ask_price, mm_bid_price, mm_ask_price):
         max_trade_amount = self.LIQUID_MAX_ZRX_AMOUNT
+        min_trade_amount = self.LIQUID_MIN_ZRX_AMOUNT
 
         liquid_max_diff = self.LIQUID_MAX_DIFF
 
@@ -323,7 +325,7 @@ class Liquid_ZRX(BasicBot):
 
             min_amount_balance = round(min(self.mm_broker.eth_available / price, self.hedge_broker.zrx_available), 8)
 
-            min_trade_amount = self.cal_min_amount_trade_bn(mm_bid_price)
+            # min_trade_amount = self.cal_min_amount_trade_bn(mm_bid_price)
             if min_amount_balance < amount or amount < min_trade_amount:
                 logging.info("Liquid_ZRX======>\
                     BUY amount (%s) not IN (%s, %s)" % (amount, min_trade_amount, min_amount_balance))
@@ -345,7 +347,7 @@ class Liquid_ZRX(BasicBot):
             price = round(sell_price * (1 + liquid_max_diff * random.random()), 5)
 
             min_amount_balance = round(min(self.mm_broker.zrx_available, self.hedge_broker.eth_available / price), 8)
-            min_trade_amount = self.cal_min_amount_trade_bn(mm_ask_price)
+            # min_trade_amount = self.cal_min_amount_trade_bn(mm_ask_price)
             if min_amount_balance < amount or amount < min_trade_amount:
                 logging.info("Liquid_ZRX======>\
                     SELL amount (%s) not IN (%s, %s)" % (amount, min_trade_amount, min_amount_balance))
