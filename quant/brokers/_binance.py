@@ -21,6 +21,24 @@ class Binance(Broker):
             api_key if api_key else config.Binance_API_KEY,
             api_secret if api_secret else config.Binance_SECRET_TOKEN)
 
+    def buy_limit(self, amount, price, client_id=None):
+        protected_amount = 600
+        if amount > protected_amount:
+            logging.error('risk alert: amount %s > risk amount:%s' % (amount, protected_amount))
+            raise Exception
+
+        logging.debug("BUY LIMIT %f %s at %f %s @%s" % (amount, self.market_currency,
+                                                        price, self.base_currency, self.brief_name))
+
+        try:
+            if client_id:
+                return self._buy_limit(amount, price, client_id)
+            else:
+                return self._buy_limit(amount, price)
+        except Exception as e:
+            logging.error('%s %s except: %s' % (self.name, 'buy_limit', e))
+            return None
+
     def sell_limit(self, amount, price, client_id=None):
         protected_amount = 600
         if amount > protected_amount:
