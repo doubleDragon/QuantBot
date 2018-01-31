@@ -22,7 +22,7 @@ class Binance(Broker):
             api_secret if api_secret else config.Binance_SECRET_TOKEN)
 
     def buy_limit(self, amount, price, client_id=None):
-        protected_amount = 600
+        protected_amount = 1000
         if amount > protected_amount:
             logging.error('risk alert: amount %s > risk amount:%s' % (amount, protected_amount))
             raise Exception
@@ -40,7 +40,7 @@ class Binance(Broker):
             return None
 
     def sell_limit(self, amount, price, client_id=None):
-        protected_amount = 600
+        protected_amount = 1000
         if amount > protected_amount:
             logging.error('risk alert: amount %s > risk amount:%s' % (amount, protected_amount))
             raise Exception

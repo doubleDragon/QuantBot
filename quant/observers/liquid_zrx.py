@@ -42,7 +42,7 @@ class Liquid_ZRX(BasicBot):
         self.LIQUID_MAX_DIFF = 0.03
 
         self.LIQUID_HEDGE_MIN_AMOUNT = 6
-        self.LIQUID_MAX_ZRX_AMOUNT = 600
+        self.LIQUID_MAX_ZRX_AMOUNT = 1000
         self.LIQUID_MIN_ZRX_AMOUNT = 100
         self.LIQUID_BUY_ORDER_PAIRS = 5
         self.LIQUID_SELL_ORDER_PAIRS = 5
