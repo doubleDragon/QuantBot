@@ -79,7 +79,7 @@ broker = brokers[pair_code]
 #     print('get order failed')
 
 '''test cancel order 7361152886'''
-# order_id = 7361152886
+# order_id = 7775588107
 # res = broker.cancel_order(order_id=order_id)
 # if res:
 #     print('cancel order: %s' % res)
@@ -95,4 +95,4 @@ broker = brokers[pair_code]
 #     print('get active order failed')
 
 '''test cancel orders base on symbol  7463958203'''
-res = broker.cancel_orders()
+# res = broker.cancel_orders()

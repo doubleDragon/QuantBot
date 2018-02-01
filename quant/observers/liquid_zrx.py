@@ -32,7 +32,9 @@ class Liquid_ZRX(BasicBot):
 
         self.brokers = broker_factory.create_brokers([self.mm_market, self.hedge_market])
         self.mm_broker = self.brokers[self.mm_market]
+        self.mm_broker.set_max_volume_risk_protect(1000)
         self.hedge_broker = self.brokers[self.hedge_market]
+        self.hedge_broker.set_max_volume_risk_protect(1000)
 
         self.hedge_bid_price = 0.0
         self.hedge_ask_price = 0.0

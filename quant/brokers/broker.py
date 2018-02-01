@@ -46,6 +46,8 @@ class Broker(object):
         self.zrx_balance = 0.
         self.zrx_available = 0.
 
+        self.max_volume_risk_protect = config.RISK_PROTECT_MAX_VOLUMN
+
     def __str__(self):
         return "%s: %s" % (self.brief_name, str({"cny_balance": self.cny_balance,
                                                  "cny_available": self.cny_available,
@@ -58,6 +60,9 @@ class Broker(object):
                                                  "usd_balance": self.usd_balance,
                                                  "usd_available": self.usd_available
                                                  }))
+
+    def set_max_volume_risk_protect(self, count):
+        self.max_volume_risk_protect = count
 
     def buy_limit_c(self, amount, price, client_id=None):
         error_count = 0
@@ -72,9 +77,10 @@ class Broker(object):
         return order_id
 
     def buy_limit(self, amount, price, client_id=None):
-        if amount > config.RISK_PROTECT_MAX_VOLUMN:
-            logging.error('risk alert: amount %s > risk amount:%s' % (amount, config.RISK_PROTECT_MAX_VOLUMN))
-            raise Exception
+        if amount > self.max_volume_risk_protect:
+            error_msg = 'risk alert:buy_limit amount %s > risk amount:%s' % (amount, self.max_volume_risk_protect)
+            logging.error(error_msg)
+            raise Exception(error_msg)
 
         logging.debug("BUY LIMIT %f %s at %f %s @%s" % (amount, self.market_currency,
                                                         price, self.base_currency, self.brief_name))
@@ -101,9 +107,10 @@ class Broker(object):
         return order_id
 
     def sell_limit(self, amount, price, client_id=None):
-        if amount > config.RISK_PROTECT_MAX_VOLUMN:
-            logging.error('risk alert: amount %s > risk amount:%s' % (amount, config.RISK_PROTECT_MAX_VOLUMN))
-            raise Exception
+        if amount > self.max_volume_risk_protect:
+            error_msg = 'risk alert:sell_limit amount %s > risk amount:%s' % (amount, self.max_volume_risk_protect)
+            logging.error(error_msg)
+            raise Exception(error_msg)
 
         logging.debug("SELL LIMIT %f %s at %f %s @%s" % (amount, self.market_currency,
                                                          price, self.base_currency, self.brief_name))
@@ -118,8 +125,8 @@ class Broker(object):
             return None
 
     def buy_maker(self, amount, price):
-        if amount > config.RISK_PROTECT_MAX_VOLUMN:
-            logging.error('risk alert: amount %s > risk amount:%s' % (amount, config.RISK_PROTECT_MAX_VOLUMN))
+        if amount > self.max_volume_risk_protect:
+            logging.error('risk alert: amount %s > risk amount:%s' % (amount, self.max_volume_risk_protect))
             raise Exception
 
         logging.info("BUY MAKER %f %s at %f %s @%s" % (amount, self.market_currency,
@@ -132,8 +139,8 @@ class Broker(object):
             return None
 
     def sell_maker(self, amount, price):
-        if amount > config.RISK_PROTECT_MAX_VOLUMN:
-            logging.error('risk alert: amount %s > risk amount:%s' % (amount, config.RISK_PROTECT_MAX_VOLUMN))
+        if amount > self.max_volume_risk_protect:
+            logging.error('risk alert: amount %s > risk amount:%s' % (amount, self.max_volume_risk_protect))
             raise Exception
 
         logging.info("SELL MAKER %f %s at %f %s @%s" % (amount, self.market_currency,
