@@ -1,14 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
-
-"""
-./venv/bin/python -m quant.cli -mBitfinex_ETH_BTC,Binance_ETH_BTC,Bittrex_ETH_BTC,Gate_ETH_BTC -oC_Diff_ETH -f=mc_diff_eth -v
-./venv/bin/python -m quant.cli -mBitfinex_ETH_BTC,Binance_ETH_BTC -oC_Diff_ETH -f=c_diff_eth -v
-"""
 import logging
 
 from quant.observers.basicbot import BasicBot
+
+"""
+./venv/bin/python -m quant.cli -mBitfinex_ETH_BTC,Binance_ETH_BTC -oC_Diff_ETH -f=c_diff_eth -v
+"""
 
 
 class C_Diff_ETH(BasicBot):
