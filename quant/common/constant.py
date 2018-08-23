@@ -34,6 +34,7 @@ EX_BITFLYER = 'Bitflyer'
 EX_KRAKEN = 'Kraken'
 EX_COINEGG = 'Coinegg'
 EX_BITHUMB = 'Bithumb'
+EX_HUOBI = 'Huobi'
 
 
 EX_SET = (

@@ -6,37 +6,40 @@ import logging
 from quant.observers.basicbot import BasicBot
 
 """
-./venv/bin/python -m quant.cli -mBitfinex_ETH_BTC,Binance_ETH_BTC -oC_Diff_ETH -f=c_diff_eth -v
+./venv/bin/python -m quant.cli -mBinance_ETH_USDT,Huobi_ETH_USDT -oC_ETH_USDT -f=c_eth_usdt -v
 """
 
 
-class C_Diff_ETH(BasicBot):
+class C_ETH_USDT(BasicBot):
 
     def __init__(self):
-        super(C_Diff_ETH, self).__init__()
-        self.market_bfx = "Bitfinex_ETH_BTC"
-        self.market_bn = "Binance_ETH_BTC"
+        super(C_ETH_USDT, self).__init__()
+        self.market_bn = "Binance_ETH_USDT"
+        self.market_hb = "Huobi_ETH_USDT"
         self.profit_count = 0
         self.profit_total = 0
         self.percent_total = 0
+
+        self.fee_hb = 0.002
+        self.fee_bn = 0.001
 
         logging.info('C_Diff_ETH Setup complete')
 
     def is_depths_available(self, depths):
         if not depths:
             return False
-        res = self.market_bfx in depths and self.market_bn in depths
+        res = self.market_hb in depths and self.market_bn in depths
         if not res:
             return False
 
-        if not depths[self.market_bfx]['bids'] or not depths[self.market_bfx]['asks']:
+        if not depths[self.market_hb]['bids'] or not depths[self.market_hb]['asks']:
             return False
 
         if not depths[self.market_bn]['bids'] or not depths[self.market_bn]['asks']:
             return False
 
-        bfx_bid_price = depths[self.market_bfx]['bids'][0]['price']
-        bfx_ask_price = depths[self.market_bfx]['asks'][0]['price']
+        bfx_bid_price = depths[self.market_hb]['bids'][0]['price']
+        bfx_ask_price = depths[self.market_hb]['asks'][0]['price']
         if bfx_bid_price <= 0 or bfx_ask_price <= 0:
             return False
 
@@ -49,14 +52,19 @@ class C_Diff_ETH(BasicBot):
     def tick(self, depths):
         if not self.is_depths_available(depths):
             return
-        bfx_bid_price, bfx_ask_price = self.get_ticker(depths, self.market_bfx)
-        bfx_bid_amount, bfx_ask_amount = self.get_amount(depths, self.market_bfx)
+        hb_bid_price, hb_ask_price = self.get_ticker(depths, self.market_hb)
+        hb_bid_price = round(hb_bid_price * (1 - self.fee_hb), 2)
+        hb_ask_price = round(hb_ask_price * (1 + self.fee_hb), 2)
+        hb_bid_amount, hb_ask_amount = self.get_amount(depths, self.market_hb)
+
         bn_bid_price, bn_ask_price = self.get_ticker(depths, self.market_bn)
+        bn_bid_price = round(bn_bid_price * (1 - self.fee_bn), 2)
+        bn_ask_price = round(bn_ask_price * (1 + self.fee_bn), 2)
         bn_bid_amount, bn_ask_amount = self.get_amount(depths, self.market_bn)
 
-        if bfx_bid_price > bn_ask_price:
-            sell_price = bfx_bid_price
-            sell_amount = bfx_bid_amount
+        if hb_bid_price > bn_ask_price:
+            sell_price = hb_bid_price
+            sell_amount = hb_bid_amount
             buy_price = bn_ask_price
             buy_amount = bn_ask_amount
 
@@ -68,14 +76,13 @@ class C_Diff_ETH(BasicBot):
             self.profit_total += profit
             self.percent_total = self.percent_total + percent
             av_percent = round(self.percent_total / self.profit_count, 3)
-            logging.info("bitfinex and binance eth_btc profit total: %s, av percent:%s, count: %s" %
+            logging.info("huobi and binance eth_usdt profit total: %s, av percent:%s, count: %s" %
                          (self.profit_total, av_percent, self.profit_count))
-            pass
-        elif bfx_ask_price < bn_bid_price:
+        elif hb_ask_price < bn_bid_price:
             sell_price = bn_bid_price
             sell_amount = bn_bid_amount
-            buy_price = bfx_ask_price
-            buy_amount = bfx_ask_amount
+            buy_price = hb_ask_price
+            buy_amount = hb_ask_amount
 
             diff_price = sell_price - buy_price
             percent = round(diff_price / buy_price * 100, 3)
@@ -85,10 +92,10 @@ class C_Diff_ETH(BasicBot):
             self.profit_total += profit
             self.percent_total = self.percent_total + percent
             av_percent = round(self.percent_total / self.profit_count, 3)
-            logging.info("bitfinex and binance eth_btc profit total: %s, av percent:%s, count: %s" %
+            logging.info("huobi and binance eth_usdt profit total: %s, av percent:%s, count: %s" %
                          (self.profit_total, av_percent, self.profit_count))
         else:
-            logging.info("bitfinex and binance eth_btc no chance to profit")
+            logging.info("huobi and binance eth_usdt no chance to profit")
 
     @classmethod
     def get_ticker(cls, depths, market):

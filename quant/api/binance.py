@@ -10,6 +10,11 @@ from urllib import urlencode
 
 
 class Client(object):
+
+    """
+    https://www.binance.com/cn/fee/schedule  手续费
+    """
+
     API_URL = 'https://www.binance.com/api'
     WEBSITE_URL = 'https://www.binance.com'
     API_VERSION = 'v1'

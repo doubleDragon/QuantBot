@@ -16,6 +16,7 @@ from ._bitflyer import Bitflyer
 from ._kraken import Kraken
 from ._coinegg import Coinegg
 from ._bithumb import Bithumb
+from ._huobi import Huobi
 
 
 def create_markets(exchange_names):
@@ -89,6 +90,8 @@ def create_markets(exchange_names):
             ex = Binance('BCCBTC')
         elif name == "%s_ETH_BTC" % constant.EX_BINANCE:
             ex = Binance('ETHBTC')
+        elif name == "%s_ETH_USDT" % constant.EX_BINANCE:
+            ex = Binance('ETHUSDT')
         elif name == "%s_BNB_BTC" % constant.EX_BINANCE:
             ex = Binance('BNBBTC')
         elif name == "%s_BNB_ETH" % constant.EX_BINANCE:
@@ -157,6 +160,8 @@ def create_markets(exchange_names):
             ex = Bithumb('eth')
         elif name == "%s_BCH_KRW" % constant.EX_BITHUMB:
             ex = Bithumb('bch')
+        elif name == "%s_ETH_USDT" % constant.EX_HUOBI:
+            ex = Huobi('ethusdt')
         else:
             logging.warn('Exchange ' + name + ' not supported!')
             assert False
