@@ -86,6 +86,8 @@ def create_markets(exchange_names):
             ex = Cex('bccbtc')
         elif name == "%s_ZEC_BTC" % constant.EX_BITTREX:
             ex = Bittrex('BTC-ZEC')
+        elif name == "%s_BTC_USDT" % constant.EX_BINANCE:
+            ex = Binance('BTCUSDT')
         elif name == "%s_BCC_BTC" % constant.EX_BINANCE:
             ex = Binance('BCCBTC')
         elif name == "%s_ETH_BTC" % constant.EX_BINANCE:
@@ -162,6 +164,8 @@ def create_markets(exchange_names):
             ex = Bithumb('bch')
         elif name == "%s_ETH_USDT" % constant.EX_HUOBI:
             ex = Huobi('ethusdt')
+        elif name == "%s_BTC_USDT" % constant.EX_HUOBI:
+            ex = Huobi('btcusdt')
         else:
             logging.warn('Exchange ' + name + ' not supported!')
             assert False

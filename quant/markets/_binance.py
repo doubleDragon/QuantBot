@@ -22,6 +22,9 @@ class Binance(Market):
         if pair_code == 'BCCBTC':
             base_currency = 'BTC'
             market_currency = 'BCC'
+        elif pair_code == 'BTCUSDT':
+            base_currency = 'USDT'
+            market_currency = 'BTC'
         elif pair_code == 'ETHBTC':
             base_currency = 'BTC'
             market_currency = 'ETH'
